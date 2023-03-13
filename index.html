@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
+<link rel="stylesheet" href="style.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/exceljs/4.4.0/exceljs.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.5/FileSaver.min.js"></script>
+<link rel="stylesheet" href="input_style.css">
+<title>Заявка на закупку номенклатур</title>
+</head>
+<body>
+ <!-- ШАПКА -->
+<div class="header">
+  <div id="search-box">
+    <input type="text" id="search" placeholder="Поле для поиска по заявкам"/>
+    <svg  class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+      <defs></defs>
+      <circle cx="11" cy="11" r="8"></circle>
+      <path d="M21 21l-4.35-4.35"></path>
+    </svg>
+  </div>
+  <div id="filter-box">
+    <label for="status">Статус</label>
+    <select id="status">
+      <option value="">Все</option>
+      <option value="Новая">Новая</option>
+      <option value="В работе">В работе</option>
+      <option value="Закупленна">Закупленна</option>
+      <option value="Выполнена">Выполнена</option>
+    </select>
+    <button id="download-button">Скачать заявки <img class="excel-icon" src="svg/excel.svg" alt="" ></button>
+
+    <button id="add-btn">Добавить заявку</button>
+  </div>
+</div>
+<!-- ТАБЛИЦА ЗАЯВОК-->
+<div class="main">
+  <table class="table-request">
+    <thead>
+      <tr class="head-string">
+        <th>Номер заявки</th>
+        <th>Ссылка на заявку <span class=""></span></th>
+        <th>Дата заявки <span class=""></span></th>
+        <th id="initiator-filter"> <span class=""></span>Инициатор</th>
+        <th>Исполнитель <span class=""></span></th>
+        <th>Статус <span class=""></span></th>
+        <th></th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody id="table-body"></tbody>
+  </table>
+</div>
+<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ЗАЯВКИ -->
+<div id="modal" class="hidden">
+  <div class="modal-content">
+    <div class="modal-header">
+      <h3>Заявка №<span id="request-number"></span></h3>
+      <span class="close">&times;</span>
+    </div>
+    <form id="form"  action="" method="">
+      <div class="container-field">
+      <div class="text-field text-field-floating-2">
+      <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор">
+      <label class="text-field-label" for="initiator">Инициатор</label>
+    </div>
+    <div class="text-field text-field-floating-2">
+      <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель">
+      <label class="text-field-label" for="executive-id">Исполнитель</label>
+    </div>
+    <select id="status-request" class="text-field-input">
+      <option value="">Все</option>
+      <option value="Новая" selected>Новая</option>
+      <option value="В работе">В работе</option>
+      <option value="Закупленна">Закупленна</option>
+      <option value="Выполнена">Выполнена</option>
+    </select>
+  </div>
+
+
+    </form>
+    <form id="request-form" action="" method="">
+      <div class="container-field">
+      <select class="text-field-input" id="category-list" name="category">
+        <option value="Основные материалы">Основные материалы</option>
+        <option value="Вспомогательные материалы">Вспомогательные материалы</option>
+        <option value="Запасные части">Запасные части</option>
+        <option value="Инвентарь">Инвентарь</option>
+        <option value="Аксессуары">Аксессуары</option>
+        <option value="ГСМ">ГСМ</option>
+        <option value="Образец">Образец</option>
+        <option value="Хозматериалы" selected>Хозматериалы</option>
+        <option value="Инструмент">Инструмент</option>
+        <option value="Стройматериал">Стройматериал</option>
+      </select>
+      <div class="text-field text-field-floating-2 inputname">
+      <input class="text-field-input" type="text" id="name" list="list-name" autocomplete="off" placeholder="Наименование" required>
+      <label class="text-field-label" for="variation">Наименование</label>
+      <datalist id="list-name"></datalist>
+    </div>
+    <div class="text-field text-field-floating-2">
+      <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="Вариант исполнения" value="осн." required>
+      <label class="text-field-label" for="variation">Вариант исполнения</label>
+    </div>
+      <!-- -->
+      <select  class="text-field-input" id="type">
+        <option value="Метр">Метр</option>
+        <option value="Штук" selected>Штук</option>
+        <option value="Кв.м">Кв.м</option>
+        <option value="Рулон">Рулон</option>
+        <option value="Упак.">Упак.</option>
+        <option value="Лист">Лист</option>
+        <option value="Пог.м">Пог.м</option>
+        <option value="Тонна">Тонна</option>
+      </select>
+      <div class="text-field text-field-floating-2">
+      <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" required>
+      <label class="text-field-label" for="equipment">Оборудование</label>
+      <datalist id="equipment-list" autocomplete="off"></datalist>
+    </div>
+    <div class="text-field text-field-floating-2">
+      <input class="text-field-input" type="number" id="input-count" name="count" min="0" placeholder="Кол-во" required>
+      <label class="text-field-label" for="input-count">Кол-во</label>
+    </div>
+      <input type="number" id="input-code" name="code" disabled>
+      <button type="submit" id="add-product-btn">Добавить номенклатуру</button>
+    </div>
+    </form>
+    <div class="modal-main">
+      <table id="products-table">
+        <thead>
+          <tr class="head-string">
+            <th>#</th>
+            <th>Категория ТМЦ</th>
+            <th>Наименование</th>
+            <th>Вариант исполнения</th>
+            <th>Баз ед</th>
+            <th>Оборудование</th>
+            <th>Статья</th>
+            <th>Поставщик</th>
+            <th>Код</th>
+            <th>Комментарий</th>
+            <th>Статус, дата</th>
+            <th>Кол-во</th>
+            <th></th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="products-body"></tbody>
+      </table>
+    </div>
+    <div class="modal-footer">
+      <input type="submit" id="save-request-btn" value="Отправить заявку">
+      <input type="submit" id="save-change-btn" value="Перезаписать заявку">
+    </div>
+  </div>
+
+  <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
+    <script src="main.js"></script>
+</body>
+</html>
