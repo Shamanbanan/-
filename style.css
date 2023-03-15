@@ -156,15 +156,21 @@ color: #888;
   -o-border-radius: 8px;
 }
 .btn-remove{
-  border: none;
+  border: 1px solid transparent;
   background-color: transparent;
   color: #333;
   padding: 3px;
   cursor: pointer;
-}
+} 
 .btn-remove:hover{
+  border: 1px solid tomato;
   color: tomato;
   font-weight: 600;
+  border-radius: 8px;
+  -webkit-border-radius: 8px;
+  -moz-border-radius: 8px;
+  -ms-border-radius: 8px;
+  -o-border-radius: 8px;
 }
 #download-button{
   display: flex;
@@ -366,6 +372,6 @@ background-color: transparent;
   .sort-arrow.desc {
     border-top: 5px solid #333;
   } 
-  option[data-variation] {
-    color: tomato;
-  }
+
+
+  
