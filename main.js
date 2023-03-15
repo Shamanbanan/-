@@ -25,7 +25,7 @@ const saveRequestBtn = document.getElementById("save-request-btn");
 const saveChangesBtn = document.getElementById("save-change-btn");
 const table = document.getElementById("table-body");
 const modalFooter = document.querySelector(".modal-footer");
-
+const selectStatusRequest = document.getElementById("status-request");
 // функция для открытия модального окна
 function openModal() {
   modal.classList.remove("hidden");
@@ -34,6 +34,7 @@ function openModal() {
   formRequest.reset();
   saveChangesBtn.classList.add("hidden");
   saveRequestBtn.classList.remove("hidden");
+  selectStatusRequest.style.display = "none"; 
   document.getElementById("request-number").textContent = "";
 }
 
@@ -268,6 +269,7 @@ requestsRef.on("value", (snapshot) => {
     editRequestButton.addEventListener("click", () => {
       form.reset();
   formRequest.reset();
+  selectStatusRequest.style.display = "block"; 
       const requestRef = database.ref("requests/" + requestKey);
 
       requestRef.once("value", (snapshot) => {
