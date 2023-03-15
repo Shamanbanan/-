@@ -525,8 +525,9 @@ requestsRef.once('value', snapshot => {
 
 // Add button event listener
 const downloadButton = document.getElementById('download-button');
-downloadButton.addEventListener('click', downloadExcel);
 
+
+downloadButton.addEventListener('click', downloadExcel);
 
 // Получаем заголовки столбцов таблицы
 const tableHeaders = document.querySelectorAll(".table-request thead tr th");

@@ -365,13 +365,39 @@ background-color: transparent;
     border-right: 5px solid transparent;
   }
   
-  .sort-arrow.asc {
-    border-bottom: 5px solid #333;
+/* .asc {
+    color: #55b377;
   }
-  
-  .sort-arrow.desc {
-    border-top: 5px solid #333;
-  } 
-
 
   
+.desc {
+  color: tomato;
+  }  */
+
+
+  .asc {
+  position: relative;
+
+}
+.asc::before {
+  position: absolute;
+  content: "▲";
+  right: 46%;
+  width: 10px;
+  height: 3px;
+  color: #65cd57;
+  transition: max-height 0.3s ease-in-out;
+}
+
+.desc{
+  position: relative;
+}
+.desc::before {
+  position: absolute;
+  content: "▼";
+  right: 46%;
+  width: 10px;
+  height: 3px;
+  color: #d86e6e;
+  transition: max-height 0.3s ease-in-out;
+}
