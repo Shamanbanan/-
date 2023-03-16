@@ -1,13 +1,12 @@
 // Инициализация Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDJch2o9N79aFKVouE5VzOwoHWyToTweW0",
-  authDomain: "nomenklature-d5601.firebaseapp.com",
-  databaseURL:
-    "https://nomenklature-d5601-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-d5601",
-  storageBucket: "nomenklature-d5601.appspot.com",
-  messagingSenderId: "1097981514400",
-  appId: "1:1097981514400:web:a6a7484924b76b2a166fc5"
+  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+  authDomain: "nomenklature-6acda.firebaseapp.com",
+  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "nomenklature-6acda",
+  storageBucket: "nomenklature-6acda.appspot.com",
+  messagingSenderId: "729807329689",
+  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -34,7 +33,7 @@ function openModal() {
   formRequest.reset();
   saveChangesBtn.classList.add("hidden");
   saveRequestBtn.classList.remove("hidden");
-  selectStatusRequest.style.display = "none"; 
+  selectStatusRequest.style.display = "none";
   document.getElementById("request-number").textContent = "";
 }
 
@@ -49,7 +48,11 @@ addBtn.addEventListener("click", openModal);
 // добавляем обработчик события на кнопку закрытия модального окна
 // closeBtn.addEventListener("click", closeModal);
 closeBtn.addEventListener("click", () => {
-  if (confirm("Закрыть окно заявки? Данные будут удалены, если не сохранены. Уверены?")) {
+  if (
+    confirm(
+      "Закрыть окно заявки? Данные будут удалены, если не сохранены. Уверены?"
+    )
+  ) {
     closeModal();
   }
 });
@@ -268,14 +271,15 @@ requestsRef.on("value", (snapshot) => {
 
     editRequestButton.addEventListener("click", () => {
       form.reset();
-  formRequest.reset();
-  selectStatusRequest.style.display = "block"; 
+      formRequest.reset();
+      selectStatusRequest.style.display = "block";
       const requestRef = database.ref("requests/" + requestKey);
 
       requestRef.once("value", (snapshot) => {
         const requestData = snapshot.val();
 
-        document.getElementById("request-number").textContent = requestData.number;
+        document.getElementById("request-number").textContent =
+          requestData.number;
         document.getElementById("initiator").value = requestData.initiator;
         document.getElementById("executive-id").value = requestData.executive;
         document.getElementById("status-request").value =
@@ -373,116 +377,123 @@ saveChangesBtn.addEventListener("click", () => {
     }
   );
 });
-
-
-async function getUniqueNameVariationCodeItems() {
-  const itemsRef = database.ref("items");
-
-  const [itemsSnapshot, requestsSnapshot] = await Promise.all([
-    itemsRef.once("value"),
-    requestsRef.once("value")
-  ]);
-
-  const uniqueItems = new Set();
-
-  itemsSnapshot.forEach(itemSnapshot => {
-    const data = itemSnapshot.val();
-
-    if (data.items) {
-      _.forEach(data.items, item => {
-        if (item.name && item.code) {
-          uniqueItems.add(`${item.name}_${item.variation}_${item.code}`);
-        }
-      });
-    } else if (data.name && data.code) {
-      uniqueItems.add(`${data.name}_${data.variation}_${data.code}`);
-    }
-  });
-
-  return _.map(Array.from(uniqueItems), item => {
-    const [name, variation, code] = item.split("_");
-    return { name, variation, code };
-  });
-}
-
-async function searchItems(searchTerms) {
-  const dataList = await getUniqueNameVariationCodeItems();
-
-  const filteredData = _.filter(dataList, ({ name }) =>
-    _.every(searchTerms, term => _.includes(_.toLower(name), _.toLower(term)))
-  );
-
-  const sortedData = _.orderBy(filteredData, item =>
-    _.reduce(item.name, (count, char) => count + (_.includes(searchTerms, char) ? 1 : 0), 0)
-  , 'desc').slice(0, 10); // slice the array to get the first 10 elements
-
-  return sortedData;
-}
-
+const itemsRef = database.ref("items");
 
 const nameInput = document.getElementById("name");
-const autocompleteList = document.getElementById("list-name");
 const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
+const autocompleteList = document.getElementById("autocompleteList");
+
+// Убираем повторяющиеся значения из списка
+const uniqueBy = (arr, key) => [
+  ...new Map(arr.map((x) => [key(x), x])).values()
+];
+
+const fuseOptions = {
+  keys: ["name", "variation", "code"],
+  threshold: 0.5
+};
+
+let items = [];
+let requests = [];
+
+itemsRef.on("value", (snapshot) => {
+  // Используем деструктуризацию массива и метод map вместо Object.values
+  items = snapshot.val()
+    ? Object.entries(snapshot.val()).map(([id, item]) => ({ id, ...item }))
+    : [];
+});
+
+requestsRef.on("value", (snapshot) => {
+  requests = snapshot.val()
+    ? Object.entries(snapshot.val())
+        .map(([id, request]) =>
+          request.items
+            ? request.items.map((item) => ({ ...item, requestId: id }))
+            : []
+        )
+        .flat()
+    : [];
+});
+
+const search = (searchTerm) => {
+  if (!searchTerm) {
+    autocompleteList.innerHTML = "";
+    return;
+  }
+
+  const allItems = uniqueBy(
+    [...items, ...requests],
+    (item) => `${item.name}-${item.variation}-${item.code}`
+  );
+  const fuse = new Fuse(allItems, fuseOptions);
+  const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 10);
+
+  const fragment = document.createDocumentFragment();
+  const uniqueItems = new Set();
+
+  if (!results.length) {
+    const noResultsEl = document.createElement("div");
+    noResultsEl.classList.add("autocomplete-item");
+    noResultsEl.innerText = "Нет результатов";
+    fragment.appendChild(noResultsEl);
+  } else {
+    results.forEach(({ item }) => {
+      const { name, variation, code } = item || {};
+      const itemKey = `${name}-${variation}-${code}`;
+      if (uniqueItems.has(itemKey)) {
+        return; // skip duplicates
+      }
+      uniqueItems.add(itemKey); // add unique item to Set
+      const el = document.createElement("div");
+      el.classList.add("autocomplete-item");
+      el.innerText = `${name}\n ВИ: ${variation}  Код: (${code})`;
+      el.addEventListener("click", () => {
+        nameInput.value = name;
+        variationInput.value = variation;
+        codeInput.value = code;
+        autocompleteList.innerHTML = "";
+      });
+      fragment.appendChild(el);
+    });
+  }
+
+  autocompleteList.innerHTML = "";
+  autocompleteList.appendChild(fragment);
+};
 
 let searchTimeout;
 
-nameInput.addEventListener("input", async function () {
+nameInput.addEventListener("input", (e) => {
   clearTimeout(searchTimeout);
-  autocompleteList.innerHTML = "";
-
-  if (!this.value) return;
-
-  const searchTerms = _.toLower(this.value).split(" ");
-
-  searchTimeout = setTimeout(async () => {
-    const filteredData = await searchItems(searchTerms);
-
-    const fragment = document.createDocumentFragment();
-
-    _.forEach(filteredData, ({ name, variation, code }) => {
-      const option = new Option(`Код:${code}`, `${name}|${variation}|${code}`);
-
-      fragment.appendChild(option);
-    });
-
-    autocompleteList.appendChild(fragment);
-  }, 500);
+  searchTimeout = setTimeout(() => search(e.target.value), 200);
 });
 
-nameInput.addEventListener("change", async function() {
-  const dataList = await getUniqueNameVariationCodeItems();
-  const selectedOption = this.value.split('|');
-
-  if (selectedOption.length === 3) {
-    nameInput.value = selectedOption[0];
-    variationInput.value = selectedOption[1];
-    codeInput.value = selectedOption[2];
-  } else {
-    variationInput.value = "осн.";
-    codeInput.value = "";
-  } 
+document.addEventListener("click", (e) => {
+  if (!autocompleteList.contains(e.target)) {
+    autocompleteList.innerHTML = "";
+  }
 });
 
 variationInput.addEventListener("input", () => (codeInput.value = ""));
 
-
-
-
 // Функция для фильтрации по статусу
 function filterByStatus() {
-const statusFilter = document.getElementById("status");
-const tableRows = document.querySelectorAll(".table-request tbody tr");
+  const statusFilter = document.getElementById("status");
+  const tableRows = document.querySelectorAll(".table-request tbody tr");
 
-tableRows.forEach((row) => {
-  const statusCell = row.querySelector(".status-cell");
-  
-  if (statusFilter.value === "" || statusCell.textContent === statusFilter.value) {
-    row.style.display = "";
-  } else {
-    row.style.display = "none";
-  }
-});
+  tableRows.forEach((row) => {
+    const statusCell = row.querySelector(".status-cell");
+
+    if (
+      statusFilter.value === "" ||
+      statusCell.textContent === statusFilter.value
+    ) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
+    }
+  });
 }
 
 const statusFilter = document.getElementById("status");
@@ -493,135 +504,173 @@ statusFilter.addEventListener("change", filterByStatus);
 
 //СКАЧИВАНИЕ
 function downloadExcel() {
-const workbook = new ExcelJS.Workbook();
-const sheet = workbook.addWorksheet('Requests');
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Requests");
 
-// Add header row
-sheet.addRow(['Номер заявки', 'Дата', 'Инициатор', 'Ответственный', 'Статус заявки', 'Индекс', 'Категория', 'Наименование', 'Вар.исп', 'Баз.ед', 'Оборудование', 'Статья', 'Поставщик', 'Код', 'комментарий', 'Статус, дата', 'Кол-во']);
+  // Add header row
+  sheet.addRow([
+    "Номер заявки",
+    "Дата",
+    "Инициатор",
+    "Ответственный",
+    "Статус заявки",
+    "Индекс",
+    "Категория",
+    "Наименование",
+    "Вар.исп",
+    "Баз.ед",
+    "Оборудование",
+    "Статья",
+    "Поставщик",
+    "Код",
+    "комментарий",
+    "Статус, дата",
+    "Кол-во"
+  ]);
 
-// Get data from Firebase Realtime Database
-const requestsRef = database.ref('requests');
-requestsRef.once('value', snapshot => {
-  const requests = snapshot.val();
+  // Get data from Firebase Realtime Database
+  const requestsRef = database.ref("requests");
+  requestsRef.once("value", (snapshot) => {
+    const requests = snapshot.val();
 
-  // Add data rows for each request and its items
-  Object.keys(requests).forEach(requestKey => {
-    const requestData = requests[requestKey];
-    requestData.items.forEach(itemData => {
-      sheet.addRow([requestData.number, requestData.date, requestData.initiator, requestData.executive, requestData.statusRequest, itemData.rowIndexRow, itemData.category, itemData.name, itemData.variation, itemData.type, itemData.equipment, itemData.article, itemData.brand, itemData.code, itemData.comment,itemData.statusNom, itemData.count]);
+    // Add data rows for each request and its items
+    Object.keys(requests).forEach((requestKey) => {
+      const requestData = requests[requestKey];
+      requestData.items.forEach((itemData) => {
+        sheet.addRow([
+          requestData.number,
+          requestData.date,
+          requestData.initiator,
+          requestData.executive,
+          requestData.statusRequest,
+          itemData.rowIndexRow,
+          itemData.category,
+          itemData.name,
+          itemData.variation,
+          itemData.type,
+          itemData.equipment,
+          itemData.article,
+          itemData.brand,
+          itemData.code,
+          itemData.comment,
+          itemData.statusNom,
+          itemData.count
+        ]);
+      });
+    });
+
+    // Download file
+    workbook.xlsx.writeBuffer().then((buffer) => {
+      const blob = new Blob([buffer], {
+        type:
+          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+      });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "requests.xlsx";
+      a.click();
+      URL.revokeObjectURL(url);
     });
   });
-
-  // Download file
-  workbook.xlsx.writeBuffer().then(buffer => {
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = 'requests.xlsx';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
-});
 }
 
 // Add button event listener
-const downloadButton = document.getElementById('download-button');
+const downloadButton = document.getElementById("download-button");
 
-
-downloadButton.addEventListener('click', downloadExcel);
+downloadButton.addEventListener("click", downloadExcel);
 
 // Получаем заголовки столбцов таблицы
 const tableHeaders = document.querySelectorAll(".table-request thead tr th");
 const sortArrow = document.createElement("span.sort-arrow");
 // Проходим по всем заголовкам столбцов
 tableHeaders.forEach((header) => {
-// Добавляем обработчик события на клик по заголовку столбца
-header.addEventListener("click", () => {
-// Получаем индекс столбца, по которому нужно сортировать (от 0 до n-1)
-const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+  // Добавляем обработчик события на клик по заголовку столбца
+  header.addEventListener("click", () => {
+    // Получаем индекс столбца, по которому нужно сортировать (от 0 до n-1)
+    const columnIndex = Array.from(header.parentNode.children).indexOf(header);
 
-// Получаем направление сортировки из атрибута "data-sort-direction"
-const sortDirection = header.getAttribute("data-sort-direction");
+    // Получаем направление сортировки из атрибута "data-sort-direction"
+    const sortDirection = header.getAttribute("data-sort-direction");
 
-// Преобразуем строки таблицы в массив
-const tableRowsArray = Array.from(
-  document.querySelectorAll(".table-request tbody tr")
-);
+    // Преобразуем строки таблицы в массив
+    const tableRowsArray = Array.from(
+      document.querySelectorAll(".table-request tbody tr")
+    );
 
-// Сортируем массив строк таблицы по значению ячейки в выбранном столбце
-tableRowsArray.sort((rowA, rowB) => {
-  const cellA = rowA.querySelectorAll("td")[columnIndex];
-  const cellB = rowB.querySelectorAll("td")[columnIndex];
+    // Сортируем массив строк таблицы по значению ячейки в выбранном столбце
+    tableRowsArray.sort((rowA, rowB) => {
+      const cellA = rowA.querySelectorAll("td")[columnIndex];
+      const cellB = rowB.querySelectorAll("td")[columnIndex];
 
-  return cellA.textContent.localeCompare(cellB.textContent, undefined, {
-    numeric: true
+      return cellA.textContent.localeCompare(cellB.textContent, undefined, {
+        numeric: true
+      });
+    });
+
+    // Если направление сортировки не задано или равно "asc", то сортируем по возрастанию
+    if (!sortDirection || sortDirection === "asc") {
+      tableRowsArray.forEach((row) => {
+        document.querySelector(".table-request tbody").appendChild(row);
+      });
+      header.setAttribute("data-sort-direction", "desc");
+      sortArrow.classList.remove("asc");
+      sortArrow.classList.add("desc");
+    } else {
+      // Иначе сортируем по убыванию
+      tableRowsArray.reverse().forEach((row) => {
+        document.querySelector(".table-request tbody").appendChild(row);
+      });
+      header.setAttribute("data-sort-direction", "asc");
+      sortArrow.classList.remove("desc");
+      sortArrow.classList.add("asc");
+    }
+
+    // Удаляем классы .asc и .desc у всех заголовков, кроме текущего
+    tableHeaders.forEach((h) => {
+      if (h !== header) {
+        h.classList.remove("asc");
+        h.classList.remove("desc");
+      }
+    });
+
+    // Добавляем класс .asc или .desc в зависимости от направления сортировки
+    if (!sortDirection || sortDirection === "asc") {
+      header.classList.remove("desc");
+      header.classList.add("asc");
+    } else {
+      header.classList.remove("asc");
+      header.classList.add("desc");
+    }
   });
 });
 
-// Если направление сортировки не задано или равно "asc", то сортируем по возрастанию
-if (!sortDirection || sortDirection === "asc") {
-  tableRowsArray.forEach((row) => {
-    document.querySelector(".table-request tbody").appendChild(row);
-  });
-  header.setAttribute("data-sort-direction", "desc");
-  sortArrow.classList.remove("asc");
-  sortArrow.classList.add("desc");
-} else {
-  // Иначе сортируем по убыванию
-  tableRowsArray.reverse().forEach((row) => {
-    document.querySelector(".table-request tbody").appendChild(row);
-  });
-  header.setAttribute("data-sort-direction", "asc");
-  sortArrow.classList.remove("desc");
-  sortArrow.classList.add("asc");
-}
-
-// Удаляем классы .asc и .desc у всех заголовков, кроме текущего
-tableHeaders.forEach((h) => {
-  if (h !== header) {
-    h.classList.remove("asc");
-    h.classList.remove("desc");
-  }
-});
-
-// Добавляем класс .asc или .desc в зависимости от направления сортировки
-if (!sortDirection || sortDirection === "asc") {
-  header.classList.remove("desc");
-  header.classList.add("asc");
-} else {
-  header.classList.remove("asc");
-  header.classList.add("desc");
-}
-});
-});
-
-const searchInput = document.getElementById('search');
-const tableBody = document.getElementById('table-body');
+const searchInput = document.getElementById("search");
+const tableBody = document.getElementById("table-body");
 
 function filterTable() {
-const filterValue = searchInput.value.toLowerCase();
-const rows = tableBody.getElementsByTagName('tr');
+  const filterValue = searchInput.value.toLowerCase();
+  const rows = tableBody.getElementsByTagName("tr");
 
-for (let i = 0; i < rows.length; i++) {
-  const columns = rows[i].getElementsByTagName('td');
-  let found = false;
+  for (let i = 0; i < rows.length; i++) {
+    const columns = rows[i].getElementsByTagName("td");
+    let found = false;
 
-  for (let j = 0; j < columns.length; j++) {
-    const columnValue = columns[j].textContent.toLowerCase();
+    for (let j = 0; j < columns.length; j++) {
+      const columnValue = columns[j].textContent.toLowerCase();
 
-    if (columnValue.indexOf(filterValue) > -1) {
-      found = true;
-      break;
+      if (columnValue.indexOf(filterValue) > -1) {
+        found = true;
+        break;
+      }
+    }
+
+    if (found) {
+      rows[i].style.display = "";
+    } else {
+      rows[i].style.display = "none";
     }
   }
-
-  if (found) {
-    rows[i].style.display = '';
-  } else {
-    rows[i].style.display = 'none';
-  }
-}
 }
 
-searchInput.addEventListener('input', filterTable);
+searchInput.addEventListener("input", filterTable);

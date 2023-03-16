@@ -401,3 +401,27 @@ background-color: transparent;
   color: #d86e6e;
   transition: max-height 0.3s ease-in-out;
 }
+#autocompleteList {
+  position: absolute;
+  right: 20%;
+  z-index: 3;
+  background-color: white;
+  min-width: 400px;
+  box-shadow: 0 2px 6px 0 rgba(136, 148, 171, 0.368),
+    0 24px 20px -24px rgb(71 82 107 / 10%);
+  border-top-right-radius: 8px;
+  border-bottom-left-radius: 8px;
+  border-bottom-right-radius: 8px;
+}
+#autocompleteList div {
+  padding: 5px;
+}
+.autocomplete-item {
+  word-wrap: wrap;
+  cursor: pointer;
+  font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
+}
+.autocomplete-item:hover {
+  color: #2667ff;
+  background-color: #f2f3f6;
+}

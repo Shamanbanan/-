@@ -14,11 +14,11 @@
 <title>Заявка на закупку номенклатур</title>
 </head>
 <body>
- <!-- ШАПКА -->
+<!-- ШАПКА -->
 <div class="header">
   <div id="search-box">
-    <input type="text" id="search" placeholder="Поле для поиска по заявкам"/>
-    <svg  class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
+    <input type="text" id="search" placeholder="Поле для поиска по заявкам" />
+    <svg class="search-icon" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="feather feather-search" viewBox="0 0 24 24">
       <defs></defs>
       <circle cx="11" cy="11" r="8"></circle>
       <path d="M21 21l-4.35-4.35"></path>
@@ -26,13 +26,13 @@
   </div>
   <div id="filter-box">
     <label for="status">Статус</label>
-    <select id="status">  
+    <select id="status">
       <option value="">Выберите статус заявки</option>
       <option value="Новая">Новая</option>
       <option value="В работе">В работе</option>
       <option value="Выполнена">Выполнена</option>
     </select>
-    <button id="download-button">Скачать заявки <img class="excel-icon" src="svg/excel.svg" alt="" ></button>
+    <button id="download-button">Скачать заявки <img class="excel-icon" src="svg/excel.svg" alt=""></button>
 
     <button id="add-btn">Добавить заявку</button>
   </div>
@@ -62,73 +62,73 @@
       <h3>Заявка №<span id="request-number"></span></h3>
       <span class="close">&times;</span>
     </div>
-    <form id="form"  action="" method="">
+    <form id="form" action="" method="">
       <div class="container-field">
-      <div class="text-field text-field-floating-2">
-      <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор">
-      <label class="text-field-label" for="initiator">Инициатор</label>
-    </div>
-    <div class="text-field text-field-floating-2">
-      <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель">
-      <label class="text-field-label" for="executive-id">Исполнитель</label>
-    </div>
-    <select id="status-request" class="text-field-input">
-      <option value="Новая" selected>Новая</option>
-      <option value="В работе">В работе</option>
-      <option value="Выполнена">Выполнена</option>
-    </select>
-  </div>
-
+        <div class="text-field text-field-floating-2">
+          <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор">
+          <label class="text-field-label" for="initiator">Инициатор</label>
+        </div>
+        <div class="text-field text-field-floating-2">
+          <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель">
+          <label class="text-field-label" for="executive-id">Исполнитель</label>
+        </div>
+        <select id="status-request" class="text-field-input">
+          <option value="Новая" selected>Новая</option>
+          <option value="В работе">В работе</option>
+          <option value="Выполнена">Выполнена</option>
+        </select>
+      </div>
 
     </form>
     <form id="request-form" action="" method="">
       <div class="container-field">
-      <select class="text-field-input" id="category-list" name="category">
-        <option value="Основные материалы">Основные материалы</option>
-        <option value="Вспомогательные материалы">Вспомогательные материалы</option>
-        <option value="Запасные части">Запасные части</option>
-        <option value="Инвентарь">Инвентарь</option>
-        <option value="Аксессуары">Аксессуары</option>
-        <option value="ГСМ">ГСМ</option>
-        <option value="Образец">Образец</option>
-        <option value="Хозматериалы" selected>Хозматериалы</option>
-        <option value="Инструмент">Инструмент</option>
-        <option value="Стройматериал">Стройматериал</option>
-        <option value="Спецодежда">Спецодежда</option>
-      </select>
-      <div class="text-field text-field-floating-2 inputname">
-      <input class="text-field-input" type="text" id="name" list="list-name" autocomplete="off" placeholder="Наименование" required>
-      <label class="text-field-label" for="variation">Наименование</label>
-      <datalist id="list-name"></datalist>
-    </div>
-    <div class="text-field text-field-floating-2">
-      <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="Вариант исполнения" value="осн." required>
-      <label class="text-field-label" for="variation">Вариант исполнения</label>
-    </div>
-      <!-- -->
-      <select  class="text-field-input" id="type">
-        <option value="Метр">Метр</option>
-        <option value="Штук" selected>Штук</option>
-        <option value="Кв.м">Кв.м</option>
-        <option value="Метр куб.">Метр куб.</option>
-        <option value="Литр">Литр</option>
-        <option value="Упак.">Упак.</option>
-        <option value="Лист">Лист</option>
-        <option value="Пог.м">Пог.м</option>
-        <option value="Тонна">Тонна</option>
-      </select>
-      <div class="text-field text-field-floating-2">
-      <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" required>
-      <label class="text-field-label" for="equipment">Оборудование</label>
-      <datalist id="equipment-list" autocomplete="off"></datalist>
-    </div>
-    <div class="text-field text-field-floating-2">
-      <input class="text-field-input" type="number" id="input-count" name="count" min="0" placeholder="Кол-во" required>
-      <label class="text-field-label" for="input-count">Кол-во</label>
-    </div>
-      <input type="number" id="input-code" name="code" disabled>
-      <button type="submit" id="add-product-btn">Добавить номенклатуру</button>
-    </div>
+        <select class="text-field-input" id="category-list" name="category">
+          <option value="Основные материалы">Основные материалы</option>
+          <option value="Вспомогательные материалы">Вспомогательные материалы</option>
+          <option value="Запасные части">Запасные части</option>
+          <option value="Инвентарь">Инвентарь</option>
+          <option value="Аксессуары">Аксессуары</option>
+          <option value="ГСМ">ГСМ</option>
+          <option value="Образец">Образец</option>
+          <option value="Хозматериалы" selected>Хозматериалы</option>
+          <option value="Инструмент">Инструмент</option>
+          <option value="Стройматериал">Стройматериал</option>
+          <option value="Спецодежда">Спецодежда</option>
+        </select>
+        <div class="text-field text-field-floating-2 inputname">
+          <input class="text-field-input" type="text" id="name" list="list-name" autocomplete="off" placeholder="Наименование" required>
+          <label class="text-field-label" for="variation">Наименование</label>
+          <datalist id="list-name"></datalist>
+        </div>
+        <div class="text-field text-field-floating-2">
+          <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="Вариант исполнения" value="осн." required>
+          <label class="text-field-label" for="variation">Вариант исполнения</label>
+        </div>
+        <!-- -->
+        <select class="text-field-input" id="type">
+          <option value="Метр">Метр</option>
+          <option value="Штук" selected>Штук</option>
+          <option value="Кв.м">Кв.м</option>
+          <option value="Метр куб.">Метр куб.</option>
+          <option value="Литр">Литр</option>
+          <option value="Упак.">Упак.</option>
+          <option value="Лист">Лист</option>
+          <option value="Пог.м">Пог.м</option>
+          <option value="Тонна">Тонна</option>
+        </select>
+        <div class="text-field text-field-floating-2">
+          <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" required>
+          <label class="text-field-label" for="equipment">Оборудование</label>
+          <div id="autocompleteList"></div>
+
+        </div>
+        <div class="text-field text-field-floating-2">
+          <input class="text-field-input" type="number" id="input-count" name="count" min="0" placeholder="Кол-во" required>
+          <label class="text-field-label" for="input-count">Кол-во</label>
+        </div>
+        <input type="number" id="input-code" name="code" disabled>
+        <button type="submit" id="add-product-btn">Добавить номенклатуру</button>
+      </div>
     </form>
     <div class="modal-main">
       <table id="products-table">
@@ -158,9 +158,9 @@
       <input type="submit" id="save-change-btn" value="Перезаписать заявку">
     </div>
   </div>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.21/lodash.min.js"></script>
-
   <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
-    <script src="main.js"></script>
+  <script src="main.js"></script>
 </body>
 </html>
