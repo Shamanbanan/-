@@ -540,28 +540,31 @@ function downloadExcel() {
     // Add data rows for each request and its items
     Object.keys(requests).forEach((requestKey) => {
       const requestData = requests[requestKey];
-      requestData.items.forEach((itemData) => {
-        sheet.addRow([
-          requestData.number,
-          requestData.date,
-          requestData.initiator,
-          requestData.executive,
-          requestData.statusRequest,
-          itemData.rowIndexRow,
-          itemData.category,
-          itemData.name,
-          itemData.variation,
-          itemData.type,
-          itemData.equipment,
-          itemData.article,
-          itemData.brand,
-          itemData.code,
-          itemData.comment,
-          itemData.statusNom,
-          itemData.count
-        ]);
-      });
+      if (requestData && requestData.items) { // Добавляем проверку
+        requestData.items.forEach((itemData) => {
+          sheet.addRow([
+            requestData.number,
+            requestData.date,
+            requestData.initiator,
+            requestData.executive,
+            requestData.statusRequest,
+            itemData.rowIndexRow,
+            itemData.category,
+            itemData.name,
+            itemData.variation,
+            itemData.type,
+            itemData.equipment,
+            itemData.article,
+            itemData.brand,
+            itemData.code,
+            itemData.comment,
+            itemData.statusNom,
+            itemData.count
+          ]);
+        });
+      }
     });
+    
 
     // Download file
     workbook.xlsx.writeBuffer().then((buffer) => {

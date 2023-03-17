@@ -23,34 +23,11 @@ body{
     align-items: center;
     min-width: 40%;
   }
-  input{
+  input, button, select, datalist, option, label, button{
     font-family: 'Roboto', sans-serif;
     font-size: calc(13px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
   }
-  button{
-    font-family: 'Roboto', sans-serif;
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
-  select{
-    font-family: 'Roboto', sans-serif;
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
-  datalist{
 
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
-  option{
-    font-family: 'Roboto', sans-serif;
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
-  label{
-    font-family: 'Roboto', sans-serif;
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
-  button{
-    font-family: 'Roboto', sans-serif;
-    font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
-  }
   #search{
     position: relative;
     padding: 5px;
@@ -364,20 +341,8 @@ background-color: transparent;
     border-left: 5px solid transparent;
     border-right: 5px solid transparent;
   }
-  
-/* .asc {
-    color: #55b377;
-  }
-
-  
-.desc {
-  color: tomato;
-  }  */
-
-
   .asc {
   position: relative;
-
 }
 .asc::before {
   position: absolute;
