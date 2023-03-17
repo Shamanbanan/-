@@ -397,24 +397,27 @@ const fuseOptions = {
 let items = [];
 let requests = [];
 
-itemsRef.on("value", (snapshot) => {
-  // Используем деструктуризацию массива и метод map вместо Object.values
-  items = snapshot.val()
-    ? Object.entries(snapshot.val()).map(([id, item]) => ({ id, ...item }))
-    : [];
-});
+// делаем запрос к базе данных один раз при загрузке страницы
+Promise.all([itemsRef.once("value"), requestsRef.once("value")]).then(
+  ([itemsSnapshot, requestsSnapshot]) => {
+    items = itemsSnapshot.val()
+      ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
+          id,
+          ...item
+        }))
+      : [];
 
-requestsRef.on("value", (snapshot) => {
-  requests = snapshot.val()
-    ? Object.entries(snapshot.val())
-        .map(([id, request]) =>
-          request.items
-            ? request.items.map((item) => ({ ...item, requestId: id }))
-            : []
-        )
-        .flat()
-    : [];
-});
+    requests = requestsSnapshot.val()
+      ? Object.entries(requestsSnapshot.val())
+          .map(([id, request]) =>
+            request.items
+              ? request.items.map((item) => ({ ...item, requestId: id }))
+              : []
+          )
+          .flat()
+      : [];
+  }
+);
 
 const search = (searchTerm) => {
   if (!searchTerm) {
@@ -476,6 +479,7 @@ document.addEventListener("click", (e) => {
 });
 
 variationInput.addEventListener("input", () => (codeInput.value = ""));
+
 
 // Функция для фильтрации по статусу
 function filterByStatus() {
