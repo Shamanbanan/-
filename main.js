@@ -426,9 +426,10 @@ const search = (searchTerm) => {
   }
 
   const allItems = uniqueBy(
-    [...items, ...requests],
-    (item) => `${item.name}-${item.variation}-${item.code}`
+    [...items, ...requests.filter((item) => item.code)],
+    (item) => `${item.name}-${item.variation}-${item.code || ''}`
   );
+  
   const fuse = new Fuse(allItems, fuseOptions);
   const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 10);
 
