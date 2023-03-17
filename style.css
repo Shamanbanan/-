@@ -385,6 +385,7 @@ background-color: transparent;
   word-wrap: wrap;
   cursor: pointer;
   font-size: calc(12px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));
+  border-bottom:1px solid #ccc;
 }
 .autocomplete-item:hover {
   color: #2667ff;
