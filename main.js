@@ -394,7 +394,7 @@ const autocompleteList = document.getElementById("autocompleteList");
 const fuseOptions = {
   keys: ["name", "variation", "code"],
   includeScore: true,
-  threshold: 0.4
+  threshold: 0.5
 };
 
 let items = [];
