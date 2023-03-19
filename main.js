@@ -1,12 +1,21 @@
 // Инициализация Firebase
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL: "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222"
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -24,7 +33,7 @@ const saveRequestBtn = document.getElementById("save-request-btn");
 const saveChangesBtn = document.getElementById("save-change-btn");
 const table = document.getElementById("table-body");
 const modalFooter = document.querySelector(".modal-footer");
-const selectStatusRequest = document.getElementById("status-request");
+const selectStatusRequest = document.querySelector(".status-block");
 // функция для открытия модального окна
 function openModal() {
   modal.classList.remove("hidden");
@@ -106,6 +115,11 @@ addProduct.addEventListener("click", addNomenklatureTable);
 const makeCellEditable = (cell, color) => {
   cell.contentEditable = true;
   cell.style.backgroundColor = color;
+  cell.addEventListener("input", () => {
+    cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
+
+  });
+  
 };
 
 // Обработчики событий
@@ -138,6 +152,7 @@ listTableRequest.addEventListener("click", (event) => {
 
       item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
         cell.contentEditable = false;
+        const cellText = cell.textContent;
         cell.style.backgroundColor = "transparent";
       });
 
@@ -236,11 +251,11 @@ const requestsRef = database.ref("requests");
 
 requestsRef.on("value", (snapshot) => {
   table.innerHTML = "";
-  // Получаем количество заявок в базе данных
-  const numRequests = snapshot.numChildren();
+ // Находим номер самой большой заявки
+const maxRequestNumber = Object.values(snapshot.val()).reduce((max, request) => Math.max(max, request.number), 0);
 
-  // Устанавливаем начальное значение номера заявки
-  requestNumber = numRequests + 1;
+// Устанавливаем начальное значение номера заявки
+requestNumber = maxRequestNumber + 1;
 
   for (const requestKey in snapshot.val()) {
     const requestData = snapshot.val()[requestKey];
@@ -257,10 +272,10 @@ requestsRef.on("value", (snapshot) => {
           <button class="edit-request-button">Редактировать</button>
         </td>
         <td class="button-cell">
-        <button class="delete-btn">Удалить заявку</button></td>
+        <button class="btn-delete">Удалить</button></td>
       `;
-    table.appendChild(newRow);
-    var deleteButton = newRow.querySelector(".delete-btn");
+      table.insertBefore(newRow, table.firstChild);
+    var deleteButton = newRow.querySelector(".btn-delete");
     const editRequestButton = newRow.querySelector(".edit-request-button");
 
     deleteButton.addEventListener("click", () => {
@@ -384,20 +399,15 @@ const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
-// Убираем повторяющиеся значения из списка
-const uniqueBy = (arr, key) => [
-  ...new Map(arr.map((x) => [key(x), x])).values()
-];
-
 const fuseOptions = {
   keys: ["name", "variation", "code"],
-  threshold: 0.5
+  includeScore: true,
+  threshold: 0.4
 };
 
 let items = [];
 let requests = [];
 
-// делаем запрос к базе данных один раз при загрузке страницы
 Promise.all([itemsRef.once("value"), requestsRef.once("value")]).then(
   ([itemsSnapshot, requestsSnapshot]) => {
     items = itemsSnapshot.val()
@@ -425,11 +435,7 @@ const search = (searchTerm) => {
     return;
   }
 
-  const allItems = uniqueBy(
-    [...items, ...requests.filter((item) => item.code)],
-    (item) => `${item.name}-${item.variation}-${item.code || ''}`
-  );
-  
+  const allItems = [...items, ...requests.filter((item) => item.code)];
   const fuse = new Fuse(allItems, fuseOptions);
   const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 10);
 
@@ -482,35 +488,10 @@ document.addEventListener("click", (e) => {
 variationInput.addEventListener("input", () => (codeInput.value = ""));
 
 
-// Функция для фильтрации по статусу
-function filterByStatus() {
-  const statusFilter = document.getElementById("status");
-  const tableRows = document.querySelectorAll(".table-request tbody tr");
-
-  tableRows.forEach((row) => {
-    const statusCell = row.querySelector(".status-cell");
-
-    if (
-      statusFilter.value === "" ||
-      statusCell.textContent === statusFilter.value
-    ) {
-      row.style.display = "";
-    } else {
-      row.style.display = "none";
-    }
-  });
-}
-
-const statusFilter = document.getElementById("status");
-
-statusFilter.addEventListener("change", filterByStatus);
-
-//ФИЛЬТР ПО ДАТЕ
-
 //СКАЧИВАНИЕ
 function downloadExcel() {
   const workbook = new ExcelJS.Workbook();
-  const sheet = workbook.addWorksheet("Requests");
+  const sheet = workbook.addWorksheet("Заявки");
 
   // Add header row
   sheet.addRow([
@@ -588,97 +569,53 @@ const downloadButton = document.getElementById("download-button");
 
 downloadButton.addEventListener("click", downloadExcel);
 
-// Получаем заголовки столбцов таблицы
-const tableHeaders = document.querySelectorAll(".table-request thead tr th");
-const sortArrow = document.createElement("span.sort-arrow");
-// Проходим по всем заголовкам столбцов
-tableHeaders.forEach((header) => {
-  // Добавляем обработчик события на клик по заголовку столбца
-  header.addEventListener("click", () => {
-    // Получаем индекс столбца, по которому нужно сортировать (от 0 до n-1)
-    const columnIndex = Array.from(header.parentNode.children).indexOf(header);
+// Определяем индексы столбцов
+const numberColIndex = 0;
+const linkColIndex = 1;
+const dateColIndex = 2;
+const initiatorColIndex = 3;
+const executiveColIndex = 4;
+const statusColIndex = 5;
+const buttonColIndex = 6;
+const button2ColIndex = 7;
 
-    // Получаем направление сортировки из атрибута "data-sort-direction"
-    const sortDirection = header.getAttribute("data-sort-direction");
-
-    // Преобразуем строки таблицы в массив
-    const tableRowsArray = Array.from(
-      document.querySelectorAll(".table-request tbody tr")
-    );
-
-    // Сортируем массив строк таблицы по значению ячейки в выбранном столбце
-    tableRowsArray.sort((rowA, rowB) => {
-      const cellA = rowA.querySelectorAll("td")[columnIndex];
-      const cellB = rowB.querySelectorAll("td")[columnIndex];
-
-      return cellA.textContent.localeCompare(cellB.textContent, undefined, {
-        numeric: true
-      });
-    });
-
-    // Если направление сортировки не задано или равно "asc", то сортируем по возрастанию
-    if (!sortDirection || sortDirection === "asc") {
-      tableRowsArray.forEach((row) => {
-        document.querySelector(".table-request tbody").appendChild(row);
-      });
-      header.setAttribute("data-sort-direction", "desc");
-      sortArrow.classList.remove("asc");
-      sortArrow.classList.add("desc");
-    } else {
-      // Иначе сортируем по убыванию
-      tableRowsArray.reverse().forEach((row) => {
-        document.querySelector(".table-request tbody").appendChild(row);
-      });
-      header.setAttribute("data-sort-direction", "asc");
-      sortArrow.classList.remove("desc");
-      sortArrow.classList.add("asc");
-    }
-
-    // Удаляем классы .asc и .desc у всех заголовков, кроме текущего
-    tableHeaders.forEach((h) => {
-      if (h !== header) {
-        h.classList.remove("asc");
-        h.classList.remove("desc");
-      }
-    });
-
-    // Добавляем класс .asc или .desc в зависимости от направления сортировки
-    if (!sortDirection || sortDirection === "asc") {
-      header.classList.remove("desc");
-      header.classList.add("asc");
-    } else {
-      header.classList.remove("asc");
-      header.classList.add("desc");
-    }
-  });
-});
-
-const searchInput = document.getElementById("search");
-const tableBody = document.getElementById("table-body");
-
-function filterTable() {
-  const filterValue = searchInput.value.toLowerCase();
-  const rows = tableBody.getElementsByTagName("tr");
+// Функция для фильтрации таблицы по значениям в ячейках заголовка
+function filterTable(event) {
+  const filter = event.target.value.toUpperCase();
+  const dropdown = event.target.closest('.filter-dropdown');
+  const th = dropdown.closest('th');
+  const colIndex = Array.from(th.parentNode.children).indexOf(th);
+  const rows = document.querySelectorAll(".table-request tbody tr");
 
   for (let i = 0; i < rows.length; i++) {
-    const columns = rows[i].getElementsByTagName("td");
-    let found = false;
-
-    for (let j = 0; j < columns.length; j++) {
-      const columnValue = columns[j].textContent.toLowerCase();
-
-      if (columnValue.indexOf(filterValue) > -1) {
-        found = true;
-        break;
+    const row = rows[i];
+    const cells = row.getElementsByTagName("td");
+    const cell = cells[colIndex];
+    if (cell) {
+      const text = cell.textContent.toUpperCase();
+      if (text.indexOf(filter) > -1) {
+        row.style.display = "";
+      } else {
+        row.style.display = "none";
       }
-    }
-
-    if (found) {
-      rows[i].style.display = "";
-    } else {
-      rows[i].style.display = "none";
     }
   }
 }
 
-searchInput.addEventListener("input", filterTable);
+// Назначаем обработчики событий на элементы фильтрации
+const filters = document.querySelectorAll(".filter-row input, .filter-row select");
+for (let i = 0; i < filters.length; i++) {
+  filters[i].addEventListener("input", filterTable);
+}
+
+const toggleButtons = document.querySelectorAll('.toggle-filter-button');
+
+toggleButtons.forEach(button => {
+  const th = button.closest('th');
+  const dropdown = th.querySelector('.filter-dropdown');
+  button.addEventListener('click', () => {
+    dropdown.classList.toggle('active');
+    button.classList.toggle('active');
+  });
+});
+
