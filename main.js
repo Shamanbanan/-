@@ -257,7 +257,6 @@ function saveRequestDatabase() {
   // Получаем данные из формы
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
-  const statusRequest = document.getElementById("status-request").value;
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
@@ -344,6 +343,7 @@ requestNumber = maxRequestNumber + 1;
     const requestData = snapshot.val()[requestKey];
 
     const newRow = document.createElement("tr");
+    newRow.setAttribute("data-key", requestKey);
     newRow.innerHTML = `
       <td class="id-cell">${requestData.number}</td>
         <td class="number-cell">${requestKey}</td>
@@ -351,6 +351,7 @@ requestNumber = maxRequestNumber + 1;
         <td class="in-cell">${requestData.initiator}</td>
         <td class="executive-cell">${requestData.executive}</td>
         <td class="status-cell">${requestData.statusRequest}</td>
+        <td class="completion-date-cell">${requestData.completionDate || ""}</td>
           <td class="button-cell">
           <button class="edit-request-button">Редактировать</button>
         </td>
@@ -425,6 +426,17 @@ saveChangesBtn.addEventListener("click", () => {
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
   const statusRequest = document.getElementById("status-request").value;
+  const currentCompletionDate = document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`).textContent || null;
+
+
+  let completionDate;
+  if (statusRequest === "Выполнена" && !currentCompletionDate) {
+    completionDate = new Date().toLocaleString();
+  } else if (statusRequest !== "Выполнена") {
+    completionDate = null;
+  } else {
+    completionDate = currentCompletionDate;
+  }
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
@@ -461,7 +473,8 @@ saveChangesBtn.addEventListener("click", () => {
       initiator: initiator,
       executive: executive,
       statusRequest: statusRequest,
-      items: requestData
+      items: requestData,
+      completionDate: completionDate
     },
     (error) => {
       if (error) {
@@ -584,6 +597,7 @@ function downloadExcel() {
     "Инициатор",
     "Ответственный",
     "Статус заявки",
+    "Дата выполнения",
     "Индекс",
     "Категория",
     "Наименование",
@@ -614,6 +628,7 @@ function downloadExcel() {
             requestData.initiator,
             requestData.executive,
             requestData.statusRequest,
+            requestData.completionDate,
             itemData.rowIndexRow,
             itemData.category,
             itemData.name,
@@ -660,8 +675,9 @@ const dateColIndex = 2;
 const initiatorColIndex = 3;
 const executiveColIndex = 4;
 const statusColIndex = 5;
-const buttonColIndex = 6;
-const button2ColIndex = 7;
+const datestatusColIndex = 6;
+const buttonColIndex = 7;
+const button2ColIndex = 8;
 
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
