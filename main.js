@@ -68,27 +68,107 @@ closeBtn.addEventListener("click", () => {
     closeModal();
   }
 });
+
+function setFieldError(field, message) {
+  field.setCustomValidity(message);
+  field.reportValidity();
+}
+
 function addNomenklatureTable(event) {
   event.preventDefault();
-  // const form = document.forms.formRequest;
   const categoryField = formRequest.elements.category;
   const nameField = formRequest.elements.name;
   const variationField = formRequest.elements.variation;
   const countField = formRequest.elements["input-count"];
+  const typeField = formRequest.elements.type;
   const name = nameField.value.trim();
   const variation = variationField.value.trim();
   const count = countField.value.trim();
+  const category = categoryField.value;
 
-  if (!name || !variation || !count || !categoryField) {
-    [nameField, variationField, countField, categoryField].forEach((field) => {
-      if (!field.value.trim()) {
-        field.setCustomValidity("Введите значение");
-        field.reportValidity();
-      }
-    });
-    return;
+  const allowedCategories = [
+    "Осн. материалы",
+    "Всп. материалы",
+    "Аксессуары",
+    "ГСМ",
+    "Запасные части",
+    "Стройматериалы",
+    "Инвентарь",
+    "Инструменты",
+    "Образцы",
+    "Спецодежда",
+  ];
+
+  const allowedUnits = [
+    "шт.",
+    "м",
+    "пог.м",
+    "кв.м",
+    "м3",
+    "л",
+    "кг",
+    "т",
+    "упак.",
+  ];
+
+  const forbiddenSymbols = ["\\", ":", "?", "<", ">", "|", "\""];
+
+  const isValidName = (name) => {
+    return !forbiddenSymbols.some((symbol) => name.includes(symbol)) &&
+      !name.startsWith(" ") &&
+      !name.endsWith(" ") &&
+      !name.includes("  ")
+  };
+
+  const isValidUnit = (unit) => {
+    return allowedUnits.includes(unit);
+  };
+
+  let hasError = false;
+
+  if (!name) {
+    setFieldError(nameField, "Введите имя");
+    hasError = true;
+  } else if (!isValidName(name)) {
+    setFieldError(nameField, "Имя содержит недопустимые символы, сокращения или пробелы : \\ ? < > | \ ");
+    hasError = true;
+  } else {
+    nameField.setCustomValidity("");
   }
 
+  if (!variation) {
+    setFieldError(variationField, "Введите вариант исполнения");
+    hasError = true;
+  } else {
+    variationField.setCustomValidity("");
+  }
+
+  if (!count) {
+    setFieldError(countField, "Введите количество");
+    hasError = true;
+  } else {
+    countField.setCustomValidity("");
+  }
+  if (!categoryField.value) {
+    setFieldError(categoryField, "Выберите категорию");
+    hasError = true;
+  } else if (categoryField.value === "Запасные части" && !formRequest.elements.equipment.value) {
+    setFieldError(categoryField, "Укажите оборудование для категории 'Запасные части'");
+    hasError = true;
+  } else {
+    categoryField.setCustomValidity("");
+  }
+
+  if (!isValidUnit(typeField.value)) {
+    setFieldError(typeField, "Выберите допустимую единицу измерения");
+    hasError = true;
+  } else {
+    typeField.setCustomValidity("");
+  }
+
+  if (hasError) {
+    return;
+  }
   const rowIndex = listTableRequest.rows.length;
   const itemRequest = `
       <tr class="item-request">
@@ -487,8 +567,9 @@ document.addEventListener("click", (e) => {
     autocompleteList.innerHTML = "";
   }
 });
-
 variationInput.addEventListener("input", () => (codeInput.value = ""));
+nameInput.addEventListener("input", () => (codeInput.value = ""));
+
 
 
 //СКАЧИВАНИЕ
