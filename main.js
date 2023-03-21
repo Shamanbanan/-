@@ -2,11 +2,12 @@
 // const firebaseConfig = {
 //   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
 //   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL: "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+//   databaseURL:
+//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
 //   projectId: "test-8729c",
 //   storageBucket: "test-8729c.appspot.com",
 //   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222"
+//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
 // };
 
 // Инициализация Firebase Рабочая
@@ -19,7 +20,6 @@ const firebaseConfig = {
   messagingSenderId: "729807329689",
   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
 };
-
 
 firebase.initializeApp(firebaseConfig);
 
@@ -37,6 +37,9 @@ const saveChangesBtn = document.getElementById("save-change-btn");
 const table = document.getElementById("table-body");
 const modalFooter = document.querySelector(".modal-footer");
 const selectStatusRequest = document.querySelector(".status-block");
+const initiator = document.getElementById("initiator");
+const executive = document.getElementById("executive-id");
+
 // функция для открытия модального окна
 function openModal() {
   modal.classList.remove("hidden");
@@ -111,13 +114,30 @@ function addNomenklatureTable(event) {
     "упак.",
   ];
 
-  const forbiddenSymbols = ["\\", ":", "?", "<", ">", "|", "\"", "%","&","@",";","#","!","№"];
+  const forbiddenSymbols = [
+    "\\",
+    ":",
+    "?",
+    "<",
+    ">",
+    "|",
+    '"',
+    "%",
+    "&",
+    "@",
+    ";",
+    "#",
+    "!",
+    "№",
+  ];
 
   const isValidName = (name) => {
-    return !forbiddenSymbols.some((symbol) => name.includes(symbol)) &&
+    return (
+      !forbiddenSymbols.some((symbol) => name.includes(symbol)) &&
       !name.startsWith(" ") &&
       !name.endsWith(" ") &&
       !name.includes("  ")
+    );
   };
 
   const isValidUnit = (unit) => {
@@ -130,7 +150,10 @@ function addNomenklatureTable(event) {
     setFieldError(nameField, "Введите имя");
     hasError = true;
   } else if (!isValidName(name)) {
-    setFieldError(nameField, "Имя содержит недопустимые символы, сокращения или пробелы : \\ ? < > | \ ");
+    setFieldError(
+      nameField,
+      "Имя содержит недопустимые символы, сокращения или пробелы : \\ ? < > |  "
+    );
     hasError = true;
   } else {
     nameField.setCustomValidity("");
@@ -152,8 +175,14 @@ function addNomenklatureTable(event) {
   if (!categoryField.value) {
     setFieldError(categoryField, "Выберите категорию");
     hasError = true;
-  } else if (categoryField.value === "Запасные части" && !formRequest.elements.equipment.value) {
-    setFieldError(categoryField, "Укажите оборудование для категории 'Запасные части'");
+  } else if (
+    categoryField.value === "Запасные части" &&
+    !formRequest.elements.equipment.value
+  ) {
+    setFieldError(
+      categoryField,
+      "Укажите оборудование для категории 'Запасные части'"
+    );
     hasError = true;
   } else {
     categoryField.setCustomValidity("");
@@ -200,10 +229,8 @@ const makeCellEditable = (cell, color) => {
   cell.contentEditable = true;
   cell.style.backgroundColor = color;
   cell.addEventListener("input", () => {
-    cell.textContent = cell.textContent.replace(/<[^>]+>/g , "");
-
+    cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
   });
-  
 };
 
 // Обработчики событий
@@ -252,6 +279,7 @@ listTableRequest.addEventListener("click", (event) => {
 });
 
 let requestNumber = null; //Переменная для номера заявки
+
 // функция сохранения в базу данных
 function saveRequestDatabase() {
   // Получаем данные из формы
@@ -260,7 +288,7 @@ function saveRequestDatabase() {
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
-    var fieldinitiator = document.getElementById("initiator");
+    const fieldinitiator = document.getElementById("initiator");
     fieldinitiator.setCustomValidity("Заполните фамилию Инициатора");
     fieldinitiator.reportValidity();
     return;
@@ -282,7 +310,7 @@ function saveRequestDatabase() {
       code: row.querySelector(".code-cell").textContent,
       comment: row.querySelector(".comment-cell").textContent,
       statusNom: row.querySelector(".status-nom-cell").textContent,
-      count: row.querySelector(".count-cell").textContent
+      count: row.querySelector(".count-cell").textContent,
     };
     requestData.push(data);
   });
@@ -304,9 +332,9 @@ function saveRequestDatabase() {
       number: requestNumber,
       initiator: initiator,
       executive: executive,
-      statusRequest: statusRequest,
+      statusRequest: "Новая",
       date: new Date().toLocaleString(),
-      items: requestData
+      items: requestData,
     };
 
     // Запись в Firebase Realtime Database
@@ -333,11 +361,14 @@ const requestsRef = database.ref("requests");
 
 requestsRef.on("value", (snapshot) => {
   table.innerHTML = "";
- // Находим номер самой большой заявки
-const maxRequestNumber = Object.values(snapshot.val()).reduce((max, request) => Math.max(max, request.number), 0);
+  // Находим номер самой большой заявки
+  const maxRequestNumber = Object.values(snapshot.val()).reduce(
+    (max, request) => Math.max(max, request.number),
+    0
+  );
 
-// Устанавливаем начальное значение номера заявки
-requestNumber = maxRequestNumber + 1;
+  // Устанавливаем начальное значение номера заявки
+  requestNumber = maxRequestNumber + 1;
 
   for (const requestKey in snapshot.val()) {
     const requestData = snapshot.val()[requestKey];
@@ -347,19 +378,23 @@ requestNumber = maxRequestNumber + 1;
     newRow.innerHTML = `
       <td class="id-cell">${requestData.number}</td>
         <td class="number-cell">${requestKey}</td>
-        <td class="date-cell" value="${requestData.date}">${requestData.date}</td>
+        <td class="date-cell" value="${requestData.date}">${
+      requestData.date
+    }</td>
         <td class="in-cell">${requestData.initiator}</td>
         <td class="executive-cell">${requestData.executive}</td>
         <td class="status-cell">${requestData.statusRequest}</td>
-        <td class="completion-date-cell">${requestData.completionDate || ""}</td>
+        <td class="completion-date-cell">${
+          requestData.completionDate || ""
+        }</td>
           <td class="button-cell">
           <button class="edit-request-button">Редактировать</button>
         </td>
         <td class="button-cell">
         <button class="btn-delete">Удалить</button></td>
       `;
-      table.insertBefore(newRow, table.firstChild);
-    var deleteButton = newRow.querySelector(".btn-delete");
+    table.insertBefore(newRow, table.firstChild);
+    const deleteButton = newRow.querySelector(".btn-delete");
     const editRequestButton = newRow.querySelector(".edit-request-button");
 
     deleteButton.addEventListener("click", () => {
@@ -426,8 +461,9 @@ saveChangesBtn.addEventListener("click", () => {
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
   const statusRequest = document.getElementById("status-request").value;
-  const currentCompletionDate = document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`).textContent || null;
-
+  const currentCompletionDate =
+    document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`)
+      .textContent || null;
 
   let completionDate;
   if (statusRequest === "Выполнена" && !currentCompletionDate) {
@@ -440,7 +476,7 @@ saveChangesBtn.addEventListener("click", () => {
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
-    var fieldinitiator = document.getElementById("initiator");
+    const fieldinitiator = document.getElementById("initiator");
     fieldinitiator.setCustomValidity("Заполните фамилию Инициатора");
     fieldinitiator.reportValidity();
     return;
@@ -462,7 +498,7 @@ saveChangesBtn.addEventListener("click", () => {
       code: row.querySelector(".code-cell").textContent,
       comment: row.querySelector(".comment-cell").textContent,
       statusNom: row.querySelector(".status-nom-cell").textContent,
-      count: row.querySelector(".count-cell").textContent
+      count: row.querySelector(".count-cell").textContent,
     };
     requestData.push(data);
   });
@@ -474,7 +510,7 @@ saveChangesBtn.addEventListener("click", () => {
       executive: executive,
       statusRequest: statusRequest,
       items: requestData,
-      completionDate: completionDate
+      completionDate: completionDate,
     },
     (error) => {
       if (error) {
@@ -495,81 +531,121 @@ const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
-const fuseOptions = {
-  keys: ["name", "variation", "code"],
-  includeScore: true,
-  threshold: 0.7
-};
-
 let items = [];
 let requests = [];
+let miniSearch;
 
-Promise.all([itemsRef.once("value"), requestsRef.once("value")]).then(
-  ([itemsSnapshot, requestsSnapshot]) => {
-    items = itemsSnapshot.val()
-      ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
-          id,
-          ...item
-        }))
-      : [];
+// Load data from firebase
+async function loadData() {
+  const [itemsSnapshot, requestsSnapshot] = await Promise.all([
+    itemsRef.once("value"),
+    requestsRef.once("value"),
+  ]);
 
-    requests = requestsSnapshot.val()
-      ? Object.entries(requestsSnapshot.val())
-          .map(([id, request]) =>
-            request.items
-              ? request.items.map((item) => ({ ...item, requestId: id }))
-              : []
-          )
-          .flat()
-      : [];
-  }
-);
+  items = itemsSnapshot.val()
+    ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
+        id,
+        ...item,
+      }))
+    : [];
 
-const search = (searchTerm) => {
+  requests = requestsSnapshot.val()
+    ? Object.entries(requestsSnapshot.val())
+        .map(([id, request]) =>
+          request.items
+            ? request.items.map((item) => ({ ...item, requestId: id }))
+            : []
+        )
+        .flat()
+    : [];
+
+    miniSearch = new MiniSearch({
+      fields: ["name", "variation", "code"],
+      idField: "id",
+      storeFields: ["name", "variation", "code"],
+    });
+    
+
+    const allItems = [...items, ...requests.filter((item) => item.code)].map((item, index) => {
+      return {
+        ...item,
+        id: index + 1, // create unique ID for each item
+      };
+    });
+    
+  miniSearch.addAll(allItems);
+}
+
+loadData();
+
+// Search and update UI
+function search(searchTerm) {
   if (!searchTerm) {
     autocompleteList.innerHTML = "";
     return;
   }
 
-  const allItems = [...items, ...requests.filter((item) => item.code)];
-  const fuse = new Fuse(allItems, fuseOptions);
-  const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 12);
+  // Check if miniSearch is initialized before searching
+  if (miniSearch) {
+    const results = miniSearch.search(searchTerm, {
+      prefix: true,
+      boost: { name: 2, variation: 1 },
+      termFrequency: false,
+      prefix: true,
+    }).slice(0, 10);
+    
+    updateAutocompleteList(results);
+  }
+}
 
+
+// Update the autocomplete list based on search results
+function updateAutocompleteList(results) {
   const fragment = document.createDocumentFragment();
   const uniqueItems = new Set();
 
   if (!results.length) {
-    const noResultsEl = document.createElement("div");
-    noResultsEl.classList.add("autocomplete-item");
-    noResultsEl.innerText = "Нет результатов";
-    fragment.appendChild(noResultsEl);
+    createNoResultsElement(fragment);
   } else {
-    results.forEach(({ item }) => {
-      const { name, variation, code } = item || {};
-      const itemKey = `${name}-${variation}-${code}`;
-      if (uniqueItems.has(itemKey)) {
-        return; // skip duplicates
-      }
-      uniqueItems.add(itemKey); // add unique item to Set
-      const el = document.createElement("div");
-      el.classList.add("autocomplete-item");
-      el.innerText = `${name}\n ВИ: ${variation}  Код: (${code})`;
-      el.addEventListener("click", () => {
-        nameInput.value = name;
-        variationInput.value = variation;
-        codeInput.value = code;
-        autocompleteList.innerHTML = "";
-      });
-      fragment.appendChild(el);
-    });
+    createAutocompleteItems(results, uniqueItems, fragment);
   }
 
   autocompleteList.innerHTML = "";
   autocompleteList.appendChild(fragment);
-};
+}
+
+function createNoResultsElement(fragment) {
+  const noResultsEl = document.createElement("div");
+  noResultsEl.classList.add("autocomplete-item");
+  noResultsEl.innerText = "Нет результатов";
+  fragment.appendChild(noResultsEl);
+}
+
+function createAutocompleteItems(results, uniqueItems, fragment) {
+  results.forEach((item) => {
+    const { name, variation, code } = item || {};
+    const itemKey = `${name}-${variation}-${code}`;
+    if (uniqueItems.has(itemKey)) {
+      return; // skip duplicates
+    }
+    uniqueItems.add(itemKey); // add unique item to Set
+
+    const el = document.createElement("div");
+    el.classList.add("autocomplete-item");
+    el.innerText = `${name}\n ВИ: ${variation}  Код: (${code})`;
+    el.addEventListener("click", () => {
+      nameInput.value = name;
+      variationInput.value = variation;
+      codeInput.value = code;
+      autocompleteList.innerHTML = "";
+    });
+    fragment.appendChild(el);
+  });
+}
 
 let searchTimeout;
 
+// Event listeners
 nameInput.addEventListener("input", (e) => {
   clearTimeout(searchTimeout);
   searchTimeout = setTimeout(() => search(e.target.value), 200);
@@ -580,11 +656,9 @@ document.addEventListener("click", (e) => {
     autocompleteList.innerHTML = "";
   }
 });
+
 variationInput.addEventListener("input", () => (codeInput.value = ""));
 nameInput.addEventListener("input", () => (codeInput.value = ""));
-
-
-
 //СКАЧИВАНИЕ
 function downloadExcel() {
   const workbook = new ExcelJS.Workbook();
@@ -609,7 +683,7 @@ function downloadExcel() {
     "Код",
     "комментарий",
     "Статус, дата",
-    "Кол-во"
+    "Кол-во",
   ]);
 
   // Get data from Firebase Realtime Database
@@ -620,7 +694,8 @@ function downloadExcel() {
     // Add data rows for each request and its items
     Object.keys(requests).forEach((requestKey) => {
       const requestData = requests[requestKey];
-      if (requestData && requestData.items) { // Добавляем проверку
+      if (requestData && requestData.items) {
+        // Добавляем проверку
         requestData.items.forEach((itemData) => {
           sheet.addRow([
             requestData.number,
@@ -640,18 +715,16 @@ function downloadExcel() {
             itemData.code,
             itemData.comment,
             itemData.statusNom,
-            itemData.count
+            itemData.count,
           ]);
         });
       }
     });
-    
 
     // Download file
     workbook.xlsx.writeBuffer().then((buffer) => {
       const blob = new Blob([buffer], {
-        type:
-          "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
@@ -682,8 +755,8 @@ const button2ColIndex = 8;
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
   const filter = event.target.value.toUpperCase();
-  const dropdown = event.target.closest('.filter-dropdown');
-  const th = dropdown.closest('th');
+  const dropdown = event.target.closest(".filter-dropdown");
+  const th = dropdown.closest("th");
   const colIndex = Array.from(th.parentNode.children).indexOf(th);
   const rows = document.querySelectorAll(".table-request tbody tr");
 
@@ -703,19 +776,20 @@ function filterTable(event) {
 }
 
 // Назначаем обработчики событий на элементы фильтрации
-const filters = document.querySelectorAll(".filter-row input, .filter-row select");
+const filters = document.querySelectorAll(
+  ".filter-row input, .filter-row select"
+);
 for (let i = 0; i < filters.length; i++) {
   filters[i].addEventListener("input", filterTable);
 }
 
-const toggleButtons = document.querySelectorAll('.toggle-filter-button');
+const toggleButtons = document.querySelectorAll(".toggle-filter-button");
 
-toggleButtons.forEach(button => {
-  const th = button.closest('th');
-  const dropdown = th.querySelector('.filter-dropdown');
-  button.addEventListener('click', () => {
-    dropdown.classList.toggle('active');
-    button.classList.toggle('active');
+toggleButtons.forEach((button) => {
+  const th = button.closest("th");
+  const dropdown = th.querySelector(".filter-dropdown");
+  button.addEventListener("click", () => {
+    dropdown.classList.toggle("active");
+    button.classList.toggle("active");
   });
 });
-
