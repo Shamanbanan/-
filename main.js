@@ -1,13 +1,24 @@
-// Инициализация Firebase
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL: "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222"
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 
 firebase.initializeApp(firebaseConfig);
@@ -60,6 +71,7 @@ closeBtn.addEventListener("click", () => {
 function addNomenklatureTable(event) {
   event.preventDefault();
   // const form = document.forms.formRequest;
+  const categoryField = formRequest.elements.category;
   const nameField = formRequest.elements.name;
   const variationField = formRequest.elements.variation;
   const countField = formRequest.elements["input-count"];
@@ -67,8 +79,8 @@ function addNomenklatureTable(event) {
   const variation = variationField.value.trim();
   const count = countField.value.trim();
 
-  if (!name || !variation || !count) {
-    [nameField, variationField, countField].forEach((field) => {
+  if (!name || !variation || !count || !categoryField) {
+    [nameField, variationField, countField, categoryField].forEach((field) => {
       if (!field.value.trim()) {
         field.setCustomValidity("Введите значение");
         field.reportValidity();
@@ -108,7 +120,7 @@ const makeCellEditable = (cell, color) => {
   cell.contentEditable = true;
   cell.style.backgroundColor = color;
   cell.addEventListener("input", () => {
-    cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
+    cell.textContent = cell.textContent.replace(/<[^>]+>/g , "");
 
   });
   
@@ -144,7 +156,6 @@ listTableRequest.addEventListener("click", (event) => {
 
       item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
         cell.contentEditable = false;
-        const cellText = cell.textContent;
         cell.style.backgroundColor = "transparent";
       });
 
@@ -394,7 +405,7 @@ const autocompleteList = document.getElementById("autocompleteList");
 const fuseOptions = {
   keys: ["name", "variation", "code"],
   includeScore: true,
-  threshold: 0.5
+  threshold: 0.7
 };
 
 let items = [];
@@ -429,7 +440,7 @@ const search = (searchTerm) => {
 
   const allItems = [...items, ...requests.filter((item) => item.code)];
   const fuse = new Fuse(allItems, fuseOptions);
-  const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 10);
+  const results = fuse.search(searchTerm.toLowerCase().trim()).slice(0, 12);
 
   const fragment = document.createDocumentFragment();
   const uniqueItems = new Set();
