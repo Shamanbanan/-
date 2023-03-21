@@ -111,7 +111,7 @@ function addNomenklatureTable(event) {
     "упак.",
   ];
 
-  const forbiddenSymbols = ["\\", ":", "?", "<", ">", "|", "\""];
+  const forbiddenSymbols = ["\\", ":", "?", "<", ">", "|", "\"", "%","&","@",";","#","!","№"];
 
   const isValidName = (name) => {
     return !forbiddenSymbols.some((symbol) => name.includes(symbol)) &&
