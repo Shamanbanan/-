@@ -152,7 +152,7 @@ function addNomenklatureTable(event) {
   } else if (!isValidName(name)) {
     setFieldError(
       nameField,
-      "Имя содержит недопустимые символы, сокращения или пробелы : \\ ? < > |  "
+      "Имя содержит недопустимые символы, сокращения или пробелы :\n \\ ? < > |  "
     );
     hasError = true;
   } else {
@@ -337,22 +337,43 @@ function saveRequestDatabase() {
       items: requestData,
     };
 
-    // Запись в Firebase Realtime Database
-    database.ref("requests").push(request, (error) => {
-      if (error) {
-        console.error("Ошибка записи в базу данных: ", error);
-      } else {
-        console.log("Успешная запись в базу данных");
+// Создать элемент для отображения сообщения об успешной записи
+const messageDiv = document.createElement("div");
+messageDiv.id = "message";
+document.body.appendChild(messageDiv);
 
-        // Очистить модальное окно
-        listTableRequest.innerHTML = "";
-        formRequest.reset();
-        form.reset();
-        modal.classList.add("hidden");
-      }
-    });
+// Запись в Firebase Realtime Database
+database.ref("requests").push(request, (error) => {
+  if (error) {
+    console.error("Ошибка записи в базу данных: ", error);
+  } else {
+    console.log("Успешная запись в базу данных");
+
+    // Отобразить сообщение об успешной записи
+    const message = "Данные успешно сохранены в базу данных № " + request.number;
+    messageDiv.innerHTML = message;
+    messageDiv.classList.add("success-message", "visible");
+
+    // Скрыть сообщение через 2 секунды
+    setTimeout(() => {
+      messageDiv.classList.remove("visible");
+      setTimeout(() => {
+        messageDiv.remove();
+      }, 1000); // убрать элемент после скрытия анимации
+    }, 2000);
+
+    // Очистить модальное окно
+    listTableRequest.innerHTML = "";
+    formRequest.reset();
+    form.reset();
+    modal.classList.add("hidden");
+  }
+});
+
   }
 }
+
+
 
 //Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);

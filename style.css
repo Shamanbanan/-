@@ -329,3 +329,21 @@ font-size: calc(11px + (12 - 11) * ((100vw - 320px) / (1320 - 320)));
 .toggle-filter-button.active {
   fill: var(--color-primary);
 }
+.success-message {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: var(--color-edit);
+  color: white;
+  font-size: 1.2em;
+  padding: 0.5em;
+  text-align: center;
+  z-index: 9999;
+  display: none;
+  transition: all 0.3s;
+}
+.success-message.visible {
+  display: block;
+  transition: all 0.3s easy;
+}
