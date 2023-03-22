@@ -742,35 +742,55 @@ const downloadButton = document.getElementById("download-button");
 downloadButton.addEventListener("click", downloadExcel);
 
 // Определяем индексы столбцов
-const numberColIndex = 0;
-const linkColIndex = 1;
-const dateColIndex = 2;
-const initiatorColIndex = 3;
-const executiveColIndex = 4;
-const statusColIndex = 5;
-const datestatusColIndex = 6;
-const buttonColIndex = 7;
-const button2ColIndex = 8;
+const columnIndices = {
+  number: 0,
+  link: 1,
+  date: 2,
+  initiator: 3,
+  executive: 4,
+  status: 5,
+  datestatus: 6,
+  button: 7,
+  button2: 8,
+};
 
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
-  const filter = event.target.value.toUpperCase();
-  const dropdown = event.target.closest(".filter-dropdown");
-  const th = dropdown.closest("th");
-  const colIndex = Array.from(th.parentNode.children).indexOf(th);
+  const filters = {};
+
+  // Получаем все фильтры
+  document.querySelectorAll(".filter-row input, .filter-row select").forEach((filter) => {
+    const th = filter.closest("th");
+    const colIndex = Array.from(th.parentNode.children).indexOf(th);
+    filters[colIndex] = filter.value.toUpperCase();
+  });
+
   const rows = document.querySelectorAll(".table-request tbody tr");
 
   for (let i = 0; i < rows.length; i++) {
     const row = rows[i];
     const cells = row.getElementsByTagName("td");
-    const cell = cells[colIndex];
-    if (cell) {
-      const text = cell.textContent.toUpperCase();
-      if (text.indexOf(filter) > -1) {
-        row.style.display = "";
-      } else {
-        row.style.display = "none";
+    let rowMatchesAllFilters = true;
+
+    for (const colIndex in filters) {
+      if (filters.hasOwnProperty(colIndex)) {
+        const filter = filters[colIndex];
+        const cell = cells[colIndex];
+
+        if (cell) {
+          const text = cell.textContent.toUpperCase();
+          if (text.indexOf(filter) === -1) {
+            rowMatchesAllFilters = false;
+            break;
+          }
+        }
       }
+    }
+
+    if (rowMatchesAllFilters) {
+      row.style.display = "";
+    } else {
+      row.style.display = "none";
     }
   }
 }
@@ -788,8 +808,16 @@ const toggleButtons = document.querySelectorAll(".toggle-filter-button");
 toggleButtons.forEach((button) => {
   const th = button.closest("th");
   const dropdown = th.querySelector(".filter-dropdown");
+  const filterInput = dropdown.querySelector("input, select");
+  
   button.addEventListener("click", () => {
     dropdown.classList.toggle("active");
     button.classList.toggle("active");
+
+    if (!dropdown.classList.contains("active")) {
+      filterInput.value = "";
+      filterTable(); // Вызываем функцию filterTable, чтобы обновить таблицу после очистки фильтра
+    }
   });
 });
+
