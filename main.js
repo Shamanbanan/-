@@ -350,7 +350,7 @@ database.ref("requests").push(request, (error) => {
     console.log("Успешная запись в базу данных");
 
     // Отобразить сообщение об успешной записи
-    const message = "Данные успешно сохранены в базу данных № " + request.number;
+    const message = "Данные успешно сохранены заявка № " + request.number;
     messageDiv.innerHTML = message;
     messageDiv.classList.add("success-message", "visible");
 
