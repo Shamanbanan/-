@@ -1,25 +1,25 @@
-// //тестовая база
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
-// };
-
-// Инициализация Firebase Рабочая
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 firebase.initializeApp(firebaseConfig);
 
@@ -427,9 +427,16 @@ requestsRef.on("value", (snapshot) => {
     editRequestButton.addEventListener("click", () => {
       form.reset();
       formRequest.reset();
+      
       selectStatusRequest.style.display = "block";
       const requestRef = database.ref("requests/" + requestKey);
 
+      if (requestData.statusRequest === "Выполнена") {
+        saveChangesBtn.disabled = true;
+      } else {
+        saveChangesBtn.disabled = false;
+      }
+      
       requestRef.once("value", (snapshot) => {
         const requestData = snapshot.val();
 
@@ -472,6 +479,13 @@ requestsRef.on("value", (snapshot) => {
       saveRequestBtn.classList.add("hidden");
       saveChangesBtn.setAttribute("data-request-key", requestKey);
     });
+    // document.getElementById("status-request").addEventListener("input", () => {
+    //   if (document.getElementById("status-request").value === "Выполнена") {
+    //     saveChangesBtn.disabled = true;
+    //   } else {
+    //     saveChangesBtn.disabled = false;
+    //   }
+    // });
   }
 });
 saveChangesBtn.addEventListener("click", () => {
@@ -538,6 +552,24 @@ saveChangesBtn.addEventListener("click", () => {
         console.error("Ошибка записи в базу данных: ", error);
       } else {
         console.log("Успешное обновление данных заявки");
+        // Создать элемент для отображения сообщения об успешном обновлении данных заявки
+const messageDiv = document.createElement("div");
+messageDiv.id = "message";
+document.body.appendChild(messageDiv);
+
+// Отобразить сообщение об успешном обновлении данных заявки
+const message = "Данные заявки № " + requestNumber + " успешно обновлены";
+messageDiv.innerHTML = message;
+messageDiv.classList.add("success-message", "visible");
+
+// Скрыть сообщение через 2 секунды
+setTimeout(() => {
+  messageDiv.classList.remove("visible");
+  setTimeout(() => {
+    messageDiv.remove();
+  }, 1000); // убрать элемент после скрытия анимации
+}, 2000);
+
         modal.classList.add("hidden");
         saveChangesBtn.classList.add("hidden");
         saveRequestBtn.classList.remove("hidden");
