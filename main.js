@@ -129,7 +129,7 @@ function addNomenklatureTable(event) {
     "#",
     "!",
     "№",
-    "*",
+    "*"
   ];
 
   const isValidName = (name) => {
