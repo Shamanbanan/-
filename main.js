@@ -479,13 +479,13 @@ requestsRef.on("value", (snapshot) => {
       saveRequestBtn.classList.add("hidden");
       saveChangesBtn.setAttribute("data-request-key", requestKey);
     });
-    // document.getElementById("status-request").addEventListener("input", () => {
-    //   if (document.getElementById("status-request").value === "Выполнена") {
-    //     saveChangesBtn.disabled = true;
-    //   } else {
-    //     saveChangesBtn.disabled = false;
-    //   }
-    // });
+    document.getElementById("status-request").addEventListener("input", () => {
+      if (document.getElementById("status-request").value === "Выполнена") {
+        saveChangesBtn.disabled = true;
+      } else {
+        saveChangesBtn.disabled = false;
+      }
+    });
   }
 });
 saveChangesBtn.addEventListener("click", () => {
