@@ -129,6 +129,7 @@ function addNomenklatureTable(event) {
     "#",
     "!",
     "№",
+    "*",
   ];
 
   const isValidName = (name) => {
@@ -152,7 +153,7 @@ function addNomenklatureTable(event) {
   } else if (!isValidName(name)) {
     setFieldError(
       nameField,
-      "Имя содержит недопустимые символы, сокращения или пробелы :\n \\ ? < > |  "
+      "Имя содержит недопустимые символы, сокращения или пробелы: \n \\ ? < > | * # № @ & \" ! : %"
     );
     hasError = true;
   } else {
