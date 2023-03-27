@@ -558,7 +558,7 @@ messageDiv.id = "message";
 document.body.appendChild(messageDiv);
 
 // Отобразить сообщение об успешном обновлении данных заявки
-const message = "Данные заявки № " + requestNumber + " успешно обновлены";
+const message = "Данные заявки успешно обновлены";
 messageDiv.innerHTML = message;
 messageDiv.classList.add("success-message", "visible");
 
