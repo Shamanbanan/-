@@ -431,11 +431,11 @@ requestsRef.on("value", (snapshot) => {
       selectStatusRequest.style.display = "block";
       const requestRef = database.ref("requests/" + requestKey);
 
-      if (requestData.statusRequest === "Выполнена") {
-        saveChangesBtn.disabled = true;
-      } else {
-        saveChangesBtn.disabled = false;
-      }
+      // if (requestData.statusRequest === "Выполнена") {
+      //   saveChangesBtn.disabled = true;
+      // } else {
+      //   saveChangesBtn.disabled = false;
+      // }
       
       requestRef.once("value", (snapshot) => {
         const requestData = snapshot.val();
@@ -479,13 +479,13 @@ requestsRef.on("value", (snapshot) => {
       saveRequestBtn.classList.add("hidden");
       saveChangesBtn.setAttribute("data-request-key", requestKey);
     });
-    document.getElementById("status-request").addEventListener("input", () => {
-      if (document.getElementById("status-request").value === "Выполнена") {
-        saveChangesBtn.disabled = true;
-      } else {
-        saveChangesBtn.disabled = false;
-      }
-    });
+    // document.getElementById("status-request").addEventListener("input", () => {
+    //   if (document.getElementById("status-request").value === "Выполнена") {
+    //     saveChangesBtn.disabled = true;
+    //   } else {
+    //     saveChangesBtn.disabled = false;
+    //   }
+    // });
   }
 });
 saveChangesBtn.addEventListener("click", () => {
