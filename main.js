@@ -640,10 +640,10 @@ function search(searchTerm) {
 
   // Check if miniSearch is initialized before searching
   const results = miniSearch.search(searchTerm, {
-    prefix: false,
+    prefix: true,
     boost: { name: 2, variation: 1 },
     termFrequency: false,
-    fuzzy: 0.5 // добавляем нечеткое совпадение с уровнем нечеткости 0.5 (от 0 до 1)
+    fuzzy: 0.3 // добавляем нечеткое совпадение с уровнем нечеткости 0.5 (от 0 до 1)
   }).slice(0, 10);
   
     
