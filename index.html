@@ -89,11 +89,11 @@
       <h3>Заявка №<span id="request-number"></span></h3>
       <form id="form" action="" method="">
         <div class="field-container">
-        <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор">
+        <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор" onkeyup="capitalizeFirstLetter(this)">
         <label class="text-field-label" for="initiator">Инициатор</label>
       </div>
       <div class="field-container">
-        <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель">
+        <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель" onkeyup="capitalizeFirstLetter(this)">
         <label class="text-field-label" for="executive-id">Исполнитель</label>
       </div>
       <div class="field-container status-block">
@@ -124,7 +124,7 @@
         </select>
       </div>
         <div class="field-container">
-          <input class="text-field-input" type="text" id="name" autocomplete="off" placeholder="Наименование" required>
+          <input class="text-field-input" type="text" id="name" autocomplete="off" placeholder="Наименование" onkeyup="capitalizeFirstLetter(this)" required>
           <label class="text-field-label" for="variation">Наименование</label>
           <div id="autocompleteList"></div>
         </div>
@@ -149,7 +149,7 @@
         </select>
       </div>
       <div class="field-container">
-          <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" required>
+          <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" onkeyup="capitalizeFirstLetter(this)" required>
           <label class="text-field-label" for="equipment">Оборудование</label>
         </div>
         <div class="field-container">

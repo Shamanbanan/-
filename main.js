@@ -308,11 +308,12 @@ function saveRequestDatabase() {
       equipment: row.querySelector(".equipment-cell").textContent,
       article: row.querySelector(".article-cell").textContent,
       brand: row.querySelector(".brand-cell").textContent,
-      code: row.querySelector(".code-cell").textContent,
+      code: row.querySelector(".code-cell").textContent.trim().replace(/\s/g, ""),
       comment: row.querySelector(".comment-cell").textContent,
       statusNom: row.querySelector(".status-nom-cell").textContent,
       count: row.querySelector(".count-cell").textContent,
     };
+
     requestData.push(data);
   });
 
@@ -463,7 +464,7 @@ requestsRef.on("value", (snapshot) => {
               <td class="equipment-cell">${itemData.equipment}</td>
               <td class="article-cell">${itemData.article}</td>
               <td class="brand-cell">${itemData.brand}</td>
-              <td class="code-cell">${itemData.code}</td>
+              <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
               <td class="comment-cell">${itemData.comment}</td>
               <td class="status-nom-cell">${itemData.statusNom}</td>
               <td class="count-cell">${itemData.count}</td>
@@ -531,7 +532,7 @@ saveChangesBtn.addEventListener("click", () => {
       equipment: row.querySelector(".equipment-cell").textContent,
       article: row.querySelector(".article-cell").textContent,
       brand: row.querySelector(".brand-cell").textContent,
-      code: row.querySelector(".code-cell").textContent,
+      code: row.querySelector(".code-cell").textContent.trim().replace(/\s/g, ""),
       comment: row.querySelector(".comment-cell").textContent,
       statusNom: row.querySelector(".status-nom-cell").textContent,
       count: row.querySelector(".count-cell").textContent,
@@ -874,4 +875,12 @@ toggleButtons.forEach((button) => {
     }
   });
 });
-
+//Функция заглавной буквы
+function capitalizeFirstLetter(element) {
+  const currentValue = element.value;
+  if (currentValue.length === 0) {
+    return;
+  }
+  const newValue = currentValue.charAt(0).toUpperCase() + currentValue.slice(1);
+  element.value = newValue;
+}
