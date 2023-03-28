@@ -272,6 +272,8 @@ font-size: calc(13px + (14 - 13) * ((100vw - 320px) / (1320 - 320)));
   border-bottom-right-radius: var(--border-r);
 }
 .autocomplete-item {
+  display: flex;
+  justify-content: space-between;
   padding: 5px;
   word-wrap: wrap;
   cursor: pointer;
