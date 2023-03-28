@@ -237,6 +237,7 @@ color: var(--text-default);
 border-bottom:1px solid var(--text-secondary);
 vertical-align: middle;
 font-size: calc(13px + (14 - 13) * ((100vw - 320px) / (1320 - 320)));
+background-color: var(--color-white);
   }
   th:first-child{
     border-top-left-radius: var(--border-r);
