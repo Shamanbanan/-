@@ -433,12 +433,6 @@ requestsRef.on("value", (snapshot) => {
       selectStatusRequest.style.display = "block";
       const requestRef = database.ref("requests/" + requestKey);
 
-      // if (requestData.statusRequest === "Выполнена") {
-      //   saveChangesBtn.disabled = true;
-      // } else {
-      //   saveChangesBtn.disabled = false;
-      // }
-      
       requestRef.once("value", (snapshot) => {
         const requestData = snapshot.val();
 
@@ -481,13 +475,6 @@ requestsRef.on("value", (snapshot) => {
       saveRequestBtn.classList.add("hidden");
       saveChangesBtn.setAttribute("data-request-key", requestKey);
     });
-    // document.getElementById("status-request").addEventListener("input", () => {
-    //   if (document.getElementById("status-request").value === "Выполнена") {
-    //     saveChangesBtn.disabled = true;
-    //   } else {
-    //     saveChangesBtn.disabled = false;
-    //   }
-    // });
   }
 });
 saveChangesBtn.addEventListener("click", () => {
@@ -714,12 +701,13 @@ document.addEventListener("click", (e) => {
 
 variationInput.addEventListener("input", () => (codeInput.value = ""));
 nameInput.addEventListener("input", () => (codeInput.value = ""));
+
 //СКАЧИВАНИЕ
 function downloadExcel() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Заявки");
 
-  // Add header row
+  // добавим загаловки таблицы
   sheet.addRow([
     "Номер заявки",
     "Дата",
@@ -875,15 +863,24 @@ toggleButtons.forEach((button) => {
     }
   });
 });
-//Функция заглавной буквы
+
+//Функция заглавной буквы и удаления пробелов
+
 function capitalizeFirstLetter(element) {
   const currentValue = element.value;
   if (currentValue.length === 0) {
     return;
   }
-  const newValue = currentValue.charAt(0).toUpperCase() + currentValue.slice(1);
+  const newValue = currentValue
+    .replace(/^\s+/, "") // удалить пробелы в начале строки
+    .replace(/\s{2,}/g, " ") // заменить двойные пробелы на одинарные
   element.value = newValue;
 }
+
+
+
+
+
 
 
 const equipmentRef = database.ref("equipment");
