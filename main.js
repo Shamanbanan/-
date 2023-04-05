@@ -39,6 +39,7 @@ const modalFooter = document.querySelector(".modal-footer");
 const selectStatusRequest = document.querySelector(".status-block");
 const initiator = document.getElementById("initiator");
 const executive = document.getElementById("executive-id");
+const categoryInput = document.getElementById("category-list");
 
 // функция для открытия модального окна
 function openModal() {
@@ -971,3 +972,19 @@ document.addEventListener("click", (e) => {
     equipmentAutocompleteList.innerHTML = "";
   }
 });
+
+
+
+  
+  categoryInput.addEventListener("change", () => {
+    if (
+      categoryInput.value === "Всп. материалы" ||
+      categoryInput.value === "Осн. материалы" ||
+      categoryInput.value === "Спецодежда"
+    ) {
+      variationInput.disabled = false ;
+    } else {
+      variationInput.disabled = true;
+    }
+  });
+  
