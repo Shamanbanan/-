@@ -868,13 +868,14 @@ toggleButtons.forEach((button) => {
 //Функция заглавной буквы и удаления пробелов
 
 function capitalizeFirstLetter(element) {
-  const currentValue = element.value;
+  let currentValue = element.value.trim(); // удаляем пробелы в начале и конце строки
   if (currentValue.length === 0) {
     return;
   }
-  const newValue = currentValue
-    .replace(/^\s+/, "") // удалить пробелы в начале строки
-    .replace(/\s{2,}/g, " ") // заменить двойные пробелы на одинарные
+  const firstLetter = currentValue.charAt(0).toUpperCase();
+  const restOfString = currentValue.slice(1);
+  const newValue = firstLetter + restOfString
+    .replace(/\s{2,}/g, " "); // заменить двойные пробелы на одинарные
   element.value = newValue;
 }
 
