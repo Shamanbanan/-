@@ -1,30 +1,33 @@
-// //тестовая база
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
-// };
-
-// Инициализация Firebase Рабочая
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
 const database = firebase.database();
+
+//ссылка на узел items
+const itemsRef = database.ref("items");
 
 const addBtn = document.getElementById("add-btn");
 const modal = document.getElementById("modal");
@@ -85,77 +88,16 @@ function addNomenklatureTable(event) {
   const variationField = formRequest.elements.variation;
   const countField = formRequest.elements["input-count"];
   const typeField = formRequest.elements.type;
+  const equipmentField = formRequest.elements.equipment;
   const name = nameField.value.trim();
   const variation = variationField.value.trim();
   const count = countField.value.trim();
   const category = categoryField.value;
 
-  const allowedCategories = [
-    "Осн. материалы",
-    "Всп. материалы",
-    "Аксессуары",
-    "ГСМ",
-    "Запасные части",
-    "Стройматериалы",
-    "Инвентарь",
-    "Инструменты",
-    "Образцы",
-    "Спецодежда",
-  ];
-
-  const allowedUnits = [
-    "шт.",
-    "м",
-    "пог.м",
-    "кв.м",
-    "м3",
-    "л",
-    "кг",
-    "т",
-    "упак.",
-  ];
-
-  const forbiddenSymbols = [
-    "\\",
-    ":",
-    "?",
-    "<",
-    ">",
-    "|",
-    '"',
-    "%",
-    "&",
-    "@",
-    ";",
-    "#",
-    "!",
-    "№",
-    "*"
-  ];
-
-  const isValidName = (name) => {
-    return (
-      !forbiddenSymbols.some((symbol) => name.includes(symbol)) &&
-      !name.startsWith(" ") &&
-      !name.endsWith(" ") &&
-      !name.includes("  ")
-    );
-  };
-
-  const isValidUnit = (unit) => {
-    return allowedUnits.includes(unit);
-  };
-
   let hasError = false;
 
   if (!name) {
     setFieldError(nameField, "Введите имя");
-    hasError = true;
-  } else if (!isValidName(name)) {
-    setFieldError(
-      nameField,
-      "Имя содержит недопустимые символы, сокращения или пробелы: \n \\ ? < > | * # № @ & \" ! : %"
-    );
     hasError = true;
   } else {
     nameField.setCustomValidity("");
@@ -174,27 +116,16 @@ function addNomenklatureTable(event) {
   } else {
     countField.setCustomValidity("");
   }
+
   if (!categoryField.value) {
     setFieldError(categoryField, "Выберите категорию");
     hasError = true;
-  } else if (
-    categoryField.value === "Запасные части" &&
-    !formRequest.elements.equipment.value
-  ) {
-    setFieldError(
-      categoryField,
-      "Укажите оборудование для категории 'Запасные части'"
-    );
+  } else if (categoryField.value === "Запасные части" && !equipmentField.value) {
+    setFieldError(equipmentField, "Укажите оборудование для категории Запасные части");
     hasError = true;
   } else {
+    equipmentField.setCustomValidity("");
     categoryField.setCustomValidity("");
-  }
-
-  if (!isValidUnit(typeField.value)) {
-    setFieldError(typeField, "Выберите допустимую единицу измерения");
-    hasError = true;
-  } else {
-    typeField.setCustomValidity("");
   }
 
   if (hasError) {
@@ -234,6 +165,40 @@ const makeCellEditable = (cell, color) => {
     cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
   });
 };
+
+const editListCheckbox = document.getElementById("edit-list");
+
+editListCheckbox.addEventListener("change", (event) => {
+  const isEditMode = event.target.checked;
+
+  if (isEditMode) {
+    // Режим редактирования
+    document.querySelectorAll(".item-request").forEach((item) => {
+      const editButton = item.querySelector(".btn-edit");
+      editButton.textContent = "Сохранить";
+
+      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
+        makeCellEditable(cell, "#f0faeb");
+      });
+    });
+  } else {
+    // Режим сохранения
+    document.querySelectorAll(".item-request").forEach((item) => {
+      const editButton = item.querySelector(".btn-edit");
+      editButton.textContent = "Изменить";
+
+      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
+        cell.contentEditable = false;
+        cell.style.backgroundColor = "transparent";
+      });
+
+      const dataForm = Object.fromEntries(
+        new FormData(item.formRequest).entries()
+      );
+      Object.assign(item, { data: dataForm });
+    });
+  }
+});
 
 // Обработчики событий
 listTableRequest.addEventListener("click", (event) => {
@@ -326,6 +291,7 @@ function saveRequestDatabase() {
       saveRequest(requestData);
     });
   } else {
+
     // Если заявки есть, начинаем со следующего номера
     saveRequest(requestData);
   }
@@ -375,8 +341,6 @@ database.ref("requests").push(request, (error) => {
 
   }
 }
-
-
 
 //Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);
@@ -478,6 +442,9 @@ requestsRef.on("value", (snapshot) => {
     });
   }
 });
+
+
+
 saveChangesBtn.addEventListener("click", () => {
   // Get the request key from the button attribute
   const requestKey = saveChangesBtn.getAttribute("data-request-key");
@@ -528,20 +495,48 @@ saveChangesBtn.addEventListener("click", () => {
     requestData.push(data);
   });
 
+// Обновление данных в Firebase Realtime Database
+itemsRef.once("value", (snapshot) => {
+  const items = snapshot.val();
+
+  requestData.forEach((item, index) => {
+    if (item.code) {
+      let itemExists = false;
+      let itemExistsWithDifferentName = false;
+
+      Object.keys(items).forEach((key) => {
+        if (items[key].code == item.code && items[key].variation == item.variation) {
+          itemExists = true;
+          if (items[key].name != item.name) {
+            itemExistsWithDifferentName = true;
+          }
+        }
+      });
+
+      if (!itemExists) {
+        const newItemKey = itemsRef.push().key;
+        itemsRef.child(newItemKey).set(item);
+      } else if (itemExistsWithDifferentName) {
+        requestData[index].code = ""; // Очистите код элемента, если code и variation совпадают, но name нет.
+      }
+    }
+  });
+  
   // обновление в Firebase Realtime Database
-  database.ref(`requests/${requestKey}`).update(
-    {
-      initiator: initiator,
-      executive: executive,
-      statusRequest: statusRequest,
-      items: requestData,
-      completionDate: completionDate,
-    },
+database.ref(`requests/${requestKey}`).update(
+  {
+    initiator: initiator,
+    executive: executive,
+    statusRequest: statusRequest,
+    items: requestData,
+    completionDate: completionDate,
+  },
     (error) => {
       if (error) {
         console.error("Ошибка записи в базу данных: ", error);
       } else {
         console.log("Успешное обновление данных заявки");
+
         // Создать элемент для отображения сообщения об успешном обновлении данных заявки
 const messageDiv = document.createElement("div");
 messageDiv.id = "message";
@@ -567,23 +562,20 @@ setTimeout(() => {
     }
   );
 });
-const itemsRef = database.ref("items");
+});
 
 const nameInput = document.getElementById("name");
 const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
+
 let items = [];
-let requests = [];
 let miniSearch;
 
 // Load data from firebase
 async function loadData() {
-  const [itemsSnapshot, requestsSnapshot] = await Promise.all([
-    itemsRef.once("value"),
-    requestsRef.once("value"),
-  ]);
+  const itemsSnapshot = await itemsRef.once("value");
 
   items = itemsSnapshot.val()
     ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
@@ -592,30 +584,23 @@ async function loadData() {
       }))
     : [];
 
-  requests = requestsSnapshot.val()
-    ? Object.entries(requestsSnapshot.val())
-        .map(([id, request]) =>
-          request.items
-            ? request.items.map((item) => ({ ...item, requestId: id }))
-            : []
-        )
-        .flat()
-    : [];
-
     miniSearch = new MiniSearch({
       fields: ["name", "variation", "code"],
       idField: "id",
       storeFields: ["name", "variation", "code"],
+      caseSensitive: true,
+      normalizeField: false,
     });
+    
     
 
-    const allItems = [...items, ...requests.filter((item) => item.code)].map((item, index) => {
-      return {
-        ...item,
-        id: index + 1, // create unique ID for each item
-      };
-    });
-    
+  const allItems = items.map((item, index) => {
+    return {
+      ...item,
+      id: index + 1, // create unique ID for each item
+    };
+  });
+
   miniSearch.addAll(allItems);
 }
 
@@ -628,19 +613,34 @@ function search(searchTerm) {
     return;
   }
 
-  // Check if miniSearch is initialized before searching
-  const results = miniSearch.search(searchTerm, {
+  const results = miniSearch.search(searchTerm.toLowerCase(), {
     prefix: true,
-    boost: { name: 2, variation: 1 },
     termFrequency: false,
-    fuzzy: 0.3 // добавляем нечеткое совпадение с уровнем нечеткости 0.5 (от 0 до 1)
-  }).slice(0, 10);
-  
-    
-    updateAutocompleteList(results);
+    fuzzy: 0.3,
+  });
+
+  const rankedResults = results
+    .map((result) => {
+      const matches = countCharMatches(result.name.toLowerCase(), searchTerm);
+      return { ...result, matches };
+    })
+    .sort((a, b) => b.matches - a.matches)
+    .slice(0, 10);
+
+  updateAutocompleteList(rankedResults);
+}
+
+
+function countCharMatches(string, searchTerm) {
+  let count = 0;
+  const searchTermLength = searchTerm.length;
+  for (let i = 0; i < searchTermLength; i++) {
+    if (string.indexOf(searchTerm[i].toLowerCase()) !== -1) {
+      count++;
+    }
   }
-
-
+  return count;
+}
 
 // Update the autocomplete list based on search results
 function updateAutocompleteList(results) {
@@ -665,6 +665,8 @@ function createNoResultsElement(fragment) {
 }
 
 function createAutocompleteItems(results, uniqueItems, fragment) {
+  const searchTerm = nameInput.value;
+
   results.forEach((item) => {
     const { name, variation, code } = item || {};
     const itemKey = `${name}-${variation}-${code}`;
@@ -675,7 +677,15 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
 
     const el = document.createElement("div");
     el.classList.add("autocomplete-item");
-    el.innerText = `${name}\n ВИ: ${variation}  Код: (${code})`;
+
+    const highlightedName = document.createElement("div");
+    highlightedName.innerHTML = highlightMatch(name, searchTerm);
+    el.appendChild(highlightedName);
+
+    const info = document.createElement("div");
+    info.innerHTML = `ВИ: ${variation}  Код: (${code})`;
+    el.appendChild(info);
+
     el.addEventListener("click", () => {
       nameInput.value = name;
       variationInput.value = variation;
@@ -686,12 +696,20 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
   });
 }
 
+function highlightMatch(text, searchTerm) {
+  const searchWords = searchTerm.split(/\s+/);
+  const escapedSearchWords = searchWords.map((word) => word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"));
+  const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
+  return text.replace(regex, "<mark>$1</mark>");
+}
+
+
 let searchTimeout;
 
 // Event listeners
 nameInput.addEventListener("input", (e) => {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => search(e.target.value), 200);
+  searchTimeout = setTimeout(() => search(e.target.value.toLowerCase()), 200);
 });
 
 document.addEventListener("click", (e) => {
@@ -701,7 +719,8 @@ document.addEventListener("click", (e) => {
 });
 
 variationInput.addEventListener("input", () => (codeInput.value = ""));
-nameInput.addEventListener("input", () => (codeInput.value = ""));
+nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
+
 
 //СКАЧИВАНИЕ
 function downloadExcel() {
@@ -865,23 +884,24 @@ toggleButtons.forEach((button) => {
   });
 });
 
-//Функция заглавной буквы и удаления пробелов
 
-function capitalizeFirstLetter(element) {
-  const currentValue = element.value;
-  if (currentValue.length === 0) {
+function capitalizeWords(input) {
+  const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
+  const originalValue = input.value.trim();
+  if (originalValue.length === 0) {
     return;
   }
-  const newValue = currentValue
-    .replace(/^\s+/, "") // удалить пробелы в начале строки
-    .replace(/\s{2,}/g, " ") // заменить двойные пробелы на одинарные
-    .charAt(0).toUpperCase() + currentValue.slice(1); // сделать первую букву заглавной
-  element.value = newValue;
+  const sanitizedValue = originalValue.replace(forbiddenChars, '');
+
+  // Заглавить только первую букву строки
+  const words = sanitizedValue.split(/\s+/);
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+
+  const capitalizedValue = words.join(' ').replace(/\s(?=\S)/g, ' ');
+  const finalValue = capitalizedValue.replace(/\*/g, 'x');
+
+  input.value = finalValue;
 }
-
-
-
-
 
 
 
@@ -974,20 +994,24 @@ document.addEventListener("click", (e) => {
   }
 });
 
+categoryInput.addEventListener("change", () => {
+  if (
+    categoryInput.value === "Образцы" ||
+    categoryInput.value === "Осн. материалы" ||
+    categoryInput.value === "Спецодежда" 
+  ) {
+    variationInput.disabled = false;
+  } else {
+    variationInput.disabled = true;
+  }
 
+  if (categoryInput.value === "Запасные части") {
+    equipmentInput.disabled = false;
+  } else {
+    equipmentInput.disabled = true;
+  }
+});
 
-  
-  categoryInput.addEventListener("change", () => {
-    if (
-      categoryInput.value === "Образцы" ||
-      categoryInput.value === "Осн. материалы" ||
-      categoryInput.value === "Спецодежда"
-    ) {
-      variationInput.disabled = false ;
-    } else {
-      variationInput.disabled = true;
-    }
-  });
   
 
 

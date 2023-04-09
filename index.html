@@ -89,11 +89,11 @@
       <h3>Заявка №<span id="request-number"></span></h3>
       <form id="form" action="" method="">
         <div class="field-container">
-        <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор" onkeyup="capitalizeFirstLetter(this)">
+        <input class="text-field-input" type="text" id="initiator" value="" placeholder="Инициатор" onblur="capitalizeWords(this)">
         <label class="text-field-label" for="initiator">Инициатор</label>
       </div>
       <div class="field-container">
-        <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель" onkeyup="capitalizeFirstLetter(this)">
+        <input class="text-field-input" type="text" id="executive-id" value="" placeholder="Исполнитель" onblur="capitalizeWords(this)">
         <label class="text-field-label" for="executive-id">Исполнитель</label>
       </div>
       <div class="field-container status-block">
@@ -122,12 +122,12 @@
         </select>
       </div>
         <div class="field-container">
-          <input class="text-field-input" type="text" id="name" autocomplete="off" placeholder="Наименование" onkeyup="capitalizeFirstLetter(this)" required>
+          <input class="text-field-input" type="text" id="name" autocomplete="off" placeholder="Наименование" onblur="capitalizeWords(this)" required>
           <label class="text-field-label" for="variation">Наименование</label>
           <div id="autocompleteList"></div>
         </div>
         <div class="field-container">
-          <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="Вариант исполнения" value="осн." required>
+          <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="Вариант исполнения" value="осн." required disabled>
           <label class="text-field-label" for="variation">Вариант исполнения</label>
         </div>
         <!-- -->
@@ -147,7 +147,7 @@
         </select>
       </div>
       <div class="field-container">
-          <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" onkeyup="capitalizeFirstLetter(this)" required>
+          <input class="text-field-input" type="text" id="equipment" list="equipment-list" placeholder="Оборудование" autocomplete="off" onblur="capitalizeWords(this)" required>
           <label class="text-field-label" for="equipment">Оборудование</label>
           <div id="equipment-list"></div>
         </div>
@@ -167,7 +167,7 @@
               <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg> 
               <div class="filter-dropdown">
                 <select class="text-field-input" id="category-list" name="category" required>
-                  <option value="" disabled selected>Выберите категорию</option>
+                  <option value="Выберите категорию" disabled selected>Выберите категорию</option>
                   <option value="Осн. материалы">Осн. материалы</option>
                   <option value="Осн. материалы">Осн. материалы</option>
                   <option value="Запасные части">Запасные части</option>
@@ -232,7 +232,8 @@
             </th>
             <th style="width: 6%;">Кол-во</th>
             <th></th>
-            <th></th>
+            <th>  <input type="checkbox" name="editList" id="edit-list"></th>
+          
           </tr>
         </thead>
         <tbody id="products-body"></tbody>

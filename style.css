@@ -285,6 +285,7 @@ background-color: var(--color-white);
 }
 .autocomplete-item {
   display: flex;
+  flex-direction: column;
   justify-content: space-between;
   padding: 5px;
   word-wrap: wrap;
@@ -338,4 +339,8 @@ background-color: var(--color-white);
 .success-message.visible {
   display: block;
   transition: all 0.3s easy;
+}
+
+mark {
+  background-color: rgb(208, 239, 248);
 }
