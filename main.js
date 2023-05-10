@@ -44,6 +44,9 @@ const initiator = document.getElementById("initiator");
 const executive = document.getElementById("executive-id");
 const categoryInput = document.getElementById("category-list");
 
+// Объявляем переменную вне обработчика событий
+let requestRef;
+
 // функция для открытия модального окна
 function openModal() {
   modal.classList.remove("hidden");
@@ -59,6 +62,7 @@ function openModal() {
 // функция для закрытия модального окна
 function closeModal() {
   modal.classList.add("hidden");
+  requestRef.update({ isLocked: false });
 }
 
 // добавляем обработчик события на кнопку "Добавить заявку"
@@ -342,6 +346,7 @@ database.ref("requests").push(request, (error) => {
   }
 }
 
+
 //Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
@@ -366,22 +371,19 @@ requestsRef.on("value", (snapshot) => {
     newRow.innerHTML = `
       <td class="id-cell">${requestData.number}</td>
         <td class="number-cell">${requestKey}</td>
-        <td class="date-cell" value="${requestData.date}">${
-      requestData.date
-    }</td>
+        <td class="date-cell" value="${requestData.date}">${requestData.date}</td>
         <td class="in-cell">${requestData.initiator}</td>
         <td class="executive-cell">${requestData.executive}</td>
         <td class="status-cell">${requestData.statusRequest}</td>
-        <td class="completion-date-cell">${
-          requestData.completionDate || ""
-        }</td>
-          <td class="button-cell">
-          <button class="edit-request-button">Редактировать</button>
-        </td>
+        <td class="completion-date-cell">${requestData.completionDate || ""}</td>
         <td class="button-cell">
-        <button class="btn-delete">Удалить</button></td>
+         <button class="edit-request-button">Редактировать</button></td>
+        <td class="button-cell"><button class="btn-delete">Удалить</button></td>
       `;
+
     table.insertBefore(newRow, table.firstChild);
+
+    //Переменные кнопок удалить и редактировать
     const deleteButton = newRow.querySelector(".btn-delete");
     const editRequestButton = newRow.querySelector(".edit-request-button");
 
@@ -390,27 +392,35 @@ requestsRef.on("value", (snapshot) => {
         database.ref(`requests/${requestKey}`).remove();
       }
     });
-
+    
+//Функция для кнопки редактирования
     editRequestButton.addEventListener("click", () => {
       form.reset();
       formRequest.reset();
-      
       selectStatusRequest.style.display = "block";
-      const requestRef = database.ref("requests/" + requestKey);
-
+    
+      requestRef = database.ref("requests/" + requestKey);
+    
       requestRef.once("value", (snapshot) => {
         const requestData = snapshot.val();
-
-        document.getElementById("request-number").textContent =
-          requestData.number;
+    
+        if (requestData.isLocked) {
+          alert("Заявка заблокирована. Пожалуйста, дождитесь завершения редактирования другим пользователем.");
+          return;
+        }
+    
+        // Lock the request
+        requestRef.update({ isLocked: true });
+    
+        document.getElementById("request-number").textContent = requestData.number;
         document.getElementById("initiator").value = requestData.initiator;
         document.getElementById("executive-id").value = requestData.executive;
-        document.getElementById("status-request").value =
-          requestData.statusRequest;
-
+        document.getElementById("status-request").value = requestData.statusRequest;
+    
         const tableRows = document.querySelectorAll(".item-request");
+    
         tableRows.forEach((row) => row.remove());
-
+    
         requestData.items.forEach((itemData) => {
           const itemRow = document.createElement("tr");
           itemRow.classList.add("item-request");
@@ -434,30 +444,31 @@ requestsRef.on("value", (snapshot) => {
             `;
           listTableRequest.appendChild(itemRow);
         });
+    
+        modal.classList.remove("hidden");
+        saveChangesBtn.classList.remove("hidden");
+        saveRequestBtn.classList.add("hidden");
+        saveChangesBtn.setAttribute("data-request-key", requestKey);
       });
-      modal.classList.remove("hidden");
-      saveChangesBtn.classList.remove("hidden");
-      saveRequestBtn.classList.add("hidden");
-      saveChangesBtn.setAttribute("data-request-key", requestKey);
     });
   }
 });
 
 
-
+//функция обработчик 
 saveChangesBtn.addEventListener("click", () => {
-  // Get the request key from the button attribute
+
+  // Записывает атрибут в кнопку перезаписать заявку с ключом
   const requestKey = saveChangesBtn.getAttribute("data-request-key");
 
   // Get the updated data from the form
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
   const statusRequest = document.getElementById("status-request").value;
-  const currentCompletionDate =
-    document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`)
-      .textContent || null;
+  const currentCompletionDate =  document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`).textContent || null;
 
   let completionDate;
+
   if (statusRequest === "Выполнена" && !currentCompletionDate) {
     completionDate = new Date().toLocaleString();
   } else if (statusRequest !== "Выполнена") {
@@ -468,7 +479,9 @@ saveChangesBtn.addEventListener("click", () => {
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
+  
     const fieldinitiator = document.getElementById("initiator");
+  
     fieldinitiator.setCustomValidity("Заполните фамилию Инициатора");
     fieldinitiator.reportValidity();
     return;
@@ -478,6 +491,7 @@ saveChangesBtn.addEventListener("click", () => {
   const requestData = [];
 
   tableRows.forEach((row) => {
+  
     const data = {
       rowIndexRow: row.querySelector(".number-cell").textContent,
       category: row.querySelector(".category-cell").textContent,
@@ -495,31 +509,35 @@ saveChangesBtn.addEventListener("click", () => {
     requestData.push(data);
   });
 
-  
 // Обновление данных в Firebase Realtime Database
 itemsRef.once("value", (snapshot) => {
+
   const items = snapshot.val();
   const codeVariationToNameMap = {};
 
   Object.keys(items).forEach((key) => {
+
     const item = items[key];
+
     codeVariationToNameMap[`${item.code}-${item.variation}`] = item.name;
   });
 
   requestData.forEach((item, index) => {
     if (item.code) {
+
       const codeVariationKey = `${item.code}-${item.variation}`;
+
       if (codeVariationToNameMap[codeVariationKey]) {
         requestData[index].name = codeVariationToNameMap[codeVariationKey];
       } else {
+
         const newItemKey = itemsRef.push().key;
+
         itemsRef.child(newItemKey).set(item);
         codeVariationToNameMap[codeVariationKey] = item.name;
       }
     }
   });
-
-
 
   // обновление в Firebase Realtime Database
 database.ref(`requests/${requestKey}`).update(
@@ -537,12 +555,14 @@ database.ref(`requests/${requestKey}`).update(
         console.log("Успешное обновление данных заявки");
 
         // Создать элемент для отображения сообщения об успешном обновлении данных заявки
-const messageDiv = document.createElement("div");
-messageDiv.id = "message";
-document.body.appendChild(messageDiv);
+        const messageDiv = document.createElement("div");
+
+        messageDiv.id = "message";
+        document.body.appendChild(messageDiv);
 
 // Отобразить сообщение об успешном обновлении данных заявки
 const message = "Данные заявки успешно обновлены";
+
 messageDiv.innerHTML = message;
 messageDiv.classList.add("success-message", "visible");
 
@@ -554,9 +574,10 @@ setTimeout(() => {
   }, 1000); // убрать элемент после скрытия анимации
 }, 2000);
 
-        modal.classList.add("hidden");
-        saveChangesBtn.classList.add("hidden");
-        saveRequestBtn.classList.remove("hidden");
+     modal.classList.add("hidden");
+     saveChangesBtn.classList.add("hidden");
+     saveRequestBtn.classList.remove("hidden");
+     requestRef.update({ isLocked: false });
       }
     }
   );
@@ -568,15 +589,15 @@ const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
-
 let items = [];
 let miniSearch;
 
 // Load data from firebase
 async function loadData() {
-  const itemsSnapshot = await itemsRef.once("value");
 
-  items = itemsSnapshot.val()
+const itemsSnapshot = await itemsRef.once("value");
+
+ items = itemsSnapshot.val()
     ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
         id,
         ...item,
@@ -591,8 +612,6 @@ async function loadData() {
       normalizeField: false,
     });
     
-    
-
   const allItems = items.map((item, index) => {
     return {
       ...item,
@@ -620,6 +639,7 @@ function search(searchTerm) {
 
   const rankedResults = results
     .map((result) => {
+     
       const matches = countCharMatches(result.name.toLowerCase(), searchTerm);
       return { ...result, matches };
     })
@@ -629,9 +649,10 @@ function search(searchTerm) {
   updateAutocompleteList(rankedResults);
 }
 
-
 function countCharMatches(string, searchTerm) {
+  
   let count = 0;
+  
   const searchTermLength = searchTerm.length;
   for (let i = 0; i < searchTermLength; i++) {
     if (string.indexOf(searchTerm[i].toLowerCase()) !== -1) {
@@ -643,6 +664,7 @@ function countCharMatches(string, searchTerm) {
 
 // Update the autocomplete list based on search results
 function updateAutocompleteList(results) {
+  
   const fragment = document.createDocumentFragment();
   const uniqueItems = new Set();
 
@@ -664,24 +686,30 @@ function createNoResultsElement(fragment) {
 }
 
 function createAutocompleteItems(results, uniqueItems, fragment) {
+ 
   const searchTerm = nameInput.value;
 
   results.forEach((item) => {
+   
     const { name, variation, code } = item || {};
     const itemKey = `${name}-${variation}-${code}`;
+    
     if (uniqueItems.has(itemKey)) {
       return; // skip duplicates
     }
     uniqueItems.add(itemKey); // add unique item to Set
 
     const el = document.createElement("div");
+    
     el.classList.add("autocomplete-item");
 
     const highlightedName = document.createElement("div");
+   
     highlightedName.innerHTML = highlightMatch(name, searchTerm);
     el.appendChild(highlightedName);
 
     const info = document.createElement("div");
+    
     info.innerHTML = `ВИ: ${variation}  Код: (${code})`;
     el.appendChild(info);
 
@@ -696,12 +724,13 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
 }
 
 function highlightMatch(text, searchTerm) {
+  
   const searchWords = searchTerm.split(/\s+/);
   const escapedSearchWords = searchWords.map((word) => word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"));
   const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
+  
   return text.replace(regex, "<mark>$1</mark>");
 }
-
 
 let searchTimeout;
 
@@ -720,9 +749,9 @@ document.addEventListener("click", (e) => {
 variationInput.addEventListener("input", () => (codeInput.value = ""));
 nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
 
-
 //СКАЧИВАНИЕ
 function downloadExcel() {
+ 
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Заявки");
 
@@ -750,12 +779,16 @@ function downloadExcel() {
 
   // Get data from Firebase Realtime Database
   const requestsRef = database.ref("requests");
+ 
   requestsRef.once("value", (snapshot) => {
-    const requests = snapshot.val();
+   
+  const requests = snapshot.val();
 
     // Add data rows for each request and its items
     Object.keys(requests).forEach((requestKey) => {
+      
       const requestData = requests[requestKey];
+      
       if (requestData && requestData.items) {
         // Добавляем проверку
         requestData.items.forEach((itemData) => {
@@ -785,9 +818,11 @@ function downloadExcel() {
 
     // Download file
     workbook.xlsx.writeBuffer().then((buffer) => {
+      
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
+      
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -818,6 +853,7 @@ const columnIndices = {
 
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
+  
   const filters = {};
 
   // Получаем все фильтры
@@ -830,12 +866,16 @@ function filterTable(event) {
   const rows = document.querySelectorAll(".table-request tbody tr");
 
   for (let i = 0; i < rows.length; i++) {
+   
     const row = rows[i];
+    
     const cells = row.getElementsByTagName("td");
+    
     let rowMatchesAllFilters = true;
 
     for (const colIndex in filters) {
       if (filters.hasOwnProperty(colIndex)) {
+        
         const filter = filters[colIndex];
         const cell = cells[colIndex];
 
@@ -1011,8 +1051,3 @@ categoryInput.addEventListener("change", () => {
   }
 });
 
-  
-
-
-
-  
