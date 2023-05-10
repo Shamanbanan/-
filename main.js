@@ -388,8 +388,31 @@ requestsRef.on("value", (snapshot) => {
     const editRequestButton = newRow.querySelector(".edit-request-button");
 
     deleteButton.addEventListener("click", () => {
-      if (confirm("Вы уверены, что хотите удалить заявку?")) {
-        database.ref(`requests/${requestKey}`).remove();
+      // if (confirm("Вы уверены, что хотите удалить заявку?")) {
+      //   database.ref(`requests/${requestKey}`).remove();
+      // }
+      if (confirm("Вы действительно хотите удалить эту заявку?")) {
+        const requestRef = database.ref("requests/" + requestKey);
+        const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
+    
+        requestRef.once("value", (snapshot) => {
+          const requestData = snapshot.val();
+    
+          // Опционально: добавьте сведения о дате удаления и пользователе, удалившем заявку
+          requestData.deletedAt = new Date().toISOString();
+          requestData.deletedBy = "username"; // Замените "username" именем текущего пользователя
+    
+          // Перемещаем заявку в узел deletedRequests
+          deletedRequestsRef.set(requestData, (error) => {
+            if (error) {
+              console.error("Error moving request to deletedRequests:", error);
+            } else {
+              // Удаляем заявку из узла requests
+              requestRef.remove();
+              row.remove();
+            }
+          });
+        });
       }
     });
     
