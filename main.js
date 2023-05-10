@@ -454,6 +454,13 @@ requestsRef.on("value", (snapshot) => {
   }
 });
 
+window.addEventListener("beforeunload", (event) => {
+  // При закрытии или перезагрузке вкладки, разблокируйте заявку:
+  if (requestRef) {
+    requestRef.update({ isLocked: false });
+  }
+});
+
 
 //функция обработчик 
 saveChangesBtn.addEventListener("click", () => {
