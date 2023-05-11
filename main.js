@@ -1,25 +1,25 @@
-// //тестовая база
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
-// };
-
-// Инициализация Firebase Рабочая
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 firebase.initializeApp(firebaseConfig);
 
@@ -46,6 +46,7 @@ const categoryInput = document.getElementById("category-list");
 
 // Объявляем переменную вне обработчика событий
 let requestRef;
+let currentRequestKey = null;
 
 // функция для открытия модального окна
 function openModal() {
@@ -434,6 +435,7 @@ requestsRef.on("value", (snapshot) => {
     
         // Lock the request
         requestRef.update({ isLocked: true });
+        currentRequestKey = requestKey;
     
         document.getElementById("request-number").textContent = requestData.number;
         document.getElementById("initiator").value = requestData.initiator;
@@ -477,9 +479,10 @@ requestsRef.on("value", (snapshot) => {
   }
 });
 
+// Обновите обработчик события beforeunload
 window.addEventListener("beforeunload", (event) => {
-  // При закрытии или перезагрузке вкладки, разблокируйте заявку:
-  if (requestRef) {
+  if (currentRequestKey) {
+    const requestRef = database.ref("requests/" + currentRequestKey);
     requestRef.update({ isLocked: false });
   }
 });
@@ -607,7 +610,11 @@ setTimeout(() => {
      modal.classList.add("hidden");
      saveChangesBtn.classList.add("hidden");
      saveRequestBtn.classList.remove("hidden");
-     requestRef.update({ isLocked: false });
+       // Записываем изменения и разблокируем заявку
+  requestRef.update(updatedData).then(() => {
+    requestRef.update({ isLocked: false });
+    currentRequestKey = null;
+  });
       }
     }
   );
@@ -1081,3 +1088,12 @@ categoryInput.addEventListener("change", () => {
   }
 });
 
+
+document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("showRequestsButton").addEventListener("click", () => {
+    const initiator = document.getElementById("initiatorSelect").value;
+    const url = new URL("requests.html", window.location.href);
+    url.searchParams.set("initiator", initiator);
+    window.open(url, "_blank");
+  });
+});
