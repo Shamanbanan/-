@@ -1,25 +1,25 @@
-// //тестовая база
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
-// };
-
-// Инициализация Firebase Рабочая
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 firebase.initializeApp(firebaseConfig);
 
@@ -613,7 +613,7 @@ setTimeout(() => {
        // Записываем изменения и разблокируем заявку
   requestRef.update(updatedData).then(() => {
     requestRef.update({ isLocked: false });
-    currentRequestKey = null;
+
   });
       }
     }
@@ -1089,11 +1089,53 @@ categoryInput.addEventListener("change", () => {
 });
 
 
-document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("showRequestsButton").addEventListener("click", () => {
-    const initiator = document.getElementById("initiatorSelect").value;
-    const url = new URL("requests.html", window.location.href);
-    url.searchParams.set("initiator", initiator);
-    window.open(url, "_blank");
-  });
+const viewRequestsButton = document.getElementById("view-requests");
+const requestsTableContainer = document.getElementById("requests-table-container");
+const productsTableContainer = document.getElementById("products-table-container");
+const productsTable = document.getElementById("products-table");
+const productsTableBody = document.getElementById("products-table-body");
+
+viewRequestsButton.addEventListener("click", () => {
+  // Переключение видимости таблиц
+  const isRequestsTableVisible = requestsTableContainer.style.display !== "none";
+  requestsTableContainer.style.display = isRequestsTableVisible ? "none" : "block";
+  productsTableContainer.style.display = isRequestsTableVisible ? "block" : "none";
+
+  if (isRequestsTableVisible) {
+    // Очистите таблицу перед загрузкой новых данных
+    productsTableBody.innerHTML = "";
+
+    // Загрузите данные о заявках из базы данных
+    const requestsRef = database.ref("requests");
+    requestsRef.once("value", (snapshot) => {
+      snapshot.forEach((requestSnapshot) => {
+        const requestKey = requestSnapshot.key;
+        const requestData = requestSnapshot.val();
+
+        // Добавьте продукты из заявки в таблицу
+        requestData.items.forEach((itemData) => {
+          const itemRow = document.createElement("tr");
+          itemRow.innerHTML = `
+          <td>${requestData.number}</td>
+          <td>${requestData.initiator}</td>
+          <td>${requestData.date}</td>
+          <td>${itemData.category}</td>
+          <td>${itemData.rowIndexRow}</td>
+          <td>${itemData.name}</td>
+          <td>${itemData.variation}</td>
+          <td>${itemData.equipment}</td>
+          <td>${itemData.type}</td>
+          <td>${itemData.brand}</td>
+          <td class="comment-cell">${itemData.comment}</td>
+          <td>${itemData.code}</td>
+          <td>${itemData.count}</td>
+          <td>${itemData.statusNom}</td>
+          `;
+          productsTableBody.appendChild(itemRow);
+        });
+      });
+    });
+  }
 });
+
+

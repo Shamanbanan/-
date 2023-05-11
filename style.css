@@ -22,6 +22,9 @@ body{
   background-color: #fff;
   height: 100%;
 }
+.header{
+  padding: 10px;
+}
 
   input, select, datalist, option, label{
     font-family: 'Roboto', sans-serif;
@@ -46,7 +49,7 @@ width:100%;
 #status{
   border: 1px solid var(--text-disabled);
 }
-#add-btn, #add-product-btn, #save-change-btn, #save-request-btn, #download-button{
+#add-btn, #add-product-btn, #save-change-btn, #save-request-btn, #download-button, #view-requests{
   align-items: center;
   background-color: var(--color-primary);
   color: var(--color-white);
@@ -57,7 +60,7 @@ width:100%;
   border-radius: var(--border-r);
   font-size: calc(13px + (14 - 13) * ((100vw - 320px) / (1920 - 320)));    
  }
-#add-btn:hover, #add-product-btn:hover, #save-change-btn:hover, #save-request-btn:hover, #download-button:hover{
+#add-btn:hover, #add-product-btn:hover, #save-change-btn:hover, #save-request-btn:hover, #download-button:hover, #view-requests:hover{
   background-color: var(--color-secondary) ;
   color:var(--color-white);
 }
@@ -230,6 +233,14 @@ color: var(--text-default);
     font-size: calc(12px + (13 - 12) * ((100vw - 320px) / (1320 - 320)));
     transition: all 0.3s;
   }
+/* Устанавливаем максимальную ширину для 11-й ячейки */
+#products-table tr td:nth-child(11) {
+  max-width: 100px; /* Замените это значение на желаемую максимальную ширину */
+  white-space: nowrap; /* Запрещаем перенос текста на новую строку */
+  overflow: hidden; /* Скрываем текст, выходящий за пределы ячейки */
+  text-overflow: ellipsis; /* Добавляем многоточие в конце текста, если он не умещается в ячейку */
+}
+
   th{
     text-align: start;
     padding: 10px 5px;

@@ -15,9 +15,38 @@
 <body>
 <!-- ШАПКА -->
 <div class="header">
+  <button id="view-requests">Посмотреть ТМЦ</button>
 </div>
-<!-- ТАБЛИЦА ЗАЯВОК-->
+<!-- ТАБЛИЦА РАСКРЫТЫХ ЗАЯВОК-->
 <div class="main">
+<div id="products-table-container" style="display: none;">
+  <table id="products-table">
+    <thead>
+      <tr>
+        <th>№ заявки</th>
+        <th>ФИО инициатор</th>
+        <th>Дата заявки</th>
+        <th>Категория</th>
+        <th>№ в заявке</th>
+        <th>Наименование</th>
+        <th>Вариант исп.</th>
+        <th>Оборудование</th>
+        <th>Баз.ед.</th>
+        <th>Поставщик</th>
+        <th>Комментарий</th>
+        <th>Код в УМФ</th>
+        <th>Количество</th>
+        <th>Статус ТМЦ</th>
+      </tr>
+    </thead>
+    <tbody id="products-table-body">
+      <!-- Здесь будут добавляться строки с продуктами -->
+    </tbody>
+  </table>
+</div>
+  
+  <!-- ТАБЛИЦА ЗАЯВОК-->
+  <div id="requests-table-container">
   <table class="table-request">
     <thead>
       <tr class="head-string filter-row">
@@ -81,6 +110,7 @@
     </thead>
     <tbody id="table-body"></tbody>
   </table>
+</div>
 </div>
 <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ЗАЯВКИ -->
 <div id="modal" class="hidden">
