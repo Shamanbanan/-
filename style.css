@@ -95,8 +95,8 @@ width:100%;
     width: 100%;
     height: 100%;
     overflow: auto;
-    background-color: rgb(0, 0, 0);
-    background-color: rgba(0, 0, 0, 0.716);
+    background-color: var(--text-primary);
+    
   }
   
 .modal-content {
@@ -210,6 +210,7 @@ color: var(--text-default);
   }
   /* ТАБЛИЦА */
   table {
+
     width: 100%;
     border-collapse: collapse;
     background-color: var(--color-white);
@@ -234,7 +235,7 @@ color: var(--text-default);
     transition: all 0.3s;
   }
 /* Устанавливаем максимальную ширину для 11-й ячейки */
-#products-table tr td:nth-child(11) {
+td.tooltip{
   max-width: 100px; /* Замените это значение на желаемую максимальную ширину */
   white-space: nowrap; /* Запрещаем перенос текста на новую строку */
   overflow: hidden; /* Скрываем текст, выходящий за пределы ячейки */
@@ -242,6 +243,7 @@ color: var(--text-default);
 }
 
   th{
+    position: relative;
     text-align: start;
     padding: 10px 5px;
     color: var(--text-default);
@@ -263,7 +265,9 @@ background-color: var(--color-white);
     cursor: pointer;
     transition: all 0.3s;
   }
-  
+  .toggle-filter-button{
+    position: absolute;
+  }
   tbody {
     max-height: 300px;
     overflow-y: auto;
@@ -354,4 +358,89 @@ background-color: var(--color-white);
 
 mark {
   background-color: rgb(208, 239, 248);
+}
+.tooltip {
+  position: relative;
+}
+
+.tooltip::after {
+  content: attr(title);
+  position: absolute;
+  left: 0;
+  top: 100%;
+  white-space: nowrap;
+  z-index: 100;
+  padding: 10px;
+  background:var(--text-primary);
+  color: var(--color-white);
+  visibility: hidden;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+}
+
+.tooltip:hover::after {
+  visibility: visible;
+  opacity: 1;
+}
+
+/* Стиль для контейнера чекбокса */
+#edit-list {
+  display: inline-block;
+  width: 20px;
+  height: 20px;
+  position: relative;
+}
+
+/* Скрываем реальный чекбокс */
+#edit-list input[type="checkbox"] {
+  visibility: hidden;
+}
+
+/* Создаем стилизованный чекбокс */
+#edit-list label {
+  cursor: pointer;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background-color: #eeeeee;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  transition: all 0.3s ease;
+}
+
+/* Стиль для чекбокса при наведении */
+#edit-list label:hover {
+  background-color: #ddd;
+}
+
+/* Стиль для чекбокса при активации */
+#edit-list input[type="checkbox"]:checked + label {
+  background-color: #26a69a;
+  border-color: #26a69a;
+}
+
+/* Создаем галочку внутри чекбокса */
+#edit-list label:after {
+  content: "";
+  position: absolute;
+  display: none;
+}
+
+/* Показываем галочку, когда чекбокс активирован */
+#edit-list input[type="checkbox"]:checked + label:after {
+  display: block;
+}
+
+/* Стиль и позиция галочки внутри чекбокса */
+#edit-list label:after {
+  left: 7px;
+  top: 3px;
+  width: 6px;
+  height: 12px;
+  border: solid white;
+  border-width: 0 2px 2px 0;
+  transform: rotate(45deg);
 }

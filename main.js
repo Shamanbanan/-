@@ -486,7 +486,6 @@ window.addEventListener("beforeunload", (event) => {
   }
 });
 
-
 //функция обработчик 
 saveChangesBtn.addEventListener("click", () => {
 
@@ -851,7 +850,7 @@ function downloadExcel() {
       }
     });
 
-    // Download file
+    // Download file 
     workbook.xlsx.writeBuffer().then((buffer) => {
       
       const blob = new Blob([buffer], {
@@ -873,44 +872,59 @@ const downloadButton = document.getElementById("download-button");
 
 downloadButton.addEventListener("click", downloadExcel);
 
-// Определяем индексы столбцов
-const columnIndices = {
-  number: 0,
-  link: 1,
-  date: 2,
-  initiator: 3,
-  executive: 4,
-  status: 5,
-  datestatus: 6,
-  button: 7,
-  button2: 8,
-};
+// функция фильтрации
+function setColumnWidths(table) {
+  // Получить все строки в таблице
+  const rows = table.querySelectorAll('tr');
+  
+  // Если в таблице есть строки
+  if (rows.length > 0) {
+      // Получить все ячейки в первой строке
+      const cells = rows[0].querySelectorAll('th, td');
+      
+      // Создать массив для хранения ширин столбцов
+      const widths = [];
+      
+      // Вычислить ширину каждого столбца
+      cells.forEach((cell, index) => {
+          widths[index] = cell.offsetWidth;
+      });
+      
+      // Установить ширину каждого столбца
+      cells.forEach((cell, index) => {
+          cell.style.width = `${widths[index]}px`;
+      });
+  }
+}
+
+
 
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
-  
+  // Получаем таблицу, в которой произошло событие
+  const table = event.target.closest('table');
+
+  // Устанавливаем ширину столбцов перед фильтрацией
+  setColumnWidths(table);
+
   const filters = {};
 
   // Получаем все фильтры
-  document.querySelectorAll(".filter-row input, .filter-row select").forEach((filter) => {
+  table.querySelectorAll(".filter-row input, .filter-row select").forEach((filter) => {
     const th = filter.closest("th");
     const colIndex = Array.from(th.parentNode.children).indexOf(th);
     filters[colIndex] = filter.value.toUpperCase();
   });
 
-  const rows = document.querySelectorAll(".table-request tbody tr");
+  const rows = table.querySelectorAll("tbody tr");
 
   for (let i = 0; i < rows.length; i++) {
-   
     const row = rows[i];
-    
     const cells = row.getElementsByTagName("td");
-    
     let rowMatchesAllFilters = true;
 
     for (const colIndex in filters) {
       if (filters.hasOwnProperty(colIndex)) {
-        
         const filter = filters[colIndex];
         const cell = cells[colIndex];
 
@@ -930,12 +944,13 @@ function filterTable(event) {
       row.style.display = "none";
     }
   }
+
+  // Устанавливаем ширину столбцов после фильтрации
+  setColumnWidths(table);
 }
 
 // Назначаем обработчики событий на элементы фильтрации
-const filters = document.querySelectorAll(
-  ".filter-row input, .filter-row select"
-);
+const filters = document.querySelectorAll(".filter-row input, .filter-row select");
 for (let i = 0; i < filters.length; i++) {
   filters[i].addEventListener("input", filterTable);
 }
@@ -953,12 +968,14 @@ toggleButtons.forEach((button) => {
 
     if (!dropdown.classList.contains("active")) {
       filterInput.value = "";
-      filterTable(); // Вызываем функцию filterTable, чтобы обновить таблицу после очистки фильтра
+      const fakeEvent = { target: filterInput }; // Создаем искусственный объект события
+      filterTable.call(filterInput, fakeEvent); // Вызываем функцию filterTable, чтобы обновить таблицу после очистки фильтра
     }
   });
 });
 
 
+//функция для редактирования поля ввода
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
@@ -976,8 +993,6 @@ function capitalizeWords(input) {
 
   input.value = finalValue;
 }
-
-
 
 const equipmentRef = database.ref("equipment");
 
@@ -1086,7 +1101,6 @@ categoryInput.addEventListener("change", () => {
   }
 });
 
-
 const viewRequestsButton = document.getElementById("view-requests");
 const requestsTableContainer = document.getElementById("requests-table-container");
 const productsTableContainer = document.getElementById("products-table-container");
@@ -1118,22 +1132,57 @@ viewRequestsButton.addEventListener("click", () => {
           <td>${requestData.initiator}</td>
           <td>${requestData.date}</td>
           <td>${itemData.category}</td>
-          <td>${itemData.rowIndexRow}</td>
           <td>${itemData.name}</td>
           <td>${itemData.variation}</td>
           <td>${itemData.equipment}</td>
           <td>${itemData.type}</td>
           <td>${itemData.brand}</td>
-          <td class="comment-cell">${itemData.comment}</td>
+          <td class="tooltip" title="${itemData.comment.replace(/"/g, '')}">${itemData.comment}</td>
           <td>${itemData.code}</td>
           <td>${itemData.count}</td>
           <td>${itemData.statusNom}</td>
           `;
-          productsTableBody.appendChild(itemRow);
+          
+          
+          productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
         });
       });
     });
   }
 });
+
+let page = 0; // Текущая страница, начинаем с 0
+
+function loadMoreItems() {
+    // Загружаем следующую страницу
+    fetch(`/api/requests?page=${++page}&size=25`) 
+        .then(response => response.json())
+        .then(data => {
+            // Когда данные загружены, добавляем их в таблицу
+            const table = document.querySelector('table');
+            data.forEach(item => {
+                const row = document.createElement('tr');
+
+                // Здесь создайте и добавьте ячейки в строку на основе своих данных
+                // Например: 
+                const cell = document.createElement('td');
+                cell.textContent = item.someField;
+                row.appendChild(cell);
+
+                table.appendChild(row);
+            });
+        });
+}
+
+
+
+window.onscroll = function(ev) {
+  // Проверяем, достиг ли пользователь конца страницы
+  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
+      // Если это так, загружаем больше элементов
+      loadMoreItems();
+  }
+};
+
 
 
