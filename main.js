@@ -445,6 +445,7 @@ requestsRef.on("value", (snapshot) => {
     
         tableRows.forEach((row) => row.remove());
     
+        if (requestData.items) {
         requestData.items.forEach((itemData) => {
           const itemRow = document.createElement("tr");
           itemRow.classList.add("item-request");
@@ -468,7 +469,7 @@ requestsRef.on("value", (snapshot) => {
             `;
           listTableRequest.appendChild(itemRow);
         });
-    
+      }
         modal.classList.remove("hidden");
         saveChangesBtn.classList.remove("hidden");
         saveRequestBtn.classList.add("hidden");
@@ -1124,32 +1125,39 @@ viewRequestsButton.addEventListener("click", () => {
         const requestKey = requestSnapshot.key;
         const requestData = requestSnapshot.val();
 
-        // Добавьте продукты из заявки в таблицу
+        // Проверяем, существуют ли продукты в заявке
         if (requestData.items) {
+          // Добавьте продукты из заявки в таблицу
           requestData.items.forEach((itemData) => {
-          const itemRow = document.createElement("tr");
-          itemRow.innerHTML = `
-          <td>${requestData.number}</td>
-          <td>${requestData.initiator}</td>
-          <td>${requestData.date}</td>
-          <td>${itemData.category}</td>
-          <td>${itemData.name}</td>
-          <td>${itemData.variation}</td>
-          <td>${itemData.equipment}</td>
-          <td>${itemData.type}</td>
-          <td>${itemData.brand}</td>
-          <td class="tooltip" title="${itemData.comment.replace(/"/g, '')}">${itemData.comment}</td>
-          <td>${itemData.code}</td>
-          <td>${itemData.count}</td>
-          <td>${itemData.statusNom}</td>
-          `;
-          
-          productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
-        });}
+            const itemRow = document.createElement("tr");
+            itemRow.innerHTML = `
+            <td>${requestData.number}</td>
+            <td>${requestData.initiator}</td>
+            <td>${requestData.date}</td>
+            <td>${itemData.category}</td>
+            <td>${itemData.name}</td>
+            <td>${itemData.variation}</td>
+            <td>${itemData.equipment}</td>
+            <td>${itemData.type}</td>
+            <td>${itemData.brand}</td>
+            <td class="tooltip" title="${itemData.comment.replace(/"/g, '')}">${itemData.comment}</td>
+            <td>${itemData.code}</td>
+            <td>${itemData.count}</td>
+            <td>${itemData.statusNom}</td>
+            `;
+            
+            
+            productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
+          });
+        } else {
+          console.log(`Request with key "${requestKey}" has no items.`);
+        }
       });
     });
   }
 });
+
+
 
 
 
