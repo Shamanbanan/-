@@ -1125,7 +1125,8 @@ viewRequestsButton.addEventListener("click", () => {
         const requestData = requestSnapshot.val();
 
         // Добавьте продукты из заявки в таблицу
-        requestData.items.forEach((itemData) => {
+        if (requestData.items) {
+          requestData.items.forEach((itemData) => {
           const itemRow = document.createElement("tr");
           itemRow.innerHTML = `
           <td>${requestData.number}</td>
@@ -1143,46 +1144,12 @@ viewRequestsButton.addEventListener("click", () => {
           <td>${itemData.statusNom}</td>
           `;
           
-          
           productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
-        });
+        });}
       });
     });
   }
 });
-
-let page = 0; // Текущая страница, начинаем с 0
-
-function loadMoreItems() {
-    // Загружаем следующую страницу
-    fetch(`/api/requests?page=${++page}&size=25`) 
-        .then(response => response.json())
-        .then(data => {
-            // Когда данные загружены, добавляем их в таблицу
-            const table = document.querySelector('table');
-            data.forEach(item => {
-                const row = document.createElement('tr');
-
-                // Здесь создайте и добавьте ячейки в строку на основе своих данных
-                // Например: 
-                const cell = document.createElement('td');
-                cell.textContent = item.someField;
-                row.appendChild(cell);
-
-                table.appendChild(row);
-            });
-        });
-}
-
-
-
-window.onscroll = function(ev) {
-  // Проверяем, достиг ли пользователь конца страницы
-  if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight) {
-      // Если это так, загружаем больше элементов
-      loadMoreItems();
-  }
-};
 
 
 

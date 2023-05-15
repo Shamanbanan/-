@@ -230,7 +230,7 @@
         <button type="submit" id="add-product-btn">Добавить номенклатуру</button>
     </form>
     <div class="modal-main">
-      <input type="checkbox" name="editList" id="edit-list">
+      
       <table id="products-table">
         <thead>
           <tr class="head-string filter-row">
@@ -258,17 +258,18 @@
             <th>Статус, дата</th>
             <th style="width: 6%;">Кол-во</th>
             <th></th>
-            <th>
-             
-            </th>
+            <th></th>
           </tr>
         </thead>
-        <tbody id="products-body"></tbody>
+        <tbody id="products-body">
+          <input type="checkbox" name="editList" id="edit-list">
+        </tbody>
       </table>
     </div>
     <div class="modal-footer">
       <input type="submit" id="save-request-btn" value="Отправить заявку">
       <input type="submit" id="save-change-btn" value="Перезаписать заявку">
+ 
     </div>
   </div>
   <script src="https://cdn.jsdelivr.net/npm/minisearch"></script>
