@@ -16,6 +16,7 @@
 <!-- ШАПКА -->
 <div class="header">
   <button id="view-requests">Посмотреть ТМЦ</button>
+  <button id="admin-button">Админ</button>
 </div>
 <!-- ТАБЛИЦА РАСКРЫТЫХ ЗАЯВОК-->
 <div class="main">
@@ -81,6 +82,73 @@
       </tr>
     </thead>
     <tbody id="products-table-body">
+      <!-- Здесь будут добавляться строки с продуктами -->
+    </tbody>
+  </table>
+</div>
+<!-- ТАБЛИЦА АДМИН -->
+<div id="admin-table-container" style="display: none;">
+  <table id="products-table">
+    <!-- <thead>
+      <tr class="head-string filter-row">
+        <th>№ заявки
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+            <input type="number"  data-filter="0" min="0" size="6" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>ФИО инициатор
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="1" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Дата заявки
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="2" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Категория
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="3" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Наименование
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="4" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Вариант исп.
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="5" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Оборудование
+          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
+          <br>
+          <div class="filter-dropdown">
+          <input type="text"  data-filter="6" placeholder="Фильтр">
+          </div>
+        </th>
+        <th>Баз.ед.</th>
+        <th>Поставщик</th>
+        <th>Комментарий</th>
+        <th>Код в УМФ</th>
+        <th>Количество</th>
+        <th>Статус ТМЦ</th>
+      </tr>
+    </thead> -->
+    <tbody id="admin-table-body">
       <!-- Здесь будут добавляться строки с продуктами -->
     </tbody>
   </table>
@@ -230,7 +298,6 @@
         <button type="submit" id="add-product-btn">Добавить номенклатуру</button>
     </form>
     <div class="modal-main">
-      
       <table id="products-table">
         <thead>
           <tr class="head-string filter-row">

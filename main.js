@@ -1,3 +1,4 @@
+
 // //тестовая база
 // const firebaseConfig = {
 //   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
@@ -620,6 +621,7 @@ setTimeout(() => {
 });
 
 const nameInput = document.getElementById("name");
+const typeInput = document.getElementById("type");
 const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
@@ -640,9 +642,9 @@ const itemsSnapshot = await itemsRef.once("value");
     : [];
 
     miniSearch = new MiniSearch({
-      fields: ["name", "variation", "code"],
+      fields: ["name", "variation", "code", "type"],
       idField: "id",
-      storeFields: ["name", "variation", "code"],
+      storeFields: ["name", "variation", "code", "type"],
       caseSensitive: true,
       normalizeField: false,
     });
@@ -726,8 +728,8 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
 
   results.forEach((item) => {
    
-    const { name, variation, code } = item || {};
-    const itemKey = `${name}-${variation}-${code}`;
+    const { name, variation, code, type } = item || {};
+    const itemKey = `${name}-${variation}-${code}-${type}`;
     
     if (uniqueItems.has(itemKey)) {
       return; // skip duplicates
@@ -745,13 +747,14 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
 
     const info = document.createElement("div");
     
-    info.innerHTML = `ВИ: ${variation}  Код: (${code})`;
+    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type}`;
     el.appendChild(info);
 
     el.addEventListener("click", () => {
       nameInput.value = name;
       variationInput.value = variation;
       codeInput.value = code;
+      typeInput.value = type;
       autocompleteList.innerHTML = "";
     });
     fragment.appendChild(el);
@@ -782,6 +785,7 @@ document.addEventListener("click", (e) => {
 });
 
 variationInput.addEventListener("input", () => (codeInput.value = ""));
+typeInput.addEventListener("input", () => (codeInput.value = ""));
 nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
 
 //СКАЧИВАНИЕ
@@ -897,8 +901,6 @@ function setColumnWidths(table) {
       });
   }
 }
-
-
 
 // Функция для фильтрации таблицы по значениям в ячейках заголовка
 function filterTable(event) {
@@ -1157,7 +1159,106 @@ viewRequestsButton.addEventListener("click", () => {
   }
 });
 
+// //Админская панель
+// const adminButton = document.getElementById("admin-button");
+// const adminTableContainer = document.getElementById("admin-table-container");
+// const adminTableBody = document.getElementById("admin-table-body");
 
+// // Функция для загрузки данных из базы данных и отображения их в админской таблице
+// function loadAdminTable() {
+//   // Очистите таблицу перед загрузкой новых данных
+//   adminTableBody.innerHTML = "";
 
+//     // Загрузите данные о заявках из базы данных
+//     const requestsRef = database.ref("requests");
+//     requestsRef.once("value", (snapshot) => {
+//       snapshot.forEach((requestSnapshot) => {
+//         const requestKey = requestSnapshot.key;
+//         const requestData = requestSnapshot.val();
+  
+//         // Если items не определено в этой заявке, пропустите ее
+//         if (!requestData.items) {
+//           console.log(`Skipping request ${requestKey} because it has no items.`);
+//           return;
+//         }
+  
+//         // Добавьте продукты из заявки в таблицу
+//         requestData.items.forEach((itemData, itemIndex) => {
+//         const itemRow = document.createElement("tr");
+//         itemRow.innerHTML = `
+//           <td><input type="text" value="${requestData.number}"></td>
+//           <td><input type="text" value="${requestData.initiator}"></td>
+//           <td><input type="text" value="${requestData.date}"></td>
+//           <td><input type="text" value="${requestData.isLocked}"></td>
+//           <td><input type="text" value="${itemData.category}"></td>
+//           <td><input type="text" value="${itemData.name}"></td>
+//           <td><input type="text" value="${itemData.variation}"></td>
+//           <td><input type="text" value="${itemData.equipment}"></td>
+//           <td><input type="text" value="${itemData.type}"></td>
+//           <td><input type="text" value="${itemData.brand}"></td>
+//           <td><input type="text" value="${itemData.comment}"></td>
+//           <td><input type="text" value="${itemData.code}"></td>
+//           <td><input type="text" value="${itemData.count}"></td>
+//           <td><input type="text" value="${itemData.statusNom}"></td>
+//           <td><button class="save-button">Save</button></td>
+//         `;
 
+//         itemRow.querySelector(".save-button").addEventListener("click", () => {
+//           // Получить обновленные данные из строки
+//           const updatedItemData = {
+//             category: itemRow.children[4].firstChild.value,
+//             name: itemRow.children[5].firstChild.value,
+//             variation: itemRow.children[6].firstChild.value,
+//             equipment: itemRow.children[7].firstChild.value,
+//             type: itemRow.children[8].firstChild.value,
+//             brand: itemRow.children[9].firstChild.value,
+//             comment: itemRow.children[10].firstChild.value,
+//             code: itemRow.children[11].firstChild.value,
+//             count: itemRow.children[12].firstChild.value,
+//             statusNom: itemRow.children[13].firstChild.value
+//           };
+
+//           // Обновить элемент в списке
+//           requestData.items[itemIndex] = updatedItemData;
+
+//           // Обновить данные заявки
+//           requestData.number = itemRow.children[0].firstChild.value;
+//           requestData.initiator = itemRow.children[1].firstChild.value;
+//           requestData.date = itemRow.children[2].firstChild.value;
+//           requestData.isLocked = itemRow.children[3].firstChild.value;
+
+//           // Сохранить обновленные данные заявки в базе данных
+//           requestsRef.child(requestKey).set(requestData, (error) => {
+//             if (error) {
+//               // The write failed...
+//               console.log("Failed to save changes:", error);
+//             } else {
+//               // Data saved successfully!
+//               console.log("Changes saved successfully!");
+//             }
+//           });
+//         });
+//         adminTableBody.insertBefore(itemRow, adminTableBody.firstChild);
+//       });
+//     });
+//   });
+// }
+
+// const correctPassword = "123";
+
+// adminButton.addEventListener("click", () => {
+//   const enteredPassword = prompt("Please enter the admin password:");
+  
+//   if (enteredPassword === correctPassword) {
+//     // Переключите видимость админской таблицы
+//     const isAdminTableVisible = adminTableContainer.style.display !== "none";
+//     adminTableContainer.style.display = isAdminTableVisible ? "none" : "block";
+
+//     if (!isAdminTableVisible) {
+//       loadAdminTable();
+//     }
+//   } else {
+//     alert("Incorrect password. Please try again.");
+//   }
+// });
 
