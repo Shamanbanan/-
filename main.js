@@ -1,4 +1,3 @@
-
 // //тестовая база
 // const firebaseConfig = {
 //   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
@@ -87,20 +86,25 @@ function setFieldError(field, message) {
   field.reportValidity();
 }
 
-function addNomenklatureTable(event) {
+async function addNomenklatureTable(event) {
   event.preventDefault();
-  const categoryField = formRequest.elements.category;
-  const nameField = formRequest.elements.name;
-  const variationField = formRequest.elements.variation;
-  const countField = formRequest.elements["input-count"];
-  const typeField = formRequest.elements.type;
-  const equipmentField = formRequest.elements.equipment;
-  const name = nameField.value.trim();
-  const variation = variationField.value.trim();
-  const count = countField.value.trim();
-  const category = categoryField.value;
 
-  let hasError = false;
+  // Отключаем кнопку во время выполнения функции
+  addProduct.disabled = true;
+
+  try {
+    const categoryField = formRequest.elements.category;
+    const nameField = formRequest.elements.name;
+    const variationField = formRequest.elements.variation;
+    const countField = formRequest.elements["input-count"];
+    const typeField = formRequest.elements.type;
+    const equipmentField = formRequest.elements.equipment;
+    const name = nameField.value.trim();
+    const variation = variationField.value.trim();
+    const count = countField.value.trim();
+    const category = categoryField.value;
+
+    let hasError = false;
 
   if (!name) {
     setFieldError(nameField, "Введите имя");
@@ -137,27 +141,50 @@ function addNomenklatureTable(event) {
   if (hasError) {
     return;
   }
-  const rowIndex = listTableRequest.rows.length;
-  const itemRequest = `
-      <tr class="item-request">
-        <td class="number-cell">${rowIndex}</td>
-        <td class="category-cell">${formRequest.elements.category.value}</td>
-        <td class="name-cell">${name}</td>
-        <td class="variation-cell">${variation}</td>
-        <td class="type-cell">${formRequest.elements.type.value}</td>
-        <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
-        <td class="article-cell"></td> 
-        <td class="brand-cell"></td> 
-        <td class="code-cell">${formRequest.elements["input-code"].value}</td>
-        <td class="comment-cell"></td>
-        <td class="status-nom-cell"></td>
-        <td class="count-cell">${count}</td>
-        <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
-        <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
-      </tr>
-    `;
-  listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
-  formRequest.reset();
+
+  let code = "";
+
+ // Проверяем наличие записи в базе данных
+ await itemsRef.once("value", (snapshot) => {
+  const items = snapshot.val();
+  Object.keys(items).forEach((key) => {
+    const item = items[key];
+    if(item.name === name && item.variation === variation && item.type === typeField.value){
+      code = item.code;
+    }
+  });
+});
+
+
+const rowIndex = listTableRequest.rows.length;
+const itemRequest = `
+    <tr class="item-request">
+      <td class="number-cell">${rowIndex}</td>
+      <td class="category-cell">${formRequest.elements.category.value}</td>
+      <td class="name-cell">${name}</td>
+      <td class="variation-cell">${variation}</td>
+      <td class="type-cell">${formRequest.elements.type.value}</td>
+      <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
+      <td class="article-cell"></td> 
+      <td class="brand-cell"></td> 
+      <td class="code-cell">${code}</td>
+      <td class="comment-cell"></td>
+      <td class="status-nom-cell"></td>
+      <td class="count-cell">${count}</td>
+      <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
+      <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
+    </tr>
+  `;
+listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
+formRequest.reset();
+
+
+} catch (error) {
+console.error("Error in addNomenklatureTable:", error);
+} finally {
+// Включаем кнопку после выполнения функции, даже если возникла ошибка
+addProduct.disabled = false;
+}
 }
 
 // добавляем обработчик события на кнопку закрытия модального окна
@@ -389,9 +416,7 @@ requestsRef.on("value", (snapshot) => {
     const editRequestButton = newRow.querySelector(".edit-request-button");
 
     deleteButton.addEventListener("click", () => {
-      // if (confirm("Вы уверены, что хотите удалить заявку?")) {
-      //   database.ref(`requests/${requestKey}`).remove();
-      // }
+
       if (confirm("Вы действительно хотите удалить эту заявку?")) {
         const requestRef = database.ref("requests/" + requestKey);
         const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
@@ -543,31 +568,37 @@ saveChangesBtn.addEventListener("click", () => {
   });
 
 // Обновление данных в Firebase Realtime Database
+
 itemsRef.once("value", (snapshot) => {
 
   const items = snapshot.val();
-  const codeVariationToNameMap = {};
+  const codeVariationToNameTypeMap = {};
+  const nameVariationTypeToCodeMap = {};
 
   Object.keys(items).forEach((key) => {
-
     const item = items[key];
-
-    codeVariationToNameMap[`${item.code}-${item.variation}`] = item.name;
+    codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {name: item.name, type: item.type};
+    nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
   });
 
   requestData.forEach((item, index) => {
     if (item.code) {
-
       const codeVariationKey = `${item.code}-${item.variation}`;
 
-      if (codeVariationToNameMap[codeVariationKey]) {
-        requestData[index].name = codeVariationToNameMap[codeVariationKey];
+      if (codeVariationToNameTypeMap[codeVariationKey]) {
+        requestData[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
+        requestData[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
       } else {
-
         const newItemKey = itemsRef.push().key;
 
         itemsRef.child(newItemKey).set(item);
-        codeVariationToNameMap[codeVariationKey] = item.name;
+        codeVariationToNameTypeMap[codeVariationKey] = {name: item.name, type: item.type};
+      }
+    } else {
+      const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
+
+      if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
+        requestData[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
       }
     }
   });
@@ -784,8 +815,6 @@ document.addEventListener("click", (e) => {
   }
 });
 
-variationInput.addEventListener("input", () => (codeInput.value = ""));
-typeInput.addEventListener("input", () => (codeInput.value = ""));
 nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
 
 //СКАЧИВАНИЕ
@@ -1126,7 +1155,7 @@ viewRequestsButton.addEventListener("click", () => {
       snapshot.forEach((requestSnapshot) => {
         const requestKey = requestSnapshot.key;
         const requestData = requestSnapshot.val();
-
+        
         // Проверяем, существуют ли продукты в заявке
         if (requestData.items) {
           // Добавьте продукты из заявки в таблицу
@@ -1148,117 +1177,76 @@ viewRequestsButton.addEventListener("click", () => {
             <td>${itemData.statusNom}</td>
             `;
             
-            
             productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
           });
         } else {
-          console.log(`Request with key "${requestKey}" has no items.`);
+          console.log(`Заяки по этому ключу "${requestKey}" нет в списке.`);
         }
       });
     });
   }
 });
 
-// //Админская панель
-// const adminButton = document.getElementById("admin-button");
-// const adminTableContainer = document.getElementById("admin-table-container");
-// const adminTableBody = document.getElementById("admin-table-body");
-
-// // Функция для загрузки данных из базы данных и отображения их в админской таблице
-// function loadAdminTable() {
-//   // Очистите таблицу перед загрузкой новых данных
-//   adminTableBody.innerHTML = "";
-
-//     // Загрузите данные о заявках из базы данных
-//     const requestsRef = database.ref("requests");
-//     requestsRef.once("value", (snapshot) => {
-//       snapshot.forEach((requestSnapshot) => {
-//         const requestKey = requestSnapshot.key;
-//         const requestData = requestSnapshot.val();
+//функция обновления всех заявок
+function updateRequests() {
+  // Load all requests
+  const requestsRef = database.ref("requests");
+  requestsRef.once("value", (snapshot) => {
+    snapshot.forEach((requestSnapshot) => {
+      const requestKey = requestSnapshot.key;
+      const requestData = requestSnapshot.val();
   
-//         // Если items не определено в этой заявке, пропустите ее
-//         if (!requestData.items) {
-//           console.log(`Skipping request ${requestKey} because it has no items.`);
-//           return;
-//         }
-  
-//         // Добавьте продукты из заявки в таблицу
-//         requestData.items.forEach((itemData, itemIndex) => {
-//         const itemRow = document.createElement("tr");
-//         itemRow.innerHTML = `
-//           <td><input type="text" value="${requestData.number}"></td>
-//           <td><input type="text" value="${requestData.initiator}"></td>
-//           <td><input type="text" value="${requestData.date}"></td>
-//           <td><input type="text" value="${requestData.isLocked}"></td>
-//           <td><input type="text" value="${itemData.category}"></td>
-//           <td><input type="text" value="${itemData.name}"></td>
-//           <td><input type="text" value="${itemData.variation}"></td>
-//           <td><input type="text" value="${itemData.equipment}"></td>
-//           <td><input type="text" value="${itemData.type}"></td>
-//           <td><input type="text" value="${itemData.brand}"></td>
-//           <td><input type="text" value="${itemData.comment}"></td>
-//           <td><input type="text" value="${itemData.code}"></td>
-//           <td><input type="text" value="${itemData.count}"></td>
-//           <td><input type="text" value="${itemData.statusNom}"></td>
-//           <td><button class="save-button">Save</button></td>
-//         `;
-
-//         itemRow.querySelector(".save-button").addEventListener("click", () => {
-//           // Получить обновленные данные из строки
-//           const updatedItemData = {
-//             category: itemRow.children[4].firstChild.value,
-//             name: itemRow.children[5].firstChild.value,
-//             variation: itemRow.children[6].firstChild.value,
-//             equipment: itemRow.children[7].firstChild.value,
-//             type: itemRow.children[8].firstChild.value,
-//             brand: itemRow.children[9].firstChild.value,
-//             comment: itemRow.children[10].firstChild.value,
-//             code: itemRow.children[11].firstChild.value,
-//             count: itemRow.children[12].firstChild.value,
-//             statusNom: itemRow.children[13].firstChild.value
-//           };
-
-//           // Обновить элемент в списке
-//           requestData.items[itemIndex] = updatedItemData;
-
-//           // Обновить данные заявки
-//           requestData.number = itemRow.children[0].firstChild.value;
-//           requestData.initiator = itemRow.children[1].firstChild.value;
-//           requestData.date = itemRow.children[2].firstChild.value;
-//           requestData.isLocked = itemRow.children[3].firstChild.value;
-
-//           // Сохранить обновленные данные заявки в базе данных
-//           requestsRef.child(requestKey).set(requestData, (error) => {
-//             if (error) {
-//               // The write failed...
-//               console.log("Failed to save changes:", error);
-//             } else {
-//               // Data saved successfully!
-//               console.log("Changes saved successfully!");
-//             }
-//           });
-//         });
-//         adminTableBody.insertBefore(itemRow, adminTableBody.firstChild);
-//       });
-//     });
-//   });
-// }
-
-// const correctPassword = "123";
-
-// adminButton.addEventListener("click", () => {
-//   const enteredPassword = prompt("Please enter the admin password:");
-  
-//   if (enteredPassword === correctPassword) {
-//     // Переключите видимость админской таблицы
-//     const isAdminTableVisible = adminTableContainer.style.display !== "none";
-//     adminTableContainer.style.display = isAdminTableVisible ? "none" : "block";
-
-//     if (!isAdminTableVisible) {
-//       loadAdminTable();
-//     }
-//   } else {
-//     alert("Incorrect password. Please try again.");
-//   }
-// });
-
+      // Skip this request if it's locked
+      if (requestData.isLocked === true) { // This will exclude both false and undefined
+        console.log(`Skipping request ${requestKey} because it is locked.`);
+        return;
+      }
+            // Load all items
+            itemsRef.once("value", (snapshot) => {
+              const items = snapshot.val();
+              const codeVariationToNameTypeMap = {};
+              const nameVariationTypeToCodeMap = {};
+      
+              Object.keys(items).forEach((key) => {
+                const item = items[key];
+                codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {name: item.name, type: item.type};
+                nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
+              });
+        
+              requestData.items.forEach((item, index) => {
+                if (item.code) {
+                  const codeVariationKey = `${item.code}-${item.variation}`;
+      
+                  if (codeVariationToNameTypeMap[codeVariationKey]) {
+                    requestData.items[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
+                    requestData.items[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
+                  } else {
+                    const newItemKey = itemsRef.push().key;
+                    itemsRef.child(newItemKey).set(item);
+                    codeVariationToNameTypeMap[codeVariationKey] = {name: item.name, type: item.type};
+                  }
+                } else {
+                  const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
+      
+                  if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
+                    requestData.items[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
+                  }
+                }
+              });
+      
+              // Update the request
+              requestsRef.child(requestKey).update(requestData, (error) => {
+                if (error) {
+                  console.error("Failed to save changes:", error);
+                } else {
+                  console.log(`Successfully updated request ${requestKey}!`);
+                }
+              });
+            });
+            console.log(`Request ${requestKey} успешно обновлены.`);
+          });
+        });
+      }
+      
+      const updateButton = document.getElementById("update-button");
+      updateButton.addEventListener("click", updateRequests);
