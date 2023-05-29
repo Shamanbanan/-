@@ -1315,7 +1315,7 @@ function updateRequests() {
           const url = URL.createObjectURL(blob);
           const a = document.createElement("a");
           a.href = url;
-          a.download = "requests.xlsx";
+          a.download = "Заявка.xlsx";
           a.click();
           URL.revokeObjectURL(url);
       });
