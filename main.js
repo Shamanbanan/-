@@ -1253,7 +1253,7 @@ function updateRequests() {
 
 
       //функция загрузки
-      function downloadExcel() {
+      function Excel() {
         const workbook = new ExcelJS.Workbook();
         const sheet = workbook.addWorksheet("Заявки");
     
@@ -1323,5 +1323,5 @@ function updateRequests() {
     
     // Добавляем обработчик события для кнопки
     const downloadProductButton = document.getElementById("download-products-button");
-    downloadProductButton.addEventListener("click", downloadExcel);
+    downloadProductButton.addEventListener("click", Excel);
     
