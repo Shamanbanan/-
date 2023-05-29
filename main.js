@@ -1250,3 +1250,78 @@ function updateRequests() {
       
       const updateButton = document.getElementById("update-button");
       updateButton.addEventListener("click", updateRequests);
+
+
+      //функция загрузки
+      function downloadExcel() {
+        const workbook = new ExcelJS.Workbook();
+        const sheet = workbook.addWorksheet("Заявки");
+    
+        // Добавляем загаловки таблицы
+        sheet.addRow([
+            "Инициатор",
+            "Ответственный",
+            "Индекс",
+            "Категория",
+            "Наименование",
+            "Вар.исп",
+            "Баз.ед",
+            "Оборудование",
+            "Статья",
+            "Поставщик",
+            "Код",
+            "комментарий",
+            "Статус, дата",
+            "Кол-во",
+        ]);
+    
+      // Получаем значение инициатора и ответственного (замените 'initiatorElementId' и 'responsibleElementId' на соответствующие id)
+      const initiator = document.getElementById('initiator').value;
+      const responsible = document.getElementById('executive-id').value;
+  
+      // Собираем все строки из таблицы 'products-table'
+      const rows = document.querySelectorAll("#products-table tr");
+  
+      // Для каждой строки (за исключением первой, так как она содержит заголовки)
+      for (let i = 1; i < rows.length; i++) {
+          const row = rows[i];
+  
+          // Для каждой ячейки в строке добавляем данные в новую строку файла Excel
+          let excelRow = [initiator, responsible];
+          const cells = row.querySelectorAll("td");
+          for (let j = 0; j < cells.length; j++) {
+              const cell = cells[j];
+  
+              // Если это не кнопка, добавляем значение в excelRow
+              if (!cell.querySelector("button")) {
+                // Для ввода получаем значение из атрибута 'value', иначе используем текстовое содержимое ячейки
+                let value = cell.firstChild?.value;
+                if (typeof value === "undefined") {
+                    value = cell.textContent;
+                }
+                excelRow.push(value);
+            }
+          }
+  
+          sheet.addRow(excelRow);
+      }
+  
+      // Скачиваем файл
+      workbook.xlsx.writeBuffer().then((buffer) => {
+          const blob = new Blob([buffer], {
+              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+          });
+  
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement("a");
+          a.href = url;
+          a.download = "requests.xlsx";
+          a.click();
+          URL.revokeObjectURL(url);
+      });
+  }
+    
+    // Добавляем обработчик события для кнопки
+    const downloadProductButton = document.getElementById("download-products-button");
+    downloadProductButton.addEventListener("click", downloadExcel);
+    
