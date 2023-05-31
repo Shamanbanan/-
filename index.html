@@ -47,13 +47,13 @@
           <input type="text"  data-filter="2" placeholder="Фильтр">
           </div>
         </th>
-        <th>Категория
+        <!-- <th>Категория
           <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
           <br>
           <div class="filter-dropdown">
           <input type="text"  data-filter="3" placeholder="Фильтр">
           </div>
-        </th>
+        </th> -->
         <th>Наименование
           <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
           <br>
@@ -107,6 +107,7 @@
             <input type="number"  data-filter="0" min="0" size="6" placeholder="Фильтр">
           </div>
         </th>
+        <th class="product-details-cell"></th>
         <th>Ссылка на заявку
           <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
           <br>
@@ -203,6 +204,7 @@
         </select>
       </div>
         <div class="field-container">
+          <input class="" type="number" id="input-code" name="code" disabled>
           <input class="text-field-input" type="text" id="name" autocomplete="off" placeholder="например: Саморез по дереву 4,2х76 мм" onblur="capitalizeWords(this)" required>
           <label class="text-field-label" for="variation">Наименование</label>
           <div id="autocompleteList"></div>
@@ -236,7 +238,6 @@
           <input class="text-field-input" type="number" id="input-count" name="count" min="0" placeholder="0" required>
           <label class="text-field-label" for="input-count" >Кол-во</label>
         </div>
-        <input class="hidden" type="number" id="input-code" name="code" disabled>
         <button type="submit" id="add-product-btn">Добавить ТМЦ</button>
     </form>
     <div class="modal-main">

@@ -1,33 +1,34 @@
-// //тестовая база
-// const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
-// };
-
-// Инициализация Firebase Рабочая
+//тестовая база
 const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
 };
+
+// // Инициализация Firebase Рабочая
+// const firebaseConfig = {
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+// };
 
 firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
 const database = firebase.database();
 
-//ссылка на узел items
+//ссылка на узел items requests
 const itemsRef = database.ref("items");
+const requestsRef = database.ref("requests");
 
 const addBtn = document.getElementById("add-btn");
 const modal = document.getElementById("modal");
@@ -47,8 +48,9 @@ const categoryInput = document.getElementById("category-list");
 // Объявляем переменную вне обработчика событий
 let requestRef;
 let currentRequestKey = null;
+let requestNumber = null; //Переменная для номера заявки
 
-// функция для открытия модального окна
+// ФУНКЦИЯ ОТКРЫТИЯ МОДАЛЬНОГО ОКНА
 function openModal() {
   modal.classList.remove("hidden");
   listTableRequest.innerHTML = "";
@@ -60,7 +62,7 @@ function openModal() {
   document.getElementById("request-number").textContent = "";
 }
 
-// функция для закрытия модального окна
+// ФУНКЦИЯ ЗАКРЫТИЯ МОДАЛЬНОГО ОКНА
 function closeModal() {
   modal.classList.add("hidden");
   requestRef.update({ isLocked: false });
@@ -70,7 +72,6 @@ function closeModal() {
 addBtn.addEventListener("click", openModal);
 
 // добавляем обработчик события на кнопку закрытия модального окна
-// closeBtn.addEventListener("click", closeModal);
 closeBtn.addEventListener("click", () => {
   if (
     confirm(
@@ -190,7 +191,7 @@ addProduct.disabled = false;
 // добавляем обработчик события на кнопку закрытия модального окна
 addProduct.addEventListener("click", addNomenklatureTable);
 
-// Функция, которая делает ячейки редактируемыми
+// ФУНКЦИЯ РЕДАКТИРОВАНИЯ ЯЧЕЕК
 const makeCellEditable = (cell, color) => {
   cell.contentEditable = true;
   cell.style.backgroundColor = color;
@@ -278,9 +279,7 @@ listTableRequest.addEventListener("click", (event) => {
   }
 });
 
-let requestNumber = null; //Переменная для номера заявки
-
-// функция сохранения в базу данных
+// ФУНКЦИЯ СОХРАНЕНИЕ В БАЗУ ДАННЫХ
 function saveRequestDatabase() {
   // Получаем данные из формы
   const initiator = document.getElementById("initiator").value;
@@ -378,9 +377,7 @@ database.ref("requests").push(request, (error) => {
 //Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
-const requestsRef = database.ref("requests");
-
-// Функция для обновления таблицы
+// ФУНКЦИЯ ОБНОВЛЕНИЯ ТАБЛИЦЫ
 function updateTable() {
   table.innerHTML = "";
 
@@ -388,24 +385,39 @@ function updateTable() {
     snapshot.forEach((requestSnapshot) => {
       const requestKey = requestSnapshot.key;
       const requestData = requestSnapshot.val();
+      let totalProducts = 0;
+let productsWithoutCode = 0;
+
+if (requestData.items) {
+  totalProducts = requestData.items.length;
+
+  productsWithoutCode = requestData.items.filter(
+    (item) => !item.code || item.code.trim() === ""
+  ).length;
+}
+
+const productDetails = `${totalProducts}/${productsWithoutCode}`;
+
 
       const newRow = document.createElement("tr");
       newRow.setAttribute("data-key", requestKey);
       newRow.innerHTML = `
-        <td class="id-cell">${requestData.number}${requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ''}</td>
-        <td class="number-cell">${requestKey}</td>
-        <td class="date-cell">${requestData.date}</td>
-        <td class="in-cell">${requestData.initiator}</td>
-        <td class="executive-cell">${requestData.executive}</td>
-        <td class="status-cell">${requestData.statusRequest}</td>
-        <td class="completion-date-cell">${requestData.completionDate || ""}</td>
-        <td class="button-cell">
-          <button class="edit-request-button">Редактировать</button>
-        </td>
-        <td class="button-cell">
-          <button class="btn-delete">Удалить</button>
-        </td>
-      `;
+      <td class="id-cell">${requestData.number}${requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ''}</td>
+      <td class="product-details-cell">${productDetails}</td>
+      <td class="number-cell">${requestKey}</td>
+      <td class="date-cell">${requestData.date}</td>
+      <td class="in-cell">${requestData.initiator}</td>
+      <td class="executive-cell">${requestData.executive}</td>
+      <td class="status-cell">${requestData.statusRequest}</td>
+      <td class="completion-date-cell">${requestData.completionDate || ""}</td>
+      <td class="button-cell">
+        <button class="edit-request-button">Редактировать</button>
+      </td>
+      <td class="button-cell">
+        <button class="btn-delete">Удалить</button>
+      </td>
+    `;
+    
 
       table.insertBefore(newRow, table.firstChild);
 
@@ -417,14 +429,14 @@ function updateTable() {
         if (confirm("Вы действительно хотите удалить эту заявку?")) {
           const requestRef = database.ref("requests/" + requestKey);
           const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
-
+      
           requestRef.once("value", (snapshot) => {
             const requestData = snapshot.val();
-
+      
             // Опционально: добавьте сведения о дате удаления и пользователе, удалившем заявку
             requestData.deletedAt = new Date().toISOString();
             requestData.deletedBy = "username"; // Замените "username" именем текущего пользователя
-
+      
             // Перемещаем заявку в узел deletedRequests
             deletedRequestsRef.set(requestData, (error) => {
               if (error) {
@@ -432,14 +444,16 @@ function updateTable() {
               } else {
                 // Удаляем заявку из узла requests
                 requestRef.remove();
-                newRow.remove();
+                newRow.remove(); // Исправлено здесь
               }
             });
           });
         }
       });
+      
+      
 
-      // Функция для редактирования заявки
+      // ФУНКЦИЯ РЕДАКТИРОВАНИЯ ЗАЯВКИ
       editRequestButton.addEventListener("click", () => {
         form.reset();
         formRequest.reset();
@@ -523,14 +537,24 @@ requestsRef.on("child_changed", (snapshot) => {
   const existingRow = document.querySelector(`tr[data-key="${requestKey}"]`);
 
   if (existingRow) {
-    // Обновляем содержимое существующей строки
-    const idCell = existingRow.querySelector(".id-cell");
-    idCell.innerHTML = `${requestData.number}${
-      requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ""
-    }`;
+    const {
+      number,
+      isLocked,
+      date,
+      initiator,
+      executive,
+      statusRequest,
+      completionDate,
+    } = requestData;
 
-    // Обновляем другие ячейки таблицы при необходимости
-    // ...
+    existingRow.querySelector(".id-cell").innerHTML = `${number}${isLocked ? ' <i class="fa fa-lock"></i>' : ""}`;
+    existingRow.querySelector(".number-cell").textContent = requestKey;
+    existingRow.querySelector(".date-cell").textContent = date;
+    existingRow.querySelector(".in-cell").textContent = initiator;
+    existingRow.querySelector(".executive-cell").textContent = executive;
+    existingRow.querySelector(".status-cell").textContent = statusRequest;
+    existingRow.querySelector(".completion-date-cell").textContent = completionDate || "";
+    existingRow.querySelector(".product-details-cell").textContent = newProductDetails;
   }
 });
 
