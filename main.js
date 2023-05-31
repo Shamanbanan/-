@@ -380,130 +380,161 @@ saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
 const requestsRef = database.ref("requests");
 
-requestsRef.on("value", (snapshot) => {
+// Функция для обновления таблицы
+function updateTable() {
   table.innerHTML = "";
-  // Находим номер самой большой заявки
-  const maxRequestNumber = Object.values(snapshot.val()).reduce(
-    (max, request) => Math.max(max, request.number),
-    0
-  );
 
-  // Устанавливаем начальное значение номера заявки
-  requestNumber = maxRequestNumber + 1;
+  requestsRef.once("value", (snapshot) => {
+    snapshot.forEach((requestSnapshot) => {
+      const requestKey = requestSnapshot.key;
+      const requestData = requestSnapshot.val();
 
-  for (const requestKey in snapshot.val()) {
-    const requestData = snapshot.val()[requestKey];
-
-    const newRow = document.createElement("tr");
-    newRow.setAttribute("data-key", requestKey);
-    newRow.innerHTML = `
-      <td class="id-cell">${requestData.number}</td>
+      const newRow = document.createElement("tr");
+      newRow.setAttribute("data-key", requestKey);
+      newRow.innerHTML = `
+        <td class="id-cell">${requestData.number}${requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ''}</td>
         <td class="number-cell">${requestKey}</td>
-        <td class="date-cell" value="${requestData.date}">${requestData.date}</td>
+        <td class="date-cell">${requestData.date}</td>
         <td class="in-cell">${requestData.initiator}</td>
         <td class="executive-cell">${requestData.executive}</td>
         <td class="status-cell">${requestData.statusRequest}</td>
         <td class="completion-date-cell">${requestData.completionDate || ""}</td>
         <td class="button-cell">
-         <button class="edit-request-button">Редактировать</button></td>
-        <td class="button-cell"><button class="btn-delete">Удалить</button></td>
+          <button class="edit-request-button">Редактировать</button>
+        </td>
+        <td class="button-cell">
+          <button class="btn-delete">Удалить</button>
+        </td>
       `;
 
-    table.insertBefore(newRow, table.firstChild);
+      table.insertBefore(newRow, table.firstChild);
 
-    //Переменные кнопок удалить и редактировать
-    const deleteButton = newRow.querySelector(".btn-delete");
-    const editRequestButton = newRow.querySelector(".edit-request-button");
+      // Переменные кнопок удаления и редактирования
+      const deleteButton = newRow.querySelector(".btn-delete");
+      const editRequestButton = newRow.querySelector(".edit-request-button");
 
-    deleteButton.addEventListener("click", () => {
+      deleteButton.addEventListener("click", () => {
+        if (confirm("Вы действительно хотите удалить эту заявку?")) {
+          const requestRef = database.ref("requests/" + requestKey);
+          const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
 
-      if (confirm("Вы действительно хотите удалить эту заявку?")) {
-        const requestRef = database.ref("requests/" + requestKey);
-        const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
-    
+          requestRef.once("value", (snapshot) => {
+            const requestData = snapshot.val();
+
+            // Опционально: добавьте сведения о дате удаления и пользователе, удалившем заявку
+            requestData.deletedAt = new Date().toISOString();
+            requestData.deletedBy = "username"; // Замените "username" именем текущего пользователя
+
+            // Перемещаем заявку в узел deletedRequests
+            deletedRequestsRef.set(requestData, (error) => {
+              if (error) {
+                console.error("Error moving request to deletedRequests:", error);
+              } else {
+                // Удаляем заявку из узла requests
+                requestRef.remove();
+                newRow.remove();
+              }
+            });
+          });
+        }
+      });
+
+      // Функция для редактирования заявки
+      editRequestButton.addEventListener("click", () => {
+        form.reset();
+        formRequest.reset();
+        selectStatusRequest.style.display = "block";
+
+        requestRef = database.ref("requests/" + requestKey);
+
         requestRef.once("value", (snapshot) => {
           const requestData = snapshot.val();
-    
-          // Опционально: добавьте сведения о дате удаления и пользователе, удалившем заявку
-          requestData.deletedAt = new Date().toISOString();
-          requestData.deletedBy = "username"; // Замените "username" именем текущего пользователя
-    
-          // Перемещаем заявку в узел deletedRequests
-          deletedRequestsRef.set(requestData, (error) => {
-            if (error) {
-              console.error("Error moving request to deletedRequests:", error);
-            } else {
-              // Удаляем заявку из узла requests
-              requestRef.remove();
-              row.remove();
-            }
-          });
+
+          if (requestData.isLocked) {
+            alert(
+              "Заявка заблокирована. Пожалуйста, дождитесь завершения редактирования другим пользователем."
+            );
+            return;
+          }
+
+          // Блокируем заявку
+          requestRef.update({ isLocked: true });
+          currentRequestKey = requestKey;
+
+          document.getElementById("request-number").textContent =
+            requestData.number;
+          document.getElementById("initiator").value = requestData.initiator;
+          document.getElementById("executive-id").value =
+            requestData.executive;
+          document.getElementById("status-request").value =
+            requestData.statusRequest;
+
+          const tableRows = document.querySelectorAll(".item-request");
+
+          tableRows.forEach((row) => row.remove());
+
+          if (requestData.items) {
+            requestData.items.forEach((itemData) => {
+              const itemRow = document.createElement("tr");
+              itemRow.classList.add("item-request");
+              itemRow.innerHTML = `
+                <td class="number-cell">${itemData.rowIndexRow}</td>
+                <td class="category-cell">${itemData.category}</td>
+                <td class="name-cell">${itemData.name}</td>
+                <td class="variation-cell">${itemData.variation}</td>
+                <td class="type-cell">${itemData.type}</td>
+                <td class="equipment-cell">${itemData.equipment}</td>
+                <td class="article-cell">${itemData.article}</td>
+                <td class="brand-cell">${itemData.brand}</td>
+                <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
+                <td class="comment-cell">${itemData.comment}</td>
+                <td class="status-nom-cell">${itemData.statusNom}</td>
+                <td class="count-cell">${itemData.count}</td>
+                <td class="button-cell">
+                  <button class="btn-edit" id="edit">Изменить</button>
+                </td>
+                <td class="button-cell">
+                  <button class="btn-remove" id="remove">Удалить</button>
+                </td>
+              `;
+
+              listTableRequest.appendChild(itemRow);
+            });
+          }
+
+          modal.classList.remove("hidden");
+          saveChangesBtn.classList.remove("hidden");
+          saveRequestBtn.classList.add("hidden");
+          saveChangesBtn.setAttribute("data-request-key", requestKey);
         });
-      }
-    });
-    
-//Функция для кнопки редактирования
-    editRequestButton.addEventListener("click", () => {
-      form.reset();
-      formRequest.reset();
-      selectStatusRequest.style.display = "block";
-    
-      requestRef = database.ref("requests/" + requestKey);
-    
-      requestRef.once("value", (snapshot) => {
-        const requestData = snapshot.val();
-    
-        if (requestData.isLocked) {
-          alert("Заявка заблокирована. Пожалуйста, дождитесь завершения редактирования другим пользователем.");
-          return;
-        }
-    
-        // Lock the request
-        requestRef.update({ isLocked: true });
-        currentRequestKey = requestKey;
-    
-        document.getElementById("request-number").textContent = requestData.number;
-        document.getElementById("initiator").value = requestData.initiator;
-        document.getElementById("executive-id").value = requestData.executive;
-        document.getElementById("status-request").value = requestData.statusRequest;
-    
-        const tableRows = document.querySelectorAll(".item-request");
-    
-        tableRows.forEach((row) => row.remove());
-    
-        if (requestData.items) {
-        requestData.items.forEach((itemData) => {
-          const itemRow = document.createElement("tr");
-          itemRow.classList.add("item-request");
-          itemRow.innerHTML = `
-              <td class="number-cell">${itemData.rowIndexRow}</td>
-              <td class="category-cell">${itemData.category}</td>
-              <td class="name-cell">${itemData.name}</td>
-              <td class="variation-cell">${itemData.variation}</td>
-              <td class="type-cell">${itemData.type}</td>
-              <td class="equipment-cell">${itemData.equipment}</td>
-              <td class="article-cell">${itemData.article}</td>
-              <td class="brand-cell">${itemData.brand}</td>
-              <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
-              <td class="comment-cell">${itemData.comment}</td>
-              <td class="status-nom-cell">${itemData.statusNom}</td>
-              <td class="count-cell">${itemData.count}</td>
-              <td class="button-cell">
-              <button class="btn-edit" id="edit">Изменить</button>
-              <td class="button-cell">
-              <button class="btn-remove" id="remove">Удалить</button></td>
-            `;
-          listTableRequest.appendChild(itemRow);
-        });
-      }
-        modal.classList.remove("hidden");
-        saveChangesBtn.classList.remove("hidden");
-        saveRequestBtn.classList.add("hidden");
-        saveChangesBtn.setAttribute("data-request-key", requestKey);
       });
     });
+  });
+}
+
+// Вызываем функцию updateTable для обновления таблицы при загрузке страницы
+updateTable();
+
+// При обновлении заявки в базе данных, вызываем функцию updateTable, чтобы обновить соответствующий элемент таблицы
+requestsRef.on("child_changed", (snapshot) => {
+  const requestKey = snapshot.key;
+  const requestData = snapshot.val();
+
+  const existingRow = document.querySelector(`tr[data-key="${requestKey}"]`);
+
+  if (existingRow) {
+    // Обновляем содержимое существующей строки
+    const idCell = existingRow.querySelector(".id-cell");
+    idCell.innerHTML = `${requestData.number}${
+      requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ""
+    }`;
+
+    // Обновляем другие ячейки таблицы при необходимости
+    // ...
   }
 });
+
+
 
 // Обновите обработчик события beforeunload
 window.addEventListener("beforeunload", (event) => {

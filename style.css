@@ -552,3 +552,8 @@ td.tooltip::after {
   border-width: 0 0.2rem 0.2rem 0;
   transform: rotate(45deg);
 }
+.fa-lock {
+  color: var(--color-error); /* Цвет иконки замка */
+  margin-left: 5px; /* Отступ слева от номера заявки */
+  font-size: 13px;
+}
