@@ -316,16 +316,27 @@ function saveRequestDatabase() {
   });
 
   // Проверяем, есть ли уже созданные заявки
-  if (requestNumber === null) {
+  if (requestNumber !== null) {
+    // Проверяем, существует ли заявка с таким номером
+    requestsRef
+      .orderByChild("number")
+      .equalTo(requestNumber)
+      .once("value", (snapshot) => {
+        if (snapshot.exists()) {
+          // Заявка с таким номером уже существует
+          console.log("Заявка с таким номером уже существует");
+          return;
+        } else {
+          // Заявка с таким номером не существует
+          saveRequest(requestData);
+        }
+      });
+  } else {
     // Если заявок нет, начинаем с номера 1
     requestsRef.once("value", (snapshot) => {
       requestNumber = snapshot.numChildren() + 1;
       saveRequest(requestData);
     });
-  } else {
-
-    // Если заявки есть, начинаем со следующего номера
-    saveRequest(requestData);
   }
 
   function saveRequest(requestData) {
@@ -380,8 +391,17 @@ saveRequestBtn.addEventListener("click", saveRequestDatabase);
 // ФУНКЦИЯ ОБНОВЛЕНИЯ ТАБЛИЦЫ
 function updateTable() {
   table.innerHTML = "";
-
   requestsRef.once("value", (snapshot) => {
+    let maxRequestNumber = 0;
+    snapshot.forEach((requestSnapshot) => {
+      const requestData = requestSnapshot.val();
+      if (requestData.number > maxRequestNumber) {
+        maxRequestNumber = requestData.number;
+      }
+    });
+
+    requestNumber = maxRequestNumber + 1;
+
     snapshot.forEach((requestSnapshot) => {
       const requestKey = requestSnapshot.key;
       const requestData = requestSnapshot.val();
@@ -451,8 +471,6 @@ const productDetails = `${totalProducts}/${productsWithoutCode}`;
         }
       });
       
-      
-
       // ФУНКЦИЯ РЕДАКТИРОВАНИЯ ЗАЯВКИ
       editRequestButton.addEventListener("click", () => {
         form.reset();
@@ -705,173 +723,6 @@ setTimeout(() => {
   );
 });
 });
-
-// const nameInput = document.getElementById("name");
-// const typeInput = document.getElementById("type");
-// const variationInput = document.getElementById("variation");
-// const codeInput = document.getElementById("input-code");
-// const autocompleteList = document.getElementById("autocompleteList");
-
-// let items = [];
-// let miniSearch;
-
-// // Load data from firebase
-// async function loadData() {
-
-// const itemsSnapshot = await itemsRef.once("value");
-
-//  items = itemsSnapshot.val()
-//     ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
-//         id,
-//         ...item,
-//       }))
-//     : [];
-
-//     miniSearch = new MiniSearch({
-//       fields: ["name", "variation", "code", "type"],
-//       idField: "id",
-//       storeFields: ["name", "variation", "code", "type"],
-//       caseSensitive: false,
-//       normalizeField: false,
-//     });
-    
-    
-//   const allItems = items.map((item, index) => {
-//     return {
-//       ...item,
-//       id: index + 1, // create unique ID for each item
-//     };
-//   });
-
-//   miniSearch.addAll(allItems);
-// }
-
-// loadData();
-
-// // Search and update UI
-// function search(searchTerm) {
-//   if (!searchTerm) {
-//     autocompleteList.innerHTML = "";
-//     return;
-//   }
-
-//   const results = miniSearch.search(searchTerm.toLowerCase(), {
-//     prefix: true,
-//     termFrequency: false,
-//     fuzzy: 0.3,
-//   });
-
-//   const rankedResults = results
-//     .map((result) => {
-     
-//       const matches = countCharMatches(result.name.toLowerCase(), searchTerm);
-//       return { ...result, matches };
-//     })
-//     .sort((a, b) => b.score - a.score)
-
-//     .slice(0);
-
-
-//   updateAutocompleteList(rankedResults);
-// }
-
-// function countCharMatches(string, searchTerm) {
-  
-//   let count = 0;
-  
-//   const searchTermLength = searchTerm.length;
-//   for (let i = 0; i < searchTermLength; i++) {
-//     if (string.indexOf(searchTerm[i].toLowerCase()) !== -1) {
-//       count++;
-//     }
-//   }
-//   return count;
-// }
-
-// // Update the autocomplete list based on search results
-// function updateAutocompleteList(results) {
-  
-//   const fragment = document.createDocumentFragment();
-//   const uniqueItems = new Set();
-
-//   if (!results.length) {
-//     createNoResultsElement(fragment);
-//   } else {
-//     createAutocompleteItems(results, uniqueItems, fragment);
-//   }
-
-//   autocompleteList.innerHTML = "";
-//   autocompleteList.appendChild(fragment);
-// }
-
-// function createNoResultsElement(fragment) {
-//   const noResultsEl = document.createElement("div");
-//   noResultsEl.classList.add("autocomplete-item");
-//   noResultsEl.innerText = "Нет результатов";
-//   fragment.appendChild(noResultsEl);
-// }
-
-// function createAutocompleteItems(results, uniqueItems, fragment) {
- 
-//   const searchTerm = nameInput.value;
-
-//   results.forEach((item) => {
-   
-//     const { name, variation, code, type } = item || {};
-//     const itemKey = `${name}-${variation}-${code}-${type}`;
-    
-//     if (uniqueItems.has(itemKey)) {
-//       return; // skip duplicates
-//     }
-//     uniqueItems.add(itemKey); // add unique item to Set
-
-//     const el = document.createElement("div");
-    
-//     el.classList.add("autocomplete-item");
-
-//     const highlightedName = document.createElement("div");
-   
-//     highlightedName.innerHTML = highlightMatch(name, searchTerm);
-//     el.appendChild(highlightedName);
-
-//     const info = document.createElement("div");
-    
-//     info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type}`;
-//     el.appendChild(info);
-
-//     el.addEventListener("click", () => {
-//       nameInput.value = name;
-//       variationInput.value = variation;
-//       codeInput.value = code;
-//       typeInput.value = type;
-//       autocompleteList.innerHTML = "";
-//     });
-//     fragment.appendChild(el);
-//   });
-// }
-
-// function highlightMatch(text, searchTerm) {
-  
-//   const searchWords = searchTerm.split(/\s+/);
-//   const escapedSearchWords = searchWords.map((word) => word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&"));
-//   const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
-  
-//   return text.replace(regex, "<mark>$1</mark>");
-// }
-
-// let searchTimeout;
-
-// // Event listeners
-// nameInput.addEventListener("input", (e) => {
-//   clearTimeout(searchTimeout);
-//   searchTimeout = setTimeout(() => search(e.target.value.toLowerCase()), 200);
-// });
-
-// document.addEventListener("click", (e) => {
-//   if (!autocompleteList.contains(e.target)) {
-//     autocompleteList.innerHTML = "";
-//   }
-// });
 
 // nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
 const nameInput = document.getElementById("name");
