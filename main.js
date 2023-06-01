@@ -557,6 +557,7 @@ requestsRef.on("child_changed", (snapshot) => {
   if (existingRow) {
     const {
       number,
+      productDetails,
       isLocked,
       date,
       initiator,
@@ -566,13 +567,13 @@ requestsRef.on("child_changed", (snapshot) => {
     } = requestData;
 
     existingRow.querySelector(".id-cell").innerHTML = `${number}${isLocked ? ' <i class="fa fa-lock"></i>' : ""}`;
+    existingRow.querySelector(".product-details-cell").textContent = productDetails;
     existingRow.querySelector(".number-cell").textContent = requestKey;
     existingRow.querySelector(".date-cell").textContent = date;
     existingRow.querySelector(".in-cell").textContent = initiator;
     existingRow.querySelector(".executive-cell").textContent = executive;
     existingRow.querySelector(".status-cell").textContent = statusRequest;
     existingRow.querySelector(".completion-date-cell").textContent = completionDate || "";
-    existingRow.querySelector(".product-details-cell").textContent = newProductDetails;
   }
 });
 
@@ -1216,7 +1217,6 @@ viewRequestsButton.addEventListener("click", () => {
             <td>${requestData.number}</td>
             <td>${requestData.initiator}</td>
             <td>${requestData.date}</td>
-            <td>${itemData.category}</td>
             <td>${itemData.name}</td>
             <td>${itemData.variation}</td>
             <td>${itemData.equipment}</td>
