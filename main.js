@@ -2,8 +2,7 @@
 // const firebaseConfig = {
 //   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
 //   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+//   databaseURL: "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
 //   projectId: "test-8729c",
 //   storageBucket: "test-8729c.appspot.com",
 //   messagingSenderId: "891947507335",
@@ -29,7 +28,6 @@ const database = firebase.database();
 //ссылка на узел items requests
 const itemsRef = database.ref("items");
 const requestsRef = database.ref("requests");
-
 const addBtn = document.getElementById("add-btn");
 const modal = document.getElementById("modal");
 const closeBtn = document.querySelector(".close");
@@ -44,11 +42,35 @@ const selectStatusRequest = document.querySelector(".status-block");
 const initiator = document.getElementById("initiator");
 const executive = document.getElementById("executive-id");
 const categoryInput = document.getElementById("category-list");
+const editListCheckbox = document.getElementById("edit-list");
 
 // Объявляем переменную вне обработчика событий
 let requestRef;
 let currentRequestKey = null;
 let requestNumber = null; //Переменная для номера заявки
+
+// Получение ссылки на элементы формы
+const emailField = document.getElementById('email_field');
+const passwordField = document.getElementById('password_field');
+
+// Функция авторизации
+function login() {
+  const email = emailField.value;
+  const password = passwordField.value;
+
+  firebase.auth().signInWithEmailAndPassword(email, password)
+    .then((userCredential) => {
+      // Пользователь вошел в систему
+      var user = userCredential.user;
+      alert("Вы успешно вошли в систему");
+    })
+    .catch((error) => {
+      var errorCode = error.code;
+      var errorMessage = error.message;
+      alert("Ошибка авторизации: " + errorMessage);
+    });
+}
+
 
 // ФУНКЦИЯ ОТКРЫТИЯ МОДАЛЬНОГО ОКНА
 function openModal() {
@@ -65,7 +87,9 @@ function openModal() {
 // ФУНКЦИЯ ЗАКРЫТИЯ МОДАЛЬНОГО ОКНА
 function closeModal() {
   modal.classList.add("hidden");
-  requestRef.update({ isLocked: false });
+  requestRef.update({
+    isLocked: false
+  });
 }
 
 // добавляем обработчик события на кнопку "Добавить заявку"
@@ -107,85 +131,85 @@ async function addNomenklatureTable(event) {
 
     let hasError = false;
 
-  if (!name) {
-    setFieldError(nameField, "Введите имя");
-    hasError = true;
-  } else {
-    nameField.setCustomValidity("");
-  }
-
-  if (!variation) {
-    setFieldError(variationField, "Введите вариант исполнения");
-    hasError = true;
-  } else {
-    variationField.setCustomValidity("");
-  }
-
-  if (!count) {
-    setFieldError(countField, "Введите количество");
-    hasError = true;
-  } else {
-    countField.setCustomValidity("");
-  }
-
-  if (!categoryField.value) {
-    setFieldError(categoryField, "Выберите категорию");
-    hasError = true;
-  } else if (categoryField.value === "Запасные части" && !equipmentField.value) {
-    setFieldError(equipmentField, "Укажите оборудование для категории Запасные части");
-    hasError = true;
-  } else {
-    equipmentField.setCustomValidity("");
-    categoryField.setCustomValidity("");
-  }
-
-  if (hasError) {
-    return;
-  }
-
-  let code = "";
-
- // Проверяем наличие записи в базе данных
- await itemsRef.once("value", (snapshot) => {
-  const items = snapshot.val();
-  Object.keys(items).forEach((key) => {
-    const item = items[key];
-    if(item.name === name && item.variation === variation && item.type === typeField.value){
-      code = item.code;
+    if (!name) {
+      setFieldError(nameField, "Введите имя");
+      hasError = true;
+    } else {
+      nameField.setCustomValidity("");
     }
-  });
-});
+
+    if (!variation) {
+      setFieldError(variationField, "Введите вариант исполнения");
+      hasError = true;
+    } else {
+      variationField.setCustomValidity("");
+    }
+
+    if (!count) {
+      setFieldError(countField, "Введите количество");
+      hasError = true;
+    } else {
+      countField.setCustomValidity("");
+    }
+
+    if (!categoryField.value) {
+      setFieldError(categoryField, "Выберите категорию");
+      hasError = true;
+    } else if (categoryField.value === "Запасные части" && !equipmentField.value) {
+      setFieldError(equipmentField, "Укажите оборудование для категории Запасные части");
+      hasError = true;
+    } else {
+      equipmentField.setCustomValidity("");
+      categoryField.setCustomValidity("");
+    }
+
+    if (hasError) {
+      return;
+    }
+
+    let code = "";
+
+    // Проверяем наличие записи в базе данных
+    await itemsRef.once("value", (snapshot) => {
+      const items = snapshot.val();
+      Object.keys(items).forEach((key) => {
+        const item = items[key];
+        if (item.name === name && item.variation === variation && item.type === typeField.value) {
+          code = item.code;
+        }
+      });
+    });
 
 
-const rowIndex = listTableRequest.rows.length;
-const itemRequest = `
-    <tr class="item-request">
-      <td class="number-cell">${rowIndex}</td>
-      <td class="category-cell">${formRequest.elements.category.value}</td>
-      <td class="name-cell">${name}</td>
-      <td class="variation-cell">${variation}</td>
-      <td class="type-cell">${formRequest.elements.type.value}</td>
-      <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
-      <td class="article-cell"></td> 
-      <td class="brand-cell"></td> 
-      <td class="code-cell">${code}</td>
-      <td class="comment-cell"></td>
-      <td class="status-nom-cell"></td>
-      <td class="count-cell">${count}</td>
-      <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
-      <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
-    </tr>
-  `;
-listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
-formRequest.reset();
+    const rowIndex = listTableRequest.rows.length;
+    const itemRequest = `
+  <tr class="item-request">
+    <td class="number-cell">${rowIndex}</td>
+    <td class="category-cell">${formRequest.elements.category.value}</td>
+    <td class="name-cell">${name}</td>
+    <td class="variation-cell">${variation}</td>
+    <td class="type-cell">${formRequest.elements.type.value}</td>
+    <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
+    <td class="article-cell"></td> 
+    <td class="brand-cell"></td> 
+    <td class="code-cell">${code}</td>
+    <td class="comment-cell"></td>
+    <td class="status-nom-cell"></td>
+    <td class="count-cell">${count}</td>
+    <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
+    <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
+  </tr>
+`;
+    listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
+    formRequest.reset();
 
 
-} catch (error) {
-console.error("Error in addNomenklatureTable:", error);
-} finally {
-// Включаем кнопку после выполнения функции, даже если возникла ошибка
-addProduct.disabled = false;
-}
+  } catch (error) {
+    console.error("Error in addNomenklatureTable:", error);
+  } finally {
+    // Включаем кнопку после выполнения функции, даже если возникла ошибка
+    addProduct.disabled = false;
+  }
 }
 
 // добавляем обработчик события на кнопку закрытия модального окна
@@ -200,38 +224,41 @@ const makeCellEditable = (cell, color) => {
   });
 };
 
-const editListCheckbox = document.getElementById("edit-list");
+// ФУНКЦИЯ СБРОСА ЯЧЕЕК
+const resetCell = (cell) => {
+  cell.contentEditable = false;
+  cell.style.backgroundColor = "";
+};
+
+// ФУНКЦИЯ ОБНОВЛЕНИЯ ТЕКСТА КНОПКИ
+const updateButtonText = (button, text) => {
+  if (button) {
+    button.textContent = text;
+  }
+};
 
 editListCheckbox.addEventListener("change", (event) => {
   const isEditMode = event.target.checked;
 
-  if (isEditMode) {
-    // Режим редактирования
-    document.querySelectorAll(".item-request").forEach((item) => {
-      const editButton = item.querySelector(".btn-edit");
-      editButton.textContent = "Сохранить";
+  document.querySelectorAll(".item-request").forEach((item) => {
+    const editButton = item.querySelector(".btn-edit");
+    const cells = item.querySelectorAll("td:not(.button-cell)");
 
-      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
-        makeCellEditable(cell, "#f0faeb");
-      });
-    });
-  } else {
-    // Режим сохранения
-    document.querySelectorAll(".item-request").forEach((item) => {
-      const editButton = item.querySelector(".btn-edit");
-      editButton.textContent = "Изменить";
-
-      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
-        cell.contentEditable = false;
-        cell.style.backgroundColor = "transparent";
-      });
+    if (isEditMode) {
+      // Режим редактирования
+      updateButtonText(editButton, "Сохранить");
+      cells.forEach((cell) => makeCellEditable(cell, "#e8f9fb"));
+    } else {
+      // Режим сохранения
+      updateButtonText(editButton, "Изменить");
+      cells.forEach(resetCell);
 
       const dataForm = Object.fromEntries(
         new FormData(item.formRequest).entries()
       );
       Object.assign(item, { data: dataForm });
-    });
-  }
+    }
+  });
 });
 
 // Обработчики событий
@@ -247,25 +274,18 @@ listTableRequest.addEventListener("click", (event) => {
   }
   // Если нажата кнопка редактирования, переключаемся между режимами редактирования и сохранения
   else if (target.matches(".btn-edit")) {
-    const { closest: closestItem, querySelector: findEditButton } = target;
-    const item = closestItem.call(target, ".item-request");
-    const editButton = findEditButton.call(item, ".btn-edit");
+    const item = target.closest(".item-request");
+    const editButton = item.querySelector(".btn-edit");
+    const cells = item.querySelectorAll("td:not(.button-cell)");
 
     if (editButton.textContent === "Изменить") {
       // Режим редактирования
-      editButton.textContent = "Сохранить";
-
-      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
-        makeCellEditable(cell, "#f0faeb");
-      });
+      updateButtonText(editButton, "Сохранить");
+      cells.forEach((cell) => makeCellEditable(cell, "#e8f9fb"));
     } else {
       // Режим сохранения
-      editButton.textContent = "Изменить";
-
-      item.querySelectorAll("td:not(.button-cell)").forEach((cell) => {
-        cell.contentEditable = false;
-        cell.style.backgroundColor = "transparent";
-      });
+      updateButtonText(editButton, "Изменить");
+      cells.forEach(resetCell);
 
       if (item) {
         const dataForm = Object.fromEntries(
@@ -315,33 +335,19 @@ function saveRequestDatabase() {
     requestData.push(data);
   });
 
-  // Проверяем, есть ли уже созданные заявки
-  if (requestNumber !== null) {
-    // Проверяем, существует ли заявка с таким номером
-    requestsRef
-      .orderByChild("number")
-      .equalTo(requestNumber)
-      .once("value", (snapshot) => {
-        if (snapshot.exists()) {
-          // Заявка с таким номером уже существует
-          console.log("Заявка с таким номером уже существует");
-          return;
-        } else {
-          // Заявка с таким номером не существует
-          saveRequest(requestData);
-        }
-      });
-  } else {
-    // Если заявок нет, начинаем с номера 1
-    requestsRef.once("value", (snapshot) => {
-      requestNumber = snapshot.numChildren() + 1;
-      saveRequest(requestData);
+  // Получаем максимальный номер заявки из базы данных
+  requestsRef.orderByChild("number").limitToLast(1).once("value", snapshot => {
+    let maxRequestNumber = 0;
+    snapshot.forEach(childSnapshot => {
+      maxRequestNumber = childSnapshot.val().number;
     });
-  }
 
-  function saveRequest(requestData) {
+    // Увеличиваем номер на 1 для новой заявки
+    const newRequestNumber = maxRequestNumber + 1;
+
+    // Создаем новую заявку с новым номером
     const request = {
-      number: requestNumber,
+      number: newRequestNumber,
       initiator: initiator,
       executive: executive,
       statusRequest: "Новая",
@@ -349,41 +355,45 @@ function saveRequestDatabase() {
       items: requestData,
     };
 
-// Создать элемент для отображения сообщения об успешной записи
-const messageDiv = document.createElement("div");
-messageDiv.id = "message";
-document.body.appendChild(messageDiv);
+    // Создать элемент для отображения сообщения об успешной записи
+    const messageDiv = document.createElement("div");
+    messageDiv.id = "message";
+    document.body.appendChild(messageDiv);
 
-// Запись в Firebase Realtime Database
-database.ref("requests").push(request, (error) => {
-  if (error) {
-    console.error("Ошибка записи в базу данных: ", error);
-  } else {
-    console.log("Успешная запись в базу данных");
+    // Запись в Firebase Realtime Database
+    requestsRef.push(request, (error) => {
+      if (error) {
+        console.error("Ошибка записи в базу данных: ", error);
+      } else {
+        console.log("Успешная запись в базу данных");
 
-    // Отобразить сообщение об успешной записи
-    const message = "Данные успешно сохранены заявка № " + request.number;
-    messageDiv.innerHTML = message;
-    messageDiv.classList.add("success-message", "visible");
+        // Отобразить сообщение об успешной записи
+        const message = "Данные успешно сохранены заявка № " + request.number;
+        messageDiv.innerHTML = message;
+        messageDiv.classList.add("success-message", "visible");
 
-    // Скрыть сообщение через 2 секунды
-    setTimeout(() => {
-      messageDiv.classList.remove("visible");
-      setTimeout(() => {
-        messageDiv.remove();
-      }, 1000); // убрать элемент после скрытия анимации
-    }, 2000);
+        // Скрыть сообщение через 2 секунды
+        setTimeout(() => {
+          messageDiv.classList.remove("visible");
+          setTimeout(() => {
+            messageDiv.remove();
+          }, 1000); // убрать элемент после скрытия анимации
+        }, 2000);
 
-    // Очистить модальное окно
-    listTableRequest.innerHTML = "";
-    formRequest.reset();
-    form.reset();
-    modal.classList.add("hidden");
-  }
-});
+        // Сбросить форму после успешной записи
+        form.reset();
+        formRequest.reset();
 
-  }
+        // Закрыть модальное окно после успешной записи
+        modal.classList.add("hidden");
+
+        // Обновить таблицу после успешной записи
+        updateTable();
+      }
+    });
+  });
 }
+
 
 //Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);
@@ -406,38 +416,36 @@ function updateTable() {
       const requestKey = requestSnapshot.key;
       const requestData = requestSnapshot.val();
       let totalProducts = 0;
-let productsWithoutCode = 0;
+      let productsWithoutCode = 0;
 
-if (requestData.items) {
-  totalProducts = requestData.items.length;
+      if (requestData.items) {
+        totalProducts = requestData.items.length;
 
-  productsWithoutCode = requestData.items.filter(
-    (item) => !item.code || item.code.trim() === ""
-  ).length;
-}
+        productsWithoutCode = requestData.items.filter(
+          (item) => !item.code || item.code.trim() === ""
+        ).length;
+      }
 
-const productDetails = `${totalProducts}/${productsWithoutCode}`;
-
+      const productDetails = `${totalProducts}/${productsWithoutCode}`;
 
       const newRow = document.createElement("tr");
       newRow.setAttribute("data-key", requestKey);
       newRow.innerHTML = `
-      <td class="id-cell">${requestData.number}${requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ''}</td>
-      <td class="product-details-cell">${productDetails}</td>
-      <td class="number-cell">${requestKey}</td>
-      <td class="date-cell">${requestData.date}</td>
-      <td class="in-cell">${requestData.initiator}</td>
-      <td class="executive-cell">${requestData.executive}</td>
-      <td class="status-cell">${requestData.statusRequest}</td>
-      <td class="completion-date-cell">${requestData.completionDate || ""}</td>
-      <td class="button-cell">
-        <button class="edit-request-button">Редактировать</button>
-      </td>
-      <td class="button-cell">
-        <button class="btn-delete">Удалить</button>
-      </td>
-    `;
-    
+    <td class="id-cell">${requestData.number}${requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ''}</td>
+    <td class="product-details-cell">${productDetails}</td>
+    <td class="number-cell">${requestKey}</td>
+    <td class="date-cell">${requestData.date}</td>
+    <td class="in-cell">${requestData.initiator}</td>
+    <td class="executive-cell">${requestData.executive}</td>
+    <td class="status-cell">${requestData.statusRequest}</td>
+    <td class="completion-date-cell">${requestData.completionDate || ""}</td>
+    <td class="button-cell">
+      <button class="edit-request-button">Редактировать</button>
+    </td>
+    <td class="button-cell">
+      <button class="btn-delete">Удалить</button>
+    </td>
+  `;
 
       table.insertBefore(newRow, table.firstChild);
 
@@ -449,14 +457,14 @@ const productDetails = `${totalProducts}/${productsWithoutCode}`;
         if (confirm("Вы действительно хотите удалить эту заявку?")) {
           const requestRef = database.ref("requests/" + requestKey);
           const deletedRequestsRef = database.ref("deletedRequests/" + requestKey);
-      
+
           requestRef.once("value", (snapshot) => {
             const requestData = snapshot.val();
-      
+
             // Опционально: добавьте сведения о дате удаления и пользователе, удалившем заявку
             requestData.deletedAt = new Date().toISOString();
             requestData.deletedBy = "username"; // Замените "username" именем текущего пользователя
-      
+
             // Перемещаем заявку в узел deletedRequests
             deletedRequestsRef.set(requestData, (error) => {
               if (error) {
@@ -470,7 +478,7 @@ const productDetails = `${totalProducts}/${productsWithoutCode}`;
           });
         }
       });
-      
+
       // ФУНКЦИЯ РЕДАКТИРОВАНИЯ ЗАЯВКИ
       editRequestButton.addEventListener("click", () => {
         form.reset();
@@ -490,7 +498,9 @@ const productDetails = `${totalProducts}/${productsWithoutCode}`;
           }
 
           // Блокируем заявку
-          requestRef.update({ isLocked: true });
+          requestRef.update({
+            isLocked: true
+          });
           currentRequestKey = requestKey;
 
           document.getElementById("request-number").textContent =
@@ -510,25 +520,25 @@ const productDetails = `${totalProducts}/${productsWithoutCode}`;
               const itemRow = document.createElement("tr");
               itemRow.classList.add("item-request");
               itemRow.innerHTML = `
-                <td class="number-cell">${itemData.rowIndexRow}</td>
-                <td class="category-cell">${itemData.category}</td>
-                <td class="name-cell">${itemData.name}</td>
-                <td class="variation-cell">${itemData.variation}</td>
-                <td class="type-cell">${itemData.type}</td>
-                <td class="equipment-cell">${itemData.equipment}</td>
-                <td class="article-cell">${itemData.article}</td>
-                <td class="brand-cell">${itemData.brand}</td>
-                <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
-                <td class="comment-cell">${itemData.comment}</td>
-                <td class="status-nom-cell">${itemData.statusNom}</td>
-                <td class="count-cell">${itemData.count}</td>
-                <td class="button-cell">
-                  <button class="btn-edit" id="edit">Изменить</button>
-                </td>
-                <td class="button-cell">
-                  <button class="btn-remove" id="remove">Удалить</button>
-                </td>
-              `;
+              <td class="number-cell">${itemData.rowIndexRow}</td>
+              <td class="category-cell">${itemData.category}</td>
+              <td class="name-cell">${itemData.name}</td>
+              <td class="variation-cell">${itemData.variation}</td>
+              <td class="type-cell">${itemData.type}</td>
+              <td class="equipment-cell">${itemData.equipment}</td>
+              <td class="article-cell">${itemData.article}</td>
+              <td class="brand-cell">${itemData.brand}</td>
+              <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
+              <td class="comment-cell">${itemData.comment}</td>
+              <td class="status-nom-cell">${itemData.statusNom}</td>
+              <td class="count-cell">${itemData.count}</td>
+              <td class="button-cell">
+                <button class="btn-edit" id="edit">Изменить</button>
+              </td>
+              <td class="button-cell">
+                <button class="btn-remove" id="remove">Удалить</button>
+              </td>
+            `;
 
               listTableRequest.appendChild(itemRow);
             });
@@ -581,7 +591,9 @@ requestsRef.on("child_changed", (snapshot) => {
 window.addEventListener("beforeunload", (event) => {
   if (currentRequestKey) {
     const requestRef = database.ref("requests/" + currentRequestKey);
-    requestRef.update({ isLocked: false });
+    requestRef.update({
+      isLocked: false
+    });
   }
 });
 
@@ -595,7 +607,7 @@ saveChangesBtn.addEventListener("click", () => {
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
   const statusRequest = document.getElementById("status-request").value;
-  const currentCompletionDate =  document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`).textContent || null;
+  const currentCompletionDate = document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`).textContent || null;
 
   let completionDate;
 
@@ -609,9 +621,9 @@ saveChangesBtn.addEventListener("click", () => {
 
   // Проверяем заполненность обязательных полей формы
   if (initiator === "") {
-  
+
     const fieldinitiator = document.getElementById("initiator");
-  
+
     fieldinitiator.setCustomValidity("Заполните фамилию Инициатора");
     fieldinitiator.reportValidity();
     return;
@@ -621,7 +633,7 @@ saveChangesBtn.addEventListener("click", () => {
   const requestData = [];
 
   tableRows.forEach((row) => {
-  
+
     const data = {
       rowIndexRow: row.querySelector(".number-cell").textContent,
       category: row.querySelector(".category-cell").textContent,
@@ -639,91 +651,98 @@ saveChangesBtn.addEventListener("click", () => {
     requestData.push(data);
   });
 
-// Обновление данных в Firebase Realtime Database
+  // Обновление данных в Firebase Realtime Database
 
-itemsRef.once("value", (snapshot) => {
+  itemsRef.once("value", (snapshot) => {
 
-  const items = snapshot.val();
-  const codeVariationToNameTypeMap = {};
-  const nameVariationTypeToCodeMap = {};
+    const items = snapshot.val();
+    const codeVariationToNameTypeMap = {};
+    const nameVariationTypeToCodeMap = {};
 
-  Object.keys(items).forEach((key) => {
-    const item = items[key];
-    codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {name: item.name, type: item.type};
-    nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
-  });
+    Object.keys(items).forEach((key) => {
+      const item = items[key];
+      codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {
+        name: item.name,
+        type: item.type
+      };
+      nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
+    });
 
-  requestData.forEach((item, index) => {
-    if (item.code) {
-      const codeVariationKey = `${item.code}-${item.variation}`;
+    requestData.forEach((item, index) => {
+      if (item.code) {
+        const codeVariationKey = `${item.code}-${item.variation}`;
 
-      if (codeVariationToNameTypeMap[codeVariationKey]) {
-        requestData[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
-        requestData[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
+        if (codeVariationToNameTypeMap[codeVariationKey]) {
+          requestData[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
+          requestData[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
+        } else {
+          const newItemKey = itemsRef.push().key;
+
+          itemsRef.child(newItemKey).set(item);
+          codeVariationToNameTypeMap[codeVariationKey] = {
+            name: item.name,
+            type: item.type
+          };
+        }
       } else {
-        const newItemKey = itemsRef.push().key;
+        const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
 
-        itemsRef.child(newItemKey).set(item);
-        codeVariationToNameTypeMap[codeVariationKey] = {name: item.name, type: item.type};
+        if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
+          requestData[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
+        }
       }
-    } else {
-      const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
+    });
 
-      if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
-        requestData[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
+    // обновление в Firebase Realtime Database
+    database.ref(`requests/${requestKey}`).update({
+      initiator: initiator,
+      executive: executive,
+      statusRequest: statusRequest,
+      items: requestData,
+      completionDate: completionDate,
+    },
+      (error) => {
+        if (error) {
+          console.error("Ошибка записи в базу данных: ", error);
+        } else {
+          console.log("Успешное обновление данных заявки");
+
+          // Создать элемент для отображения сообщения об успешном обновлении данных заявки
+          const messageDiv = document.createElement("div");
+
+          messageDiv.id = "message";
+          document.body.appendChild(messageDiv);
+
+          // Отобразить сообщение об успешном обновлении данных заявки
+          const message = "Данные заявки успешно обновлены";
+
+          messageDiv.innerHTML = message;
+          messageDiv.classList.add("success-message", "visible");
+
+          // Скрыть сообщение через 2 секунды
+          setTimeout(() => {
+            messageDiv.classList.remove("visible");
+            setTimeout(() => {
+              messageDiv.remove();
+            }, 1000); // убрать элемент после скрытия анимации
+          }, 2000);
+
+          modal.classList.add("hidden");
+          saveChangesBtn.classList.add("hidden");
+          saveRequestBtn.classList.remove("hidden");
+
+          // Записываем изменения и разблокируем заявку
+          requestRef.update({
+            isLocked: false
+          });
+          currentRequestKey = null;
+        }
       }
-    }
+    );
   });
-
-  // обновление в Firebase Realtime Database
-database.ref(`requests/${requestKey}`).update(
-  {
-    initiator: initiator,
-    executive: executive,
-    statusRequest: statusRequest,
-    items: requestData,
-    completionDate: completionDate,
-  },
-    (error) => {
-      if (error) {
-        console.error("Ошибка записи в базу данных: ", error);
-      } else {
-        console.log("Успешное обновление данных заявки");
-
-        // Создать элемент для отображения сообщения об успешном обновлении данных заявки
-        const messageDiv = document.createElement("div");
-
-        messageDiv.id = "message";
-        document.body.appendChild(messageDiv);
-
-// Отобразить сообщение об успешном обновлении данных заявки
-const message = "Данные заявки успешно обновлены";
-
-messageDiv.innerHTML = message;
-messageDiv.classList.add("success-message", "visible");
-
-// Скрыть сообщение через 2 секунды
-setTimeout(() => {
-  messageDiv.classList.remove("visible");
-  setTimeout(() => {
-    messageDiv.remove();
-  }, 1000); // убрать элемент после скрытия анимации
-}, 2000);
-
-     modal.classList.add("hidden");
-     saveChangesBtn.classList.add("hidden");
-     saveRequestBtn.classList.remove("hidden");
-
-  // Записываем изменения и разблокируем заявку
-    requestRef.update({ isLocked: false });
-    currentRequestKey = null;
-      }
-    }
-  );
-});
 });
 
-// nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.value = "осн."));
+
 const nameInput = document.getElementById("name");
 const typeInput = document.getElementById("type");
 const variationInput = document.getElementById("variation");
@@ -737,12 +756,12 @@ let miniSearch;
 async function loadData() {
   const itemsSnapshot = await itemsRef.once("value");
 
-  items = itemsSnapshot.val()
-    ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
-        id,
-        ...item,
-      }))
-    : [];
+  items = itemsSnapshot.val() ?
+    Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
+      id,
+      ...item,
+    })) :
+    [];
 
   miniSearch = new MiniSearch({
     fields: ["name", "variation", "code", "type"],
@@ -775,7 +794,12 @@ function search(searchTerm) {
     prefix: true,
     termFrequency: false,
     fuzzy: 0.4,
-    boost: { name: 2, variation: 1, code: 1, type: 1 },
+    boost: {
+      name: 2,
+      variation: 1,
+      code: 1,
+      type: 1
+    },
     threshold: 0.3,
   }).slice(0, 10);
 
@@ -808,7 +832,12 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
   const searchTerm = nameInput.value;
 
   results.forEach((item) => {
-    const { name, variation, code, type } = item || {};
+    const {
+      name,
+      variation,
+      code,
+      type
+    } = item || {};
     const itemKey = `${name}-${variation}-${code}-${type}`;
 
     if (uniqueItems.has(itemKey)) {
@@ -869,7 +898,7 @@ nameInput.addEventListener("input", () => (codeInput.value = "", variationInput.
 
 //СКАЧИВАНИЕ
 function downloadExcel() {
- 
+
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Заявки");
 
@@ -897,16 +926,16 @@ function downloadExcel() {
 
   // Get data from Firebase Realtime Database
   const requestsRef = database.ref("requests");
- 
+
   requestsRef.once("value", (snapshot) => {
-   
-  const requests = snapshot.val();
+
+    const requests = snapshot.val();
 
     // Add data rows for each request and its items
     Object.keys(requests).forEach((requestKey) => {
-      
+
       const requestData = requests[requestKey];
-      
+
       if (requestData && requestData.items) {
         // Добавляем проверку
         requestData.items.forEach((itemData) => {
@@ -936,11 +965,11 @@ function downloadExcel() {
 
     // Download file 
     workbook.xlsx.writeBuffer().then((buffer) => {
-      
+
       const blob = new Blob([buffer], {
         type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
       });
-      
+
       const url = URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;
@@ -960,24 +989,24 @@ downloadButton.addEventListener("click", downloadExcel);
 function setColumnWidths(table) {
   // Получить все строки в таблице
   const rows = table.querySelectorAll('tr');
-  
+
   // Если в таблице есть строки
   if (rows.length > 0) {
-      // Получить все ячейки в первой строке
-      const cells = rows[0].querySelectorAll('th, td');
-      
-      // Создать массив для хранения ширин столбцов
-      const widths = [];
-      
-      // Вычислить ширину каждого столбца
-      cells.forEach((cell, index) => {
-          widths[index] = cell.offsetWidth;
-      });
-      
-      // Установить ширину каждого столбца
-      cells.forEach((cell, index) => {
-          cell.style.width = `${widths[index]}px`;
-      });
+    // Получить все ячейки в первой строке
+    const cells = rows[0].querySelectorAll('th, td');
+
+    // Создать массив для хранения ширин столбцов
+    const widths = [];
+
+    // Вычислить ширину каждого столбца
+    cells.forEach((cell, index) => {
+      widths[index] = cell.offsetWidth;
+    });
+
+    // Установить ширину каждого столбца
+    cells.forEach((cell, index) => {
+      cell.style.width = `${widths[index]}px`;
+    });
   }
 }
 
@@ -1043,14 +1072,16 @@ toggleButtons.forEach((button) => {
   const th = button.closest("th");
   const dropdown = th.querySelector(".filter-dropdown");
   const filterInput = dropdown.querySelector("input, select");
-  
+
   button.addEventListener("click", () => {
     dropdown.classList.toggle("active");
     button.classList.toggle("active");
 
     if (!dropdown.classList.contains("active")) {
       filterInput.value = "";
-      const fakeEvent = { target: filterInput }; // Создаем искусственный объект события
+      const fakeEvent = {
+        target: filterInput
+      }; // Создаем искусственный объект события
       filterTable.call(filterInput, fakeEvent); // Вызываем функцию filterTable, чтобы обновить таблицу после очистки фильтра
     }
   });
@@ -1087,14 +1118,17 @@ let equipment = [];
 async function loadEquipmentData() {
   const equipmentSnapshot = await equipmentRef.once("value");
 
-  equipment = equipmentSnapshot.val()
-    ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
-        if (!acc.some((equipment) => equipment.title === data.title)) {
-          acc.push({ id, ...data });
-        }
-        return acc;
-      }, [])
-    : [];
+  equipment = equipmentSnapshot.val() ?
+    Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
+      if (!acc.some((equipment) => equipment.title === data.title)) {
+        acc.push({
+          id,
+          ...data
+        });
+      }
+      return acc;
+    }, []) :
+    [];
 
   miniSearchEquipment = new MiniSearch({
     fields: ["title"],
@@ -1116,7 +1150,9 @@ function searchEquipment(searchTerm) {
   // Check if miniSearchEquipment is initialized before searching
   const results = miniSearchEquipment.search(searchTerm, {
     prefix: true,
-    boost: { title: 2 },
+    boost: {
+      title: 2
+    },
     termFrequency: false,
     fuzzy: 0.3 // добавляем нечеткое совпадение с уровнем нечеткости 0.3 (от 0 до 1)
   }).slice(0, 10);
@@ -1139,7 +1175,10 @@ function updateEquipmentAutocompleteList(results) {
 
 function createEquipmentAutocompleteItems(results, fragment) {
   results.forEach((equipment) => {
-    const { title, in_code } = equipment || {};
+    const {
+      title,
+      in_code
+    } = equipment || {};
 
     const el = document.createElement("div");
     el.classList.add("autocomplete-item");
@@ -1169,7 +1208,7 @@ categoryInput.addEventListener("change", () => {
   if (
     categoryInput.value === "Образцы" ||
     categoryInput.value === "Осн. материалы" ||
-    categoryInput.value === "Спецодежда" 
+    categoryInput.value === "Спецодежда"
   ) {
     variationInput.disabled = false;
   } else {
@@ -1205,27 +1244,27 @@ viewRequestsButton.addEventListener("click", () => {
       snapshot.forEach((requestSnapshot) => {
         const requestKey = requestSnapshot.key;
         const requestData = requestSnapshot.val();
-        
+
         // Проверяем, существуют ли продукты в заявке
         if (requestData.items) {
           // Добавьте продукты из заявки в таблицу
           requestData.items.forEach((itemData) => {
             const itemRow = document.createElement("tr");
             itemRow.innerHTML = `
-            <td>${requestData.number}</td>
-            <td>${requestData.initiator}</td>
-            <td>${requestData.date}</td>
-            <td>${itemData.name}</td>
-            <td>${itemData.variation}</td>
-            <td>${itemData.equipment}</td>
-            <td>${itemData.type}</td>
-            <td>${itemData.brand}</td>
-            <td class="tooltip" title="${itemData.comment.replace(/"/g, '')}">${itemData.comment}</td>
-            <td>${itemData.code}</td>
-            <td>${itemData.count}</td>
-            <td>${itemData.statusNom}</td>
-            `;
-            
+          <td>${requestData.number}</td>
+          <td>${requestData.initiator}</td>
+          <td>${requestData.date}</td>
+          <td>${itemData.name}</td>
+          <td>${itemData.variation}</td>
+          <td>${itemData.equipment}</td>
+          <td>${itemData.type}</td>
+          <td>${itemData.brand}</td>
+          <td class="tooltip" title="${itemData.comment.replace(/"/g, '')}">${itemData.comment}</td>
+          <td>${itemData.code}</td>
+          <td>${itemData.count}</td>
+          <td>${itemData.statusNom}</td>
+          `;
+
             productsTableBody.insertBefore(itemRow, productsTableBody.firstChild);
           });
         } else {
@@ -1244,133 +1283,138 @@ function updateRequests() {
     snapshot.forEach((requestSnapshot) => {
       const requestKey = requestSnapshot.key;
       const requestData = requestSnapshot.val();
-  
+
       // Skip this request if it's locked
       if (requestData.isLocked === true) { // This will exclude both false and undefined
         console.log(`Skipping request ${requestKey} because it is locked.`);
         return;
       }
-            // Load all items
-            itemsRef.once("value", (snapshot) => {
-              const items = snapshot.val();
-              const codeVariationToNameTypeMap = {};
-              const nameVariationTypeToCodeMap = {};
-      
-              Object.keys(items).forEach((key) => {
-                const item = items[key];
-                codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {name: item.name, type: item.type};
-                nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
-              });
-        
-              requestData.items.forEach((item, index) => {
-                if (item.code) {
-                  const codeVariationKey = `${item.code}-${item.variation}`;
-      
-                  if (codeVariationToNameTypeMap[codeVariationKey]) {
-                    requestData.items[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
-                    requestData.items[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
-                  } else {
-                    const newItemKey = itemsRef.push().key;
-                    itemsRef.child(newItemKey).set(item);
-                    codeVariationToNameTypeMap[codeVariationKey] = {name: item.name, type: item.type};
-                  }
-                } else {
-                  const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
-      
-                  if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
-                    requestData.items[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
-                  }
-                }
-              });
-      
-              // Update the request
-              requestsRef.child(requestKey).update(requestData, (error) => {
-                if (error) {
-                  console.error("Failed to save changes:", error);
-                } else {
-                  console.log(`Successfully updated request ${requestKey}!`);
-                }
-              });
-            });
-            console.log(`Request ${requestKey} успешно обновлены.`);
-          });
+      // Load all items
+      itemsRef.once("value", (snapshot) => {
+        const items = snapshot.val();
+        const codeVariationToNameTypeMap = {};
+        const nameVariationTypeToCodeMap = {};
+
+        Object.keys(items).forEach((key) => {
+          const item = items[key];
+          codeVariationToNameTypeMap[`${item.code}-${item.variation}`] = {
+            name: item.name,
+            type: item.type
+          };
+          nameVariationTypeToCodeMap[`${item.name}-${item.variation}-${item.type}`] = item.code;
         });
-      }
-      
-      const updateButton = document.getElementById("update-button");
-      updateButton.addEventListener("click", updateRequests);
 
+        requestData.items.forEach((item, index) => {
+          if (item.code) {
+            const codeVariationKey = `${item.code}-${item.variation}`;
 
-      //функция загрузки
-      function Excel() {
-        const workbook = new ExcelJS.Workbook();
-        const sheet = workbook.addWorksheet("Заявки");
-    
-        // Добавляем загаловки таблицы
-        sheet.addRow([
-            "Инициатор",
-            "Ответственный",
-            "Индекс",
-            "Категория",
-            "Наименование",
-            "Вар.исп",
-            "Баз.ед",
-            "Оборудование",
-            "Статья",
-            "Поставщик",
-            "Код",
-            "комментарий",
-            "Статус, дата",
-            "Кол-во",
-        ]);
-    
-      // Получаем значение инициатора и ответственного (замените 'initiatorElementId' и 'responsibleElementId' на соответствующие id)
-      const initiator = document.getElementById('initiator').value;
-      const responsible = document.getElementById('executive-id').value;
-  
-      // Собираем все строки из таблицы 'products-table'
-      const rows = document.querySelectorAll("#products-table tr");
-  
-      // Для каждой строки (за исключением первой, так как она содержит заголовки)
-      for (let i = 1; i < rows.length; i++) {
-          const row = rows[i];
-  
-          // Для каждой ячейки в строке добавляем данные в новую строку файла Excel
-          let excelRow = [initiator, responsible];
-          const cells = row.querySelectorAll("td");
-          for (let j = 0; j < cells.length; j++) {
-              const cell = cells[j];
-  
-              // Если это не кнопка, добавляем значение в excelRow
-              if (!cell.querySelector("button")) {
-                // Для ввода получаем значение из атрибута 'value', иначе используем текстовое содержимое ячейки
-                let value = cell.firstChild?.value;
-                if (typeof value === "undefined") {
-                    value = cell.textContent;
-                }
-                excelRow.push(value);
+            if (codeVariationToNameTypeMap[codeVariationKey]) {
+              requestData.items[index].name = codeVariationToNameTypeMap[codeVariationKey].name;
+              requestData.items[index].type = codeVariationToNameTypeMap[codeVariationKey].type;
+            } else {
+              const newItemKey = itemsRef.push().key;
+              itemsRef.child(newItemKey).set(item);
+              codeVariationToNameTypeMap[codeVariationKey] = {
+                name: item.name,
+                type: item.type
+              };
+            }
+          } else {
+            const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
+
+            if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
+              requestData.items[index].code = nameVariationTypeToCodeMap[nameVariationTypeKey];
             }
           }
-  
-          sheet.addRow(excelRow);
-      }
-  
-      // Скачиваем файл
-      workbook.xlsx.writeBuffer().then((buffer) => {
-          const blob = new Blob([buffer], {
-              type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-          });
-  
-          const url = URL.createObjectURL(blob);
-          const a = document.createElement("a");
-          a.href = url;
-          a.download = "requests.xlsx";
-          a.click();
-          URL.revokeObjectURL(url);
+        });
+
+        // Update the request
+        requestsRef.child(requestKey).update(requestData, (error) => {
+          if (error) {
+            console.error("Failed to save changes:", error);
+          } else {
+            console.log(`Successfully updated request ${requestKey}!`);
+          }
+        });
       });
+      console.log(`Request ${requestKey} успешно обновлены.`);
+    });
+  });
+}
+
+const updateButton = document.getElementById("update-button");
+updateButton.addEventListener("click", updateRequests);
+
+
+//функция загрузки
+function Excel() {
+  const workbook = new ExcelJS.Workbook();
+  const sheet = workbook.addWorksheet("Заявки");
+
+  // Добавляем загаловки таблицы
+  sheet.addRow([
+    "Инициатор",
+    "Ответственный",
+    "Индекс",
+    "Категория",
+    "Наименование",
+    "Вар.исп",
+    "Баз.ед",
+    "Оборудование",
+    "Статья",
+    "Поставщик",
+    "Код",
+    "комментарий",
+    "Статус, дата",
+    "Кол-во",
+  ]);
+
+  // Получаем значение инициатора и ответственного (замените 'initiatorElementId' и 'responsibleElementId' на соответствующие id)
+  const initiator = document.getElementById('initiator').value;
+  const responsible = document.getElementById('executive-id').value;
+
+  // Собираем все строки из таблицы 'products-table'
+  const rows = document.querySelectorAll("#products-table tr");
+
+  // Для каждой строки (за исключением первой, так как она содержит заголовки)
+  for (let i = 1; i < rows.length; i++) {
+    const row = rows[i];
+
+    // Для каждой ячейки в строке добавляем данные в новую строку файла Excel
+    let excelRow = [initiator, responsible];
+    const cells = row.querySelectorAll("td");
+    for (let j = 0; j < cells.length; j++) {
+      const cell = cells[j];
+
+      // Если это не кнопка, добавляем значение в excelRow
+      if (!cell.querySelector("button")) {
+        // Для ввода получаем значение из атрибута 'value', иначе используем текстовое содержимое ячейки
+        let value = cell.firstChild?.value;
+        if (typeof value === "undefined") {
+          value = cell.textContent;
+        }
+        excelRow.push(value);
+      }
+    }
+
+    sheet.addRow(excelRow);
   }
-    
-    // Добавляем обработчик события для кнопки
-    const downloadProductButton = document.getElementById("download-products-button");
-    downloadProductButton.addEventListener("click", Excel);
-    
+
+  // Скачиваем файл
+  workbook.xlsx.writeBuffer().then((buffer) => {
+    const blob = new Blob([buffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "requests.xlsx";
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+}
+
+// Добавляем обработчик события для кнопки
+const downloadProductButton = document.getElementById("download-products-button");
+downloadProductButton.addEventListener("click", Excel);
