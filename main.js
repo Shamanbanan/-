@@ -1253,6 +1253,7 @@ viewRequestsButton.addEventListener("click", () => {
             itemRow.innerHTML = `
           <td>${requestData.number}</td>
           <td>${requestData.initiator}</td>
+                    <td>${requestData.executive}</td>
           <td>${requestData.date}</td>
           <td>${itemData.name}</td>
           <td>${itemData.variation}</td>
