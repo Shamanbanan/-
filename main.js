@@ -853,7 +853,7 @@ async function updateRequest() {
     });
     closeModal();
     // Обновляем таблицу после успешного обновления заявки
-    setTimeout(updateTable, 4000); // Задержка 4 секунды, соответствует длительности анимации
+    setTimeout(updateTable, 2000); // Задержка 2 секунды, соответствует длительности анимации
     // Выделяем обновленную строку
     const updatedRow = document.querySelector(`[data-key='${requestKey}']`);
     if (updatedRow) {
