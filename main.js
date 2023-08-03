@@ -1,25 +1,25 @@
-// Инициализация Firebase Рабочая
-const firebaseConfig = {
-  apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
-  authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
-  projectId: "nomenklature-6acda",
-  storageBucket: "nomenklature-6acda.appspot.com",
-  messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
-};
-
-// //тестовая база
+// // Инициализация Firebase Рабочая
 // const firebaseConfig = {
-//   apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
-//   authDomain: "test-8729c.firebaseapp.com",
-//   databaseURL:
-//     "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
-//   projectId: "test-8729c",
-//   storageBucket: "test-8729c.appspot.com",
-//   messagingSenderId: "891947507335",
-//   appId: "1:891947507335:web:f0ce6527928696b61ae222",
+//   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
+//   authDomain: "nomenklature-6acda.firebaseapp.com",
+//   databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+//   projectId: "nomenklature-6acda",
+//   storageBucket: "nomenklature-6acda.appspot.com",
+//   messagingSenderId: "729807329689",
+//   appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
 // };
+
+//тестовая база
+const firebaseConfig = {
+  apiKey: "AIzaSyDw8I0kHe1TsBmS6X3JqLCaic7nG1o6uIg",
+  authDomain: "test-8729c.firebaseapp.com",
+  databaseURL:
+    "https://test-8729c-default-rtdb.europe-west1.firebasedatabase.app",
+  projectId: "test-8729c",
+  storageBucket: "test-8729c.appspot.com",
+  messagingSenderId: "891947507335",
+  appId: "1:891947507335:web:f0ce6527928696b61ae222",
+};
 firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
@@ -788,14 +788,79 @@ function updatePageNumbers() {
 }
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ОБНОВЛЕНИЯ ЗАЯВОК --------------------------------------------//
+async function refreshRequest(requestKey) {
+  // Загрузить заявку
+  const requestRef = database.ref("requests/" + requestKey);
+  requestRef.once("value", (requestSnapshot) => {
+    const requestData = requestSnapshot.val();
+    // Загрузить все элементы
+    itemsRef.once("value", (snapshot) => {
+      const items = snapshot.val();
+      const codeVariationToNameTypeMap = {};
+      const nameVariationTypeToCodeMap = {};
+
+      Object.keys(items).forEach((key) => {
+        const item = items[key];
+        const itemCodeAsString = String(item.code);
+        codeVariationToNameTypeMap[`${itemCodeAsString}-${item.variation}`] = {
+          name: item.name,
+          type: item.type,
+        };
+        nameVariationTypeToCodeMap[
+          `${item.name}-${item.variation}-${item.type}`
+        ] = itemCodeAsString;
+      });
+
+      requestData.items.forEach((item, index) => {
+        if (item.code) {
+          const codeVariationKey = `${String(item.code)}-${item.variation}`;
+
+          if (codeVariationToNameTypeMap[codeVariationKey]) {
+            requestData.items[index].name =
+              codeVariationToNameTypeMap[codeVariationKey].name;
+            requestData.items[index].type =
+              codeVariationToNameTypeMap[codeVariationKey].type;
+          } else {
+            const newItemKey = itemsRef.push().key;
+            itemsRef.child(newItemKey).set(item);
+            codeVariationToNameTypeMap[codeVariationKey] = {
+              name: item.name,
+              type: item.type,
+            };
+          }
+        } else {
+          const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
+
+          if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
+            requestData.items[index].code = String(
+              nameVariationTypeToCodeMap[nameVariationTypeKey]
+            );
+          }
+        }
+      });
+
+      // Обновить заявку
+      requestsRef.child(requestKey).update(requestData, (error) => {
+        if (error) {
+          console.error("Failed to save changes:", error);
+        } else {
+          console.log(`Successfully updated request ${requestKey}!`);
+        }
+      });
+      console.log(`Request ${requestKey} успешно обновлены.`);
+    });
+  });
+}
 
 // Функция для обновления заявки в базе данных
 async function updateRequestInDatabase(requestKey, requestData) {
   return new Promise((resolve, reject) => {
-    requestsRef.child(requestKey).update(requestData, (error) => {
+    requestsRef.child(requestKey).update(requestData, async (error) => {
       if (error) {
         reject(error);
       } else {
+        // После успешного обновления заявки, обновляем данные элементов в этой заявке
+        await refreshRequest(requestKey);
         resolve();
       }
     });
@@ -853,7 +918,7 @@ async function updateRequest() {
     });
     closeModal();
     // Обновляем таблицу после успешного обновления заявки
-    setTimeout(updateTable, 2000); // Задержка 2 секунды, соответствует длительности анимации
+    setTimeout(updateTable, 1000); // Задержка 1 секунды, соответствует длительности анимации
     // Выделяем обновленную строку
     const updatedRow = document.querySelector(`[data-key='${requestKey}']`);
     if (updatedRow) {
@@ -1233,51 +1298,90 @@ categoryInput.addEventListener("change", () => {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
 
-// Функция для проверки наличия записи в базе данных
-async function checkDatabaseRecord(name, variation, type) {
-  const snapshot = await itemsRef.once("value");
-  const items = snapshot.val();
+// // Функция для проверки наличия записи в базе данных
+// async function checkDatabaseRecord(name, variation, type) {
+//   const snapshot = await itemsRef.once("value");
+//   const items = snapshot.val();
 
-  for (const key in items) {
-    const item = items[key];
-    if (
-      item.name === name &&
-      item.variation === variation &&
-      item.type === type
-    ) {
-      return item.code;
-    }
-  }
+//   for (const key in items) {
+//     const item = items[key];
+//     if (
+//       item.name === name &&
+//       item.variation === variation &&
+//       item.type === type
+//     ) {
+//       return item.code;
+//     }
+//   }
 
-  return "";
-}
+//   return "";
+// }
 
-// Функция для добавления новой строки в таблицу
-function addRowToTable(rowIndex, name, variation, count, code) {
-  const itemRequest = `
-    <tr class="item-request">
-      <td class="number-cell">${rowIndex}</td>
-      <td class="category-cell">${formRequest.elements.category.value}</td>
-      <td class="name-cell">${name}</td>
-      <td class="variation-cell">${variation}</td>
-      <td class="type-cell">${formRequest.elements.type.value}</td>
-      <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
-      <td class="brand-cell"></td> 
-      <td class="code-cell">${code}</td>
-      <td class="comment-cell"></td>
-      <td class="requestNom-cell"></td>
-      <td class="statusNom-cell"></td> 
-      <td class="dateNom-cell"></td>
-      <td class="count-cell">${count}</td>
-      <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
-      <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
-    </tr>
-  `;
+// // Функция для добавления новой строки в таблицу
+// function addRowToTable(rowIndex, name, variation, count, code) {
+//   const itemRequest = `
+//     <tr class="item-request">
+//       <td class="number-cell">${rowIndex}</td>
+//       <td class="category-cell">${formRequest.elements.category.value}</td>
+//       <td class="name-cell">${name}</td>
+//       <td class="variation-cell">${variation}</td>
+//       <td class="type-cell">${formRequest.elements.type.value}</td>
+//       <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
+//       <td class="brand-cell"></td>
+//       <td class="code-cell">${code}</td>
+//       <td class="comment-cell"></td>
+//       <td class="requestNom-cell"></td>
+//       <td class="statusNom-cell"></td>
+//       <td class="dateNom-cell"></td>
+//       <td class="count-cell">${count}</td>
+//       <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
+//       <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
+//     </tr>
+//   `;
 
-  listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
-}
+//   listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
+// }
 
-// Функция для добавления номенклатуры в таблицу
+// // Функция для добавления номенклатуры в таблицу
+// async function addNomenklatureTable(event) {
+//   event.preventDefault();
+
+//   // Отключаем кнопку во время выполнения функции
+//   addProductBtn.disabled = true;
+
+//   try {
+//     // Проверяем поля на наличие ошибок
+//     if (!validateFields()) {
+//       return;
+//     }
+
+//     const categoryField = formRequest.elements.category;
+//     const name = formRequest.elements.name.value.trim();
+//     const variation = formRequest.elements.variation.value.trim();
+//     const count = formRequest.elements["input-count"].value.trim();
+
+//     // Проверяем наличие записи в базе данных
+//     const code = await checkDatabaseRecord(
+//       name,
+//       variation,
+//       formRequest.elements.type.value
+//     );
+
+//     const rowIndex = listTableRequest.rows.length;
+//     addRowToTable(rowIndex, name, variation, count, code);
+
+//     // Сбрасываем форму после добавления
+//     formRequest.reset();
+//   } catch (error) {
+//     console.error("Error in addNomenklatureTable:", error);
+//   } finally {
+//     // Включаем кнопку после выполнения функции, даже если возникла ошибка
+//     addProductBtn.disabled = false;
+//   }
+// }
+
+// // Добавляем обработчик события на кнопку добавления
+// addProductBtn.addEventListener("click", addNomenklatureTable);
 async function addNomenklatureTable(event) {
   event.preventDefault();
 
@@ -1285,27 +1389,100 @@ async function addNomenklatureTable(event) {
   addProductBtn.disabled = true;
 
   try {
-    // Проверяем поля на наличие ошибок
-    if (!validateFields()) {
+    const categoryField = formRequest.elements.category;
+    const nameField = formRequest.elements.name;
+    const variationField = formRequest.elements.variation;
+    const countField = formRequest.elements["input-count"];
+    const typeField = formRequest.elements.type;
+    const equipmentField = formRequest.elements.equipment;
+    const name = nameField.value.trim();
+    const variation = variationField.value.trim();
+    const count = countField.value.trim();
+    const category = categoryField.value;
+
+    let hasError = false;
+
+    if (!name) {
+      setFieldError(nameField, "Введите имя");
+      hasError = true;
+    } else {
+      nameField.setCustomValidity("");
+    }
+
+    if (!variation) {
+      setFieldError(variationField, "Введите вариант исполнения");
+      hasError = true;
+    } else {
+      variationField.setCustomValidity("");
+    }
+
+    if (!count) {
+      setFieldError(countField, "Введите количество");
+      hasError = true;
+    } else {
+      countField.setCustomValidity("");
+    }
+
+    if (!categoryField.value) {
+      setFieldError(categoryField, "Выберите категорию");
+      hasError = true;
+    } else if (
+      categoryField.value === "Запасные части" &&
+      !equipmentField.value
+    ) {
+      setFieldError(
+        equipmentField,
+        "Укажите оборудование для категории Запасные части"
+      );
+      hasError = true;
+    } else {
+      equipmentField.setCustomValidity("");
+      categoryField.setCustomValidity("");
+    }
+
+    if (hasError) {
       return;
     }
 
-    const categoryField = formRequest.elements.category;
-    const name = formRequest.elements.name.value.trim();
-    const variation = formRequest.elements.variation.value.trim();
-    const count = formRequest.elements["input-count"].value.trim();
+    let code = "";
 
     // Проверяем наличие записи в базе данных
-    const code = await checkDatabaseRecord(
-      name,
-      variation,
-      formRequest.elements.type.value
-    );
+    await itemsRef.once("value", (snapshot) => {
+      const items = snapshot.val();
+      Object.keys(items).forEach((key) => {
+        const item = items[key];
+        if (
+          item.name === name &&
+          item.variation === variation &&
+          item.type === typeField.value
+        ) {
+          code = item.code;
+        }
+      });
+    });
 
-    const rowIndex = listTableRequest.rows.length;
-    addRowToTable(rowIndex, name, variation, count, code);
+    const rowIndex = listTableRequest.rows.length + 1;
 
-    // Сбрасываем форму после добавления
+    const itemRequest = `
+        <tr class="item-request">
+          <td class="number-cell">${rowIndex}</td>
+          <td class="category-cell">${formRequest.elements.category.value}</td>
+          <td class="name-cell">${name}</td>
+          <td class="variation-cell">${variation}</td>
+          <td class="type-cell">${formRequest.elements.type.value}</td>
+          <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
+          <td class="brand-cell"></td> 
+          <td class="code-cell">${code}</td>
+          <td class="comment-cell"></td>
+          <td class="requestNom-cell"></td>
+          <td class="statusNom-cell"></td> 
+          <td class="dateNom-cell"></td>
+          <td class="count-cell">${count}</td>
+          <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
+          <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
+        </tr>
+`;
+    listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
     formRequest.reset();
   } catch (error) {
     console.error("Error in addNomenklatureTable:", error);
@@ -1315,9 +1492,8 @@ async function addNomenklatureTable(event) {
   }
 }
 
-// Добавляем обработчик события на кнопку добавления
+// добавляем обработчик события на кнопку закрытия модального окна
 addProductBtn.addEventListener("click", addNomenklatureTable);
-
 // ------------------------------------------------------------------------------------------------------ БЛОК РЕДАКТИРОВАНИЕ ЯЧЕЕК --------------------------------------------//
 
 // Функция для включения режима редактирования ячейки
@@ -2135,33 +2311,33 @@ tableBodies.forEach((tableBody) => {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ПРИКРЕПЛЕНИЯ ФАЙЛОВ  --------------------------------------------//
 
-async function attachDocumentToRequest(requestKey, filename, fileContent) {
-  try {
-    reset;
-    const documentsRef = db.collection("documents");
+// async function attachDocumentToRequest(requestKey, filename, fileContent) {
+//   try {
+//     reset;
+//     const documentsRef = db.collection("documents");
 
-    // Проверка, существует ли уже документ с данным requestKey
-    const existingDocs = await documentsRef
-      .where("requestKey", "==", requestKey)
-      .get();
-    if (!existingDocs.empty) {
-      console.error("Документ с этим ключом уже существует.");
-      return null;
-    }
+//     // Проверка, существует ли уже документ с данным requestKey
+//     const existingDocs = await documentsRef
+//       .where("requestKey", "==", requestKey)
+//       .get();
+//     if (!existingDocs.empty) {
+//       console.error("Документ с этим ключом уже существует.");
+//       return null;
+//     }
 
-    const documentRef = await documentsRef.add({
-      requestKey: requestKey,
-      filename: filename,
-      fileContent: fileContent,
-      timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-    });
+//     const documentRef = await documentsRef.add({
+//       requestKey: requestKey,
+//       filename: filename,
+//       fileContent: fileContent,
+//       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+//     });
 
-    return documentRef.id;
-  } catch (error) {
-    console.error("Ошибка при прикреплении документа: ", error);
-    return null;
-  }
-}
+//     return documentRef.id;
+//   } catch (error) {
+//     console.error("Ошибка при прикреплении документа: ", error);
+//     return null;
+//   }
+// }
 
 // let selectedFileContent = null; // Глобальная переменная для хранения содержимого файла
 
