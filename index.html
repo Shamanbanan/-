@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -17,16 +18,23 @@
 </head>
 <body>
 <!-- ШАПКА -->
-<div class="header">
-  <div id="login_div" class="centered">
-    <!-- <h4>Вход</h4>
-    <input type="email" id="email_field" placeholder="email" />
-    <input type="password" id="password_field" placeholder="password" />
-    <button onclick="login()">Войти</button>
-  </div> -->
+<header class="header-container">
   <button id="view-requests">Посмотреть ТМЦ</button>
-  <button id="update-button" style="display: none;">Обновить</button>
-</div>
+  <div id="login-form"class="hidden">
+    <span class="close-btn-login">&times;</span>
+      <h2>Форма авторизации</h2>
+      <form>
+          <input type="email" id="email" placeholder="Email" required>
+          <input type="password" id="password" placeholder="Пароль" required>
+          <button type="submit">Войти</button>
+      </form>
+      <span>По вопросам работы сервиса писать на почту: shimanskij.a@e-1.ru или звонить по телефону: 79280358732 </span>
+  </div>
+  <div id="logged-in-content" class="hidden">
+      <h2 id="welcome-message"></h2>
+      <button id="logout-btn">Выйти</button>
+  </div>
+</header>
 <!-- ТАБЛИЦА РАСКРЫТЫХ ЗАЯВОК-->
 <div class="main">
 <div id="products-table-container" style="display: none;">
@@ -34,57 +42,43 @@
     <thead>
       <tr class="head-string filter-row">
         <th>№ заявки
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
             <input type="number"  data-filter="0" min="0" size="6" placeholder="Фильтр">
           </div>
         </th>
         <th>ФИО инициатор
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="1" placeholder="Фильтр">
           </div>
         </th>
-    <th>Ответственный
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+        <th>Ответственный
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="1" placeholder="Фильтр">
           </div>
         </th>
         <th>Дата заявки
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="2" placeholder="Фильтр">
           </div>
         </th>
-        <!-- <th>Категория
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
-          <div class="filter-dropdown">
-          <input type="text"  data-filter="3" placeholder="Фильтр">
-          </div>
-        </th> -->
         <th>Наименование
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="4" placeholder="Фильтр">
           </div>
         </th>
         <th>Вариант исп.
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="5" placeholder="Фильтр">
           </div>
         </th>
         <th>Оборудование
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="6" placeholder="Фильтр">
           </div>
@@ -92,15 +86,16 @@
         <th>Баз.ед.</th>
         <th>Поставщик</th>
         <th>Комментарий</th>
-        <th>Код в УМФ
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+        <th>Код
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="7" placeholder="Фильтр">
           </div>
         </th>
         <th>Количество</th>
-        <th>Статус ТМЦ</th>
+        <th>Дата</th>
+        <th>Статус</th>
+        <th>№ Заказа</th>
       </tr>
     </thead>
     <tbody id="products-table-body">
@@ -115,44 +110,39 @@
     <thead>
       <tr class="head-string filter-row">
         <th >Номер заявки
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
             <input type="number"  data-filter="0" min="0" size="6" placeholder="Фильтр">
           </div>
         </th>
-        <th class="product-details-cell"></th>
+        <th>
+        </th>
         <th>Ссылка на заявку
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="1" placeholder="Фильтр">
           </div>
         </th>
         <th>Дата заявки
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="2" placeholder="Фильтр">
           </div>
         </th>
         <th id="initiator-filter">Инициатор
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="3" placeholder="Фильтр">
         </div>
       </th>
         <th>Исполнитель
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="4" placeholder="Фильтр">
           </div>
         </th>
         <th>Статус
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown" data-filter="5">
           <select id="status">
           <option value="">Все</option>
@@ -163,8 +153,7 @@
           </div>
         </th>
         <th>Дата выполнения
-          <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+          <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text" data-filter="6" placeholder="Фильтр">
           </div>
@@ -175,7 +164,22 @@
     </thead>
     <tbody id="table-body"></tbody>
   </table>
+  <div id="pagination-controls">
+    <button id="prev-page" class="page-button">
+      <i class="fas fa-chevron-left"></i>
+    </button>
+    <div id="page-numbers">
+      <!-- Здесь будут размещаться кнопки с номерами страниц -->
+    </div>
+    <button id="next-page" class="page-button">
+      <i class="fas fa-chevron-right"></i>
+    </button>
+  </div>
 </div>
+      <!-- Добавим кнопку "переноса вверх страницы" -->
+      <button id="scroll-to-top" title="Перейти вверх">
+        <i class="fas fa-arrow-up"></i>
+      </button>
 </div>
 <!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ЗАЯВКИ -->
 <div id="modal" class="hidden">
@@ -189,7 +193,10 @@
         <label class="text-field-label" for="initiator">Инициатор</label>
       </div>
       <div class="field-container">
-        <input class="text-field-input" type="text" id="executive-id" value="" placeholder="ФИО" onblur="capitalizeWords(this)">
+        <input type="text" id="executive-id" list="executive-list"   placeholder="ФИО" onblur="capitalizeWords(this)" autocomplete="off" class="text-field-input">
+<datalist id="executive-list">
+  <!-- Здесь будут опции для списка исполнителей -->
+</datalist>
         <label class="text-field-label" for="executive-id">Исполнитель</label>
       </div>
       <div class="field-container status-block">
@@ -261,8 +268,7 @@
             <th>#</th>
             <th>Категория</th>
             <th>Наименование
-              <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-              <br>
+              <i class="toggle-filter-button fa fa-filter"></i>
               <div class="filter-dropdown">
               <input type="text"  data-filter="0" placeholder="Фильтр">
               </div>
@@ -270,16 +276,16 @@
             <th>Вариант исполнения</th>
             <th>Баз ед</th>
             <th>Оборудование</th>
-            <th>Статья</th>
             <th>Поставщик</th>
             <th>Код
-              <?xml version="1.0" ?><svg class="toggle-filter-button" enable-background="new 0 0 32 32" id="Glyph" version="1.1" viewBox="0 0 32 32" xml:space="preserve" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink"><path d="M29.815,6.168C29.484,5.448,28.783,5,27.986,5H4.014c-0.797,0-1.498,0.448-1.83,1.168  c-0.329,0.714-0.215,1.53,0.297,2.128c0,0,0.001,0.001,0.001,0.001L12,19.371V28c0,0.369,0.203,0.708,0.528,0.882  C12.676,28.961,12.838,29,13,29c0.194,0,0.387-0.057,0.555-0.168l6-4C19.833,24.646,20,24.334,20,24v-4.629l9.519-11.074  C30.031,7.698,30.145,6.882,29.815,6.168z" id="XMLID_276_"/></svg>
-          <br>
+              <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
             <input type="number"  data-filter="1" min="0" size="6" placeholder="Фильтр">
           </div></th>
             <th>Комментарий</th>
-            <th>Статус, дата</th>
+            <th>№ Заказа</th>
+            <th>Статус</th>
+            <th>Дата</th>
             <th>Кол-во</th>
             <th></th>
             <th></th>
@@ -291,16 +297,16 @@
       </table>
     </div>
     <div class="modal-footer">
-      <input type="submit" id="save-request-btn" value="Отправить заявку">
-      <input type="submit" id="save-change-btn" value="Перезаписать заявку">
+      <!-- <button id="attachDocumentBtn">Прикрепить документ</button>
+      <a id="downloadButton" style="display: none;">Скачать</a> -->
+        <input type="submit" id="save-request-btn" value="Отправить заявку" class="hidden">
+      <input type="submit" id="save-change-btn" value="Перезаписать заявку" class="hidden">
       <button id="download-products-button">
         <i class="fas fa-download"></i>
     </button>    
     </div>
-  </div>
   <script src="https://cdn.jsdelivr.net/npm/minisearch"></script>
   <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
-  <script src="https://cdn.jsdelivr.net/gh/nextapps-de/flexsearch@0.7.31/dist/flexsearch.bundle.js"></script>
   <script src="main.js"></script>
 </body>
 </html>

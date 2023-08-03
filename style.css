@@ -1,8 +1,7 @@
-
 :root {
   --color-white: #fff;
   --color-edit: #19c37d;
-  --color-primary: #007CFF;
+  --color-primary: #007cff;
   --color-secondary: rgba(0, 124, 255, 0.8);
   --color-error: #ef4146;
   --gradient-primary: linear-gradient(90deg, #a29bd4, #989fdd);
@@ -23,29 +22,40 @@
 }
 
 body {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   margin: 0;
-  background-color: var(--color-white);
   height: 100%;
 }
 
-.header {
+.header-container {
   padding: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
 }
+/* Стиль для закрепленной шапки */
+/* .fixed-header {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  background-color: #ffffff;
+  z-index: 1000;
+} */
 
 input,
 select,
 datalist,
 option,
 label {
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: var(--font-size-small);
 }
-#input-code{
+#input-code {
   position: absolute;
   bottom: 2.7rem;
   left: 85%;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
   font-size: var(--font-size-small);
   margin-right: 2rem;
   align-items: start;
@@ -59,7 +69,6 @@ datalist:focus,
 option:focus {
   outline: none;
   border: 0.1rem var(--color-primary) solid;
-
 }
 
 th input[type="text"],
@@ -69,9 +78,9 @@ th select {
   width: 100%;
   padding: 0.5rem;
   border: 0.1rem solid var(--text-secondary);
-  border-radius: var(--border-r);
+
   font-size: var(--font-size-small);
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 #status {
@@ -84,21 +93,21 @@ th select {
 #save-request-btn,
 #download-button,
 #view-requests,
-#download-products-button {
+#download-products-button,
+#logged-in-content button {
   align-items: center;
-  background-color: var(--color-primary);
+  background-color: var(--color-secondary);
   color: var(--color-white);
   border: none;
   outline: none;
   padding: 0.3rem;
   cursor: pointer;
-  border-radius: var(--border-r);
   font-size: var(--font-size-small);
   font-weight: 500;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 #save-change-btn,
-#save-request-btn{
+#save-request-btn {
   margin: 0 auto;
 }
 
@@ -108,26 +117,27 @@ th select {
 #save-request-btn:hover,
 #download-button:hover,
 #view-requests:hover,
-#download-products-button:hover {
-  background-color: var(--color-secondary);
+#download-products-button:hover,
+#logged-in-content button:hover {
+  background-color: var(--color-primary);
   color: var(--color-white);
 }
 
-#add-product-btn:disabled{
+#add-product-btn:disabled {
   background: var(--text-default);
 }
 #download-products-button {
-margin-left: auto;
+  margin-left: auto;
   background: transparent;
   color: var(--text-secondary);
   border: none;
   outline: none;
   padding: 0rem;
   cursor: pointer;
-  border-radius: var(--border-r);
+
   font-size: var(--font-size-small);
   font-weight: 500;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 #download-products-button:hover {
   align-items: center;
@@ -137,7 +147,7 @@ margin-left: auto;
   outline: none;
   padding: 0rem;
   cursor: pointer;
-  font-family: 'Roboto', sans-serif;
+  font-family: "Roboto", sans-serif;
 }
 
 .btn-edit,
@@ -150,14 +160,13 @@ margin-left: auto;
   padding: 0.3rem;
   cursor: pointer;
   transition: all 0.3s;
-  border-radius: var(--border-r);
 }
 
 .btn-edit:hover,
 .edit-request-button:hover {
   color: var(--color-primary);
   border: 0.1rem solid var(--color-primary);
-  border-radius: var(--border-r);
+
   transition: all 0.3s;
 }
 
@@ -166,10 +175,10 @@ margin-left: auto;
 .delete-btn:hover {
   color: var(--color-error);
   border: 0.1rem solid var(--color-error);
-  border-radius: var(--border-r);
+
   transition: all 0.3s;
 }
-#download-products-button{
+#download-products-button {
   margin-left: 1rem;
 }
 #modal {
@@ -191,7 +200,6 @@ margin-left: auto;
   flex-direction: column;
   background-color: var(--text-disabled);
   overflow: hidden;
-  border-radius: var(--border-r);
 }
 
 #form,
@@ -213,11 +221,10 @@ margin-left: auto;
 .text-field-input {
   width: 100%;
   padding: 0.7rem 0.5rem;
-  border-radius: var(--border-r);
   border: 0.1rem solid var(--text-secondary);
 }
 .modal-header h3,
-#request-number{
+#request-number {
   color: var(--text-default);
   font-weight: bold;
 }
@@ -281,7 +288,6 @@ margin-left: auto;
   height: 80vh;
   overflow-y: scroll;
   background-color: var(--color-white);
-  border-radius: var(--border-r);
 }
 
 .modal-footer {
@@ -302,7 +308,8 @@ margin-left: auto;
   transition: all 0.3s;
 }
 
-.close:hover {
+.close:hover,
+.close-btn-login:hover {
   color: var(--color-error);
   outline: none;
   transition: all 0.3s;
@@ -312,21 +319,15 @@ margin-left: auto;
   padding: 1rem;
 }
 
-table {
-  width: 100%;
-  border-collapse: collapse;
-  background-color: var(--color-white);
-  border-radius: var(--border-r);
-}
-
 .table-request {
   box-shadow: 0.2rem 0.2rem 1rem 0 rgba(142, 160, 192, 0.368);
 }
-
+#requests-table-container {
+  margin-bottom: 3rem;
+}
 #products-table {
   position: relative;
 }
-
 
 thead {
   position: sticky;
@@ -363,7 +364,7 @@ th:first-child {
 th:last-child {
   border-top-right-radius: var(--border-r);
 }
-td.product-details-cell{
+td.product-details-cell {
   color: var(--text-secondary);
   font-size: small;
 }
@@ -447,19 +448,19 @@ tbody {
 }
 
 .toggle-filter-button {
-  fill: var(--text-secondary);
+  color: var(--text-secondary);
   width: 1rem;
   transition: all 0.3s;
 }
 
 .toggle-filter-button:hover {
-  fill: var(--text-default);
+  color: var(--text-default);
   width: 1.1rem;
   transition: all 0.3s;
 }
 
 .toggle-filter-button.active {
-  fill: var(--color-primary);
+  color: var(--color-primary);
 }
 
 .success-message {
@@ -489,9 +490,9 @@ mark {
 table td.tooltip {
   max-width: 1rem;
   position: relative;
-  overflow: hidden; 
+  overflow: hidden;
   text-overflow: ellipsis;
-  white-space: nowrap; 
+  white-space: nowrap;
 }
 
 td.tooltip::after {
@@ -574,4 +575,284 @@ td.tooltip::after {
   color: var(--text-secondary); /* Цвет иконки замка */
   margin-left: 1rem; /* Отступ слева от номера заявки */
   font-size: 12px;
+}
+/* Стили для формы регистрации */
+#registration-form {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 30rem;
+  padding: 2rem;
+  background-color: var(--color-white);
+  box-shadow: 0 0 16rem 160rem rgba(136, 148, 171, 0.568),
+    0 2.4rem 2rem -2.4rem rgb(71 82 107 / 10%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+}
+
+/* Стили для регистрационных полей и кнопки */
+#registration-form label {
+  font-size: var(--font-size-small);
+  font-style: italic;
+  color: var(--text-default);
+  margin-bottom: 0.5rem;
+}
+
+#registration-form input[type="text"],
+#registration-form input[type="email"],
+#registration-form input[type="password"],
+#registration-form select {
+  padding: 0.7rem;
+  border: 0.1rem solid var(--text-secondary);
+  font-size: var(--font-size-small);
+  font-family: "Roboto", sans-serif;
+  margin-bottom: 1rem;
+}
+
+#registration-form select {
+  cursor: pointer;
+}
+
+#registration-form button[type="submit"] {
+  margin-top: 1rem;
+  align-self: flex-end;
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  border: none;
+  outline: none;
+  padding: 0.5rem 1rem;
+  cursor: pointer;
+  font-size: var(--font-size-small);
+  font-weight: 500;
+  font-family: "Roboto", sans-serif;
+}
+
+#registration-form button[type="submit"]:hover {
+  background-color: var(--color-secondary);
+}
+/* Стиль для выделения обновленной строки с анимацией */
+@keyframes highlight {
+  0% {
+    box-shadow: 0 0 0 5px var(--color-edit);
+  }
+  100% {
+    box-shadow: 0 0 0 5px initial;
+  }
+}
+
+.updated-row {
+  animation: highlight 4s;
+}
+/* Стили для таблицы заявок */
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 20px;
+}
+
+/* Стили для кнопок пагинации */
+.pagination {
+  display: flex;
+  justify-content: center;
+  margin-top: 20px;
+}
+
+.page-button {
+  background-color: transparent; /* Без фона */
+  border: none;
+  padding: 8px 16px;
+  text-align: center;
+  text-decoration: none;
+  cursor: pointer;
+  margin: 0 4px;
+  transition: 0.4s;
+}
+
+.page-button.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transition: 0.4s;
+}
+
+/* Стили для иконок Font Awesome */
+.page-button i {
+  font-size: 1.2rem;
+  transition: 0.4s;
+}
+
+/* Стили для информации о текущей странице и общем количестве страниц */
+.page-info {
+  margin-top: 10px;
+  text-align: center;
+}
+
+#pagination-controls {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: white;
+  padding: 5px;
+  display: flex;
+  justify-content: center;
+  opacity: 0.9;
+}
+
+#pagination-controls button,
+#pagination-controls select {
+  margin: 5px;
+  padding: 5px 20px;
+  font-size: var(--font-size-medium);
+  border: none;
+  background-color: transparent; /* Без фона */
+  color: var(--text-primary);
+  cursor: pointer;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+#pagination-controls button:hover,
+#pagination-controls select:hover {
+  color: var(--color-primary);
+}
+
+#pagination-controls button:disabled {
+  background-color: var(--text-disabled);
+  cursor: default;
+}
+
+#pagination-controls select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("arrow-down.png");
+  background-repeat: no-repeat;
+  background-position: right center;
+  padding-right: 25px;
+}
+
+#pagination-controls select:focus {
+  outline: none;
+  box-shadow: 0 0 3px var(--color-secondary);
+}
+/* Стили для информации о текущей странице и общем количестве страниц */
+#login-form {
+  background: var(--color-white);
+  box-shadow: 0 0 16rem 160rem rgba(136, 148, 171, 0.568),
+    0 2.4rem 2rem -2.4rem rgb(71 82 107 / 10%);
+  padding: 30px;
+  width: 350px;
+  text-align: center;
+  position: absolute;
+  left: 40%;
+  top: 30%;
+  z-index: 100;
+}
+
+#login-form h2 {
+  margin: 0 0 20px;
+  color: var(--text-default);
+}
+
+#login-form input {
+  width: 100%;
+  padding: 10px;
+  margin: 10px 0;
+  border: 1px solid var(--text-secondary);
+  color: var(--text-default);
+}
+
+#login-form button {
+  padding: 10px 20px;
+  background: var(--color-primary);
+  border: none;
+  color: var(--color-white);
+  cursor: pointer;
+  transition: background 0.3s ease;
+}
+
+#login-form button:hover {
+  background: var(--color-secondary);
+}
+.close-btn-login {
+  position: absolute;
+  right: 20px;
+  top: 5px;
+  color: var(--text-secondary);
+  font-size: 2rem;
+  font-weight: bold;
+  border: none;
+  background-color: transparent;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+#login-form h2 {
+  margin-top: 20px;
+}
+#logged-in-content button {
+  margin-right: 0.5rem;
+}
+#logged-in-content {
+  /* text-align: end; */
+}
+#logged-in-content h2 {
+  font-size: 1rem;
+  color: var(--text-default);
+  margin: 0 0 10px 0;
+}
+/* Стили для кнопки "переноса вверх страницы" */
+#scroll-to-top {
+  position: fixed;
+  bottom: 0px;
+  left: 0px;
+  background-color: var(--color-secondary);
+  color: var(--color-white);
+  border: none;
+  padding: 10px;
+  font-size: 24px;
+  cursor: pointer;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s, opacity 0.3s, transform 0.3s;
+  opacity: 0;
+}
+
+#scroll-to-top i {
+  font-size: 24px;
+}
+
+#scroll-to-top:hover {
+  background-color: var(--color-primary);
+}
+
+#scroll-to-top.show {
+  opacity: 1;
+}
+td.copied {
+  position: relative;
+}
+
+td.copied::after {
+  content: "Скопировано!";
+  font-size: 13px;
+  position: absolute;
+  left: 100%;
+  transform: translateY(-50%);
+  background-color: #19c37d;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  opacity: 0;
+  transition: opacity 0.2s ease-in-out;
+}
+
+td.copied.active-copy::after {
+  opacity: 1; /* Добавляем этот стиль, чтобы управлять видимостью текста "Скопировано!" */
+}
+
+/* Стиль для галочки */
+.fa-check {
+  /* Добавьте ваш стиль здесь */
+  color: #19c37d; /* Измените цвет галочки */
+  font-size: 12px; /* Измените размер галочки */
+  /* Другие стили по вашему желанию */
 }
