@@ -867,6 +867,17 @@ async function updateRequestInDatabase(requestKey, requestData) {
   });
 }
 
+function areAllItemsFilled(itemsData) {
+  return itemsData.every((itemData) => {
+    const trimmedCode = String(itemData.code).trim();
+    const trimmedRequestNom = String(itemData.requestNom).trim();
+
+    // Проверяем, что код и номер заказа заполнены для каждого продукта
+    return trimmedCode !== "" && trimmedRequestNom !== "";
+  });
+}
+
+
 // Функция обновления заявки
 async function updateRequest() {
   const currentUser = firebase.auth().currentUser;
