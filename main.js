@@ -2,11 +2,12 @@
 const firebaseConfig = {
   apiKey: "AIzaSyC4a4SVzUb-ekvsxsuQNIWumcJWB9oEggY",
   authDomain: "nomenklature-6acda.firebaseapp.com",
-  databaseURL: "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
+  databaseURL:
+    "https://nomenklature-6acda-default-rtdb.europe-west1.firebasedatabase.app",
   projectId: "nomenklature-6acda",
   storageBucket: "nomenklature-6acda.appspot.com",
   messagingSenderId: "729807329689",
-  appId: "1:729807329689:web:8d3f5713602fe1904cdb08"
+  appId: "1:729807329689:web:8d3f5713602fe1904cdb08",
 };
 
 // //тестовая база
@@ -789,37 +790,35 @@ function updatePageNumbers() {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ОБНОВЛЕНИЯ ЗАЯВОК --------------------------------------------//
 async function refreshRequest(requestKey) {
-  // Загрузить заявку
-  const requestRef = database.ref("requests/" + requestKey);
-  requestRef.once("value", (requestSnapshot) => {
+  try {
+    const requestSnapshot = await database
+      .ref(`requests/${requestKey}`)
+      .once("value");
     const requestData = requestSnapshot.val();
-    // Загрузить все элементы
-    itemsRef.once("value", (snapshot) => {
-      const items = snapshot.val();
-      const codeVariationToNameTypeMap = {};
-      const nameVariationTypeToCodeMap = {};
+    const itemsSnapshot = await itemsRef.once("value");
+    const items = itemsSnapshot.val() || {};
 
-      Object.keys(items).forEach((key) => {
-        const item = items[key];
-        const itemCodeAsString = String(item.code);
-        codeVariationToNameTypeMap[`${itemCodeAsString}-${item.variation}`] = {
-          name: item.name,
-          type: item.type,
-        };
-        nameVariationTypeToCodeMap[
-          `${item.name}-${item.variation}-${item.type}`
-        ] = itemCodeAsString;
-      });
+    const codeVariationToNameTypeMap = {};
+    const nameVariationTypeToCodeMap = {};
 
+    Object.keys(items).forEach((key) => {
+      const { code, name, variation, type } = items[key];
+      const itemCodeAsString = String(code);
+      const codeVariation = `${itemCodeAsString}-${variation}`;
+      codeVariationToNameTypeMap[codeVariation] = { name, type };
+      nameVariationTypeToCodeMap[`${name}-${variation}-${type}`] =
+        itemCodeAsString;
+    });
+
+    if (requestData && Array.isArray(requestData.items)) {
       requestData.items.forEach((item, index) => {
-        if (item.code) {
-          const codeVariationKey = `${String(item.code)}-${item.variation}`;
-
-          if (codeVariationToNameTypeMap[codeVariationKey]) {
-            requestData.items[index].name =
-              codeVariationToNameTypeMap[codeVariationKey].name;
-            requestData.items[index].type =
-              codeVariationToNameTypeMap[codeVariationKey].type;
+        const { code, variation } = item;
+        if (code) {
+          const codeVariationKey = `${String(code)}-${variation}`;
+          const existingItem = codeVariationToNameTypeMap[codeVariationKey];
+          if (existingItem) {
+            requestData.items[index].name = existingItem.name;
+            requestData.items[index].type = existingItem.type;
           } else {
             const newItemKey = itemsRef.push().key;
             itemsRef.child(newItemKey).set(item);
@@ -830,26 +829,20 @@ async function refreshRequest(requestKey) {
           }
         } else {
           const nameVariationTypeKey = `${item.name}-${item.variation}-${item.type}`;
-
-          if (nameVariationTypeToCodeMap[nameVariationTypeKey]) {
-            requestData.items[index].code = String(
-              nameVariationTypeToCodeMap[nameVariationTypeKey]
-            );
-          }
+          requestData.items[index].code = String(
+            nameVariationTypeToCodeMap[nameVariationTypeKey] || ""
+          );
         }
       });
 
-      // Обновить заявку
-      requestsRef.child(requestKey).update(requestData, (error) => {
-        if (error) {
-          console.error("Failed to save changes:", error);
-        } else {
-          console.log(`Successfully updated request ${requestKey}!`);
-        }
-      });
+      await requestsRef.child(requestKey).update(requestData);
       console.log(`Request ${requestKey} успешно обновлены.`);
-    });
-  });
+    } else {
+      console.error("Invalid request data");
+    }
+  } catch (error) {
+    console.error("Failed to refresh request:", error);
+  }
 }
 
 // Функция для обновления заявки в базе данных
@@ -877,7 +870,6 @@ function areAllItemsFilled(itemsData) {
   });
 }
 
-
 // Функция обновления заявки
 async function updateRequest() {
   const currentUser = firebase.auth().currentUser;
@@ -894,11 +886,12 @@ async function updateRequest() {
     document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`)
       .textContent || null;
 
-  let completionDate =
-    statusRequest === "Выполнена" && !currentCompletionDate
-      ? new Date().toLocaleString()
-      : null; // Устанавливаем null, если статус не "Выполнена"
+  let completionDate = currentCompletionDate; // Используем текущую дату завершения в качестве значения по умолчанию
 
+  // Если статус заявки "Выполнена" и текущая дата завершения не установлена, устанавливаем новую дату
+  if (statusRequest === "Выполнена" && !currentCompletionDate) {
+    completionDate = new Date().toLocaleString();
+  }
 
   if (initiator === "") {
     const fieldInitiator = document.getElementById("initiator");
@@ -911,6 +904,13 @@ async function updateRequest() {
 
   // Проверяем, что статус заявки установлен на "Выполнена"
   if (statusRequest === "Выполнена") {
+    if (executive === "") {
+      const fieldExecutive = document.getElementById("executive-id");
+      fieldExecutive.setCustomValidity("Заполните фамилию Исполнителя");
+      fieldExecutive.reportValidity();
+      return;
+    }
+
     // Проверяем, что все продукты в заявке имеют заполненные значения для code и requestNom
     if (!areAllItemsFilled(requestData)) {
       alert(
