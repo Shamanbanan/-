@@ -897,7 +897,8 @@ async function updateRequest() {
   let completionDate =
     statusRequest === "Выполнена" && !currentCompletionDate
       ? new Date().toLocaleString()
-      : currentCompletionDate;
+      : null; // Устанавливаем null, если статус не "Выполнена"
+
 
   if (initiator === "") {
     const fieldInitiator = document.getElementById("initiator");
