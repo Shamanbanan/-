@@ -21,7 +21,7 @@ const firebaseConfig = {
 //   messagingSenderId: "891947507335",
 //   appId: "1:891947507335:web:f0ce6527928696b61ae222",
 // };
-// firebase.initializeApp(firebaseConfig);
+firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
 const database = firebase.database();
