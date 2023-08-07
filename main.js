@@ -109,18 +109,26 @@ const showLoggedInContent = (surname, role) => {
 
   // Add event listener to the checkbox
   filterCheckbox.addEventListener("change", () => {
-    // If checkbox is checked, set the search filter to the user's surname
     if (filterCheckbox.checked) {
+      // If checkbox is checked, set the search filter to the user's surname
       searchFilter = surname;
     } else {
-      searchFilter = ""; // If checkbox is unchecked, reset the search filter
+      // If checkbox is unchecked, reset the search filter
+      searchFilter = "";
     }
 
     // After updating the search filter, update the table to apply the filter
     updateTable();
+
+    // Save the checkbox state to localStorage
+    localStorage.setItem("filterCheckboxState", filterCheckbox.checked);
   });
 
-  // Trigger the filterTableBySurname function if the checkbox is checked by default
+  // Retrieve the checkbox state from localStorage and apply it
+  const savedCheckboxState = localStorage.getItem("filterCheckboxState");
+  filterCheckbox.checked = savedCheckboxState === "true";
+
+  // If the checkbox is checked, set the search filter to the user's surname
   if (filterCheckbox.checked) {
     searchFilter = surname;
     filterTableBySurname(surname);
