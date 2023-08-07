@@ -891,7 +891,10 @@ async function updateRequest() {
   // Если статус заявки "Выполнена" и текущая дата завершения не установлена, устанавливаем новую дату
   if (statusRequest === "Выполнена" && !currentCompletionDate) {
     completionDate = new Date().toLocaleString();
+  } else if (statusRequest !== "Выполнена" && currentCompletionDate) {
+    completionDate = null;
   }
+
 
   if (initiator === "") {
     const fieldInitiator = document.getElementById("initiator");
