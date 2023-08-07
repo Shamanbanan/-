@@ -895,7 +895,6 @@ async function updateRequest() {
     completionDate = null;
   }
 
-
   if (initiator === "") {
     const fieldInitiator = document.getElementById("initiator");
     fieldInitiator.setCustomValidity("Заполните фамилию Инициатора");
@@ -2206,7 +2205,6 @@ function downloadExcel() {
     "Вар.исп",
     "Баз.ед",
     "Оборудование",
-    "Статья",
     "Поставщик",
     "Код",
     "Комментарий",
