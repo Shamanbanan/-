@@ -21,7 +21,7 @@ const firebaseConfig = {
 //   messagingSenderId: "891947507335",
 //   appId: "1:891947507335:web:f0ce6527928696b61ae222",
 // };
-firebase.initializeApp(firebaseConfig);
+// firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
 const database = firebase.database();
@@ -63,7 +63,14 @@ let requestRef;
 let currentRequestKey = null;
 let requestNumber = null; //Переменная для номера заявки
 
+// Глобальная переменная для фильтрации по имени пользователя (surname)
+let searchFilter = "";
+
 // ------------------------------------------------------------------------------------------------------ БЛОК АВТОРИЗАЦИИ --------------------------------------------//
+// Отображение формы авторизации
+const showLoginForm = () => {
+  toggleElementsVisibility(true, false, false);
+};
 
 // Функция для изменения видимости элементов в зависимости от авторизации пользователя
 const toggleElementsVisibility = (
@@ -83,10 +90,6 @@ const toggleElementsVisibility = (
   }
 };
 
-// Отображение формы авторизации
-const showLoginForm = () => {
-  toggleElementsVisibility(true, false, false);
-};
 const closeButtonLogin = document.querySelector(".close-btn-login");
 
 closeButtonLogin.addEventListener("click", () => {
@@ -101,6 +104,46 @@ const showLoggedInContent = (surname, role) => {
   const roleText = role === "admin" ? "Администратор" : "Пользователь";
   welcomeMessage.textContent = `${surname} (${roleText})`;
   toggleElementsVisibility(false, true, role === "admin");
+
+  const filterCheckbox = document.getElementById("filterCheckbox");
+
+  // Add event listener to the checkbox
+  filterCheckbox.addEventListener("change", () => {
+    // If checkbox is checked, set the search filter to the user's surname
+    if (filterCheckbox.checked) {
+      searchFilter = surname;
+    } else {
+      searchFilter = ""; // If checkbox is unchecked, reset the search filter
+    }
+
+    // After updating the search filter, update the table to apply the filter
+    updateTable();
+  });
+
+  // Trigger the filterTableBySurname function if the checkbox is checked by default
+  if (filterCheckbox.checked) {
+    searchFilter = surname;
+    filterTableBySurname(surname);
+  }
+};
+
+const filterTableBySurname = (surname) => {
+  const tableRows = document.querySelectorAll("tbody tr");
+
+  // Loop through all rows and check if the surname is present
+  tableRows.forEach((row) => {
+    const inCell = row.querySelector(".in-cell");
+    const executiveCell = row.querySelector(".executive-cell");
+    const showRow =
+      (inCell && inCell.textContent.includes(surname)) ||
+      (executiveCell && executiveCell.textContent.includes(surname));
+
+    row.style.display = showRow ? "" : "none";
+  });
+
+  // After applying the filter, update the page numbers and show the first page
+  currentPage = 1;
+  updateTable();
 };
 
 // Обработка отправки формы авторизации
@@ -698,19 +741,34 @@ async function updateTable() {
       ...value,
     }));
 
-    // Сортировка заявок по условию
-    const sortedRequests = requestsArray.sort((a, b) => {
-      // Сначала заявки без статуса "Выполнена"
-      if (a.statusRequest !== "Выполнена" && b.statusRequest === "Выполнена") {
-        return -1; // a раньше b
-      } else if (
-        a.statusRequest === "Выполнена" &&
-        b.statusRequest !== "Выполнена"
-      ) {
-        return 1; // b раньше a
-      }
-      return b.number - a.number; // Заявки с одинаковым статусом сортируются по убыванию номера
-    });
+    // Сортировка и фильтрация заявок по условию
+    const sortedRequests = requestsArray
+      .filter((request) => {
+        const inCell = request.initiator.toLowerCase();
+        const executiveCell = request.executive
+          ? request.executive.toLowerCase()
+          : ""; // Handle the case when executiveCell is null
+        return (
+          inCell.includes(searchFilter.toLowerCase()) ||
+          executiveCell.includes(searchFilter.toLowerCase()) ||
+          !request.executive // Show rows where executive-cell is not filled
+        );
+      })
+      .sort((a, b) => {
+        // Сначала заявки без статуса "Выполнена"
+        if (
+          a.statusRequest !== "Выполнена" &&
+          b.statusRequest === "Выполнена"
+        ) {
+          return -1; // a раньше b
+        } else if (
+          a.statusRequest === "Выполнена" &&
+          b.statusRequest !== "Выполнена"
+        ) {
+          return 1; // b раньше a
+        }
+        return b.number - a.number; // Заявки с одинаковым статусом сортируются по убыванию номера
+      });
 
     // Определяем начальный и конечный индексы заявок для текущей страницы
     const startIndex = (currentPage - 1) * itemsPerPage;
@@ -1172,8 +1230,6 @@ table.addEventListener("click", async (event) => {
   }
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК РАБОТЫ С ПОЛЯМИ ЗАЯВКИ --------------------------------------------//
-
 // ------------------------------------------------------------------------------------------------------ БЛОК ЗАГРУЗКИ ИСПОЛНИТЕЛЯ  --------------------------------------------//
 
 // Функция для загрузки списка фамилий пользователей
@@ -1312,90 +1368,6 @@ categoryInput.addEventListener("change", () => {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
 
-// // Функция для проверки наличия записи в базе данных
-// async function checkDatabaseRecord(name, variation, type) {
-//   const snapshot = await itemsRef.once("value");
-//   const items = snapshot.val();
-
-//   for (const key in items) {
-//     const item = items[key];
-//     if (
-//       item.name === name &&
-//       item.variation === variation &&
-//       item.type === type
-//     ) {
-//       return item.code;
-//     }
-//   }
-
-//   return "";
-// }
-
-// // Функция для добавления новой строки в таблицу
-// function addRowToTable(rowIndex, name, variation, count, code) {
-//   const itemRequest = `
-//     <tr class="item-request">
-//       <td class="number-cell">${rowIndex}</td>
-//       <td class="category-cell">${formRequest.elements.category.value}</td>
-//       <td class="name-cell">${name}</td>
-//       <td class="variation-cell">${variation}</td>
-//       <td class="type-cell">${formRequest.elements.type.value}</td>
-//       <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
-//       <td class="brand-cell"></td>
-//       <td class="code-cell">${code}</td>
-//       <td class="comment-cell"></td>
-//       <td class="requestNom-cell"></td>
-//       <td class="statusNom-cell"></td>
-//       <td class="dateNom-cell"></td>
-//       <td class="count-cell">${count}</td>
-//       <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
-//       <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
-//     </tr>
-//   `;
-
-//   listTableRequest.insertAdjacentHTML("beforeend", itemRequest);
-// }
-
-// // Функция для добавления номенклатуры в таблицу
-// async function addNomenklatureTable(event) {
-//   event.preventDefault();
-
-//   // Отключаем кнопку во время выполнения функции
-//   addProductBtn.disabled = true;
-
-//   try {
-//     // Проверяем поля на наличие ошибок
-//     if (!validateFields()) {
-//       return;
-//     }
-
-//     const categoryField = formRequest.elements.category;
-//     const name = formRequest.elements.name.value.trim();
-//     const variation = formRequest.elements.variation.value.trim();
-//     const count = formRequest.elements["input-count"].value.trim();
-
-//     // Проверяем наличие записи в базе данных
-//     const code = await checkDatabaseRecord(
-//       name,
-//       variation,
-//       formRequest.elements.type.value
-//     );
-
-//     const rowIndex = listTableRequest.rows.length;
-//     addRowToTable(rowIndex, name, variation, count, code);
-
-//     // Сбрасываем форму после добавления
-//     formRequest.reset();
-//   } catch (error) {
-//     console.error("Error in addNomenklatureTable:", error);
-//   } finally {
-//     // Включаем кнопку после выполнения функции, даже если возникла ошибка
-//     addProductBtn.disabled = false;
-//   }
-// }
-
-// // Добавляем обработчик события на кнопку добавления
-// addProductBtn.addEventListener("click", addNomenklatureTable);
 async function addNomenklatureTable(event) {
   event.preventDefault();
 

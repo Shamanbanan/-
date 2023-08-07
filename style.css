@@ -791,14 +791,21 @@ table {
 }
 #logged-in-content button {
   margin-right: 0.5rem;
+  align-items: center;
 }
 #logged-in-content {
-  /* text-align: end; */
+  align-items: center;
+  flex: 1; /* Take up available space */
+  display: flex;
+}
+.filter-content {
+  margin-right: auto;
 }
 #logged-in-content h2 {
+  align-items: center;
   font-size: 1rem;
   color: var(--text-default);
-  margin: 0 0 10px 0;
+  margin: 0 10px 0px 0;
 }
 /* Стили для кнопки "переноса вверх страницы" */
 #scroll-to-top {
