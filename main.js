@@ -21,6 +21,7 @@ const firebaseConfig = {
 //   messagingSenderId: "891947507335",
 //   appId: "1:891947507335:web:f0ce6527928696b61ae222",
 // };
+
 firebase.initializeApp(firebaseConfig);
 
 // Получение ссылки на базу данных
@@ -1226,6 +1227,7 @@ window.addEventListener("beforeunload", async (event) => {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ОБРАБОТЧИК КЛИКОВ ПО ТАБЛИЦЕ --------------------------------------------//
 
+// ------------------------------------------------------------------------------------------------------ БЛОК ЗАГРУЗКИ ИСПОЛНИТЕЛЯ  --------------------------------------------//
 // Добавление обработчиков для клика на кнопки в таблице
 table.addEventListener("click", async (event) => {
   if (event.target.classList.contains("btn-delete")) {
@@ -1237,9 +1239,6 @@ table.addEventListener("click", async (event) => {
     unlockRequest(requestKey);
   }
 });
-
-// ------------------------------------------------------------------------------------------------------ БЛОК ЗАГРУЗКИ ИСПОЛНИТЕЛЯ  --------------------------------------------//
-
 // Функция для загрузки списка фамилий пользователей
 async function loadUserSurnames() {
   try {
@@ -1930,6 +1929,98 @@ document.addEventListener("click", (e) => {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ТАБЛИЦЫ ПРОСМОТР ТМЦ  --------------------------------------------//
 
+// const viewRequestsButton = document.getElementById("view-requests");
+// const requestsTableContainer = document.getElementById(
+//   "requests-table-container"
+// );
+// const productsTableContainer = document.getElementById(
+//   "products-table-container"
+// );
+// const productsTable = document.getElementById("products-table");
+// const productsTableBody = document.getElementById("products-table-body");
+
+// viewRequestsButton.addEventListener("click", () => {
+//   // Переключение видимости таблиц
+//   const isRequestsTableVisible =
+//     requestsTableContainer.style.display !== "none";
+//   requestsTableContainer.style.display = isRequestsTableVisible
+//     ? "none"
+//     : "block";
+//   productsTableContainer.style.display = isRequestsTableVisible
+//     ? "block"
+//     : "none";
+
+//   if (isRequestsTableVisible) {
+//     // Очистите таблицу перед загрузкой новых данных
+//     productsTableBody.innerHTML = "";
+
+//     // Загрузите данные о заявках из базы данных
+//     const requestsRef = database.ref("requests");
+//     requestsRef.once("value", (snapshot) => {
+//       snapshot.forEach((requestSnapshot) => {
+//         const requestKey = requestSnapshot.key;
+//         const requestData = requestSnapshot.val();
+
+//         // Проверяем, существуют ли продукты в заявке
+//         if (requestData.items) {
+//           // Добавьте продукты из заявки в таблицу
+//           requestData.items.forEach((itemData) => {
+//             const itemRow = document.createElement("tr");
+//             itemRow.innerHTML = `
+//           <td>${requestData.number}</td>
+//           <td>${requestData.initiator}</td>
+//           <td>${requestData.executive}</td>
+//           <td>${requestData.date}</td>
+//           <td>${itemData.name}</td>
+//           <td>${itemData.variation}</td>
+//           <td>${itemData.equipment}</td>
+//           <td>${itemData.type}</td>
+//           <td>${itemData.brand}</td>
+//           <td class="tooltip" title="${itemData.comment.replace(/"/g, "")}">${
+//               itemData.comment
+//             }</td>
+//           <td>${itemData.code}</td>
+//           <td>${itemData.count}</td>
+//           <td>${itemData.dateNom}</td>
+//           <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
+//           <td>${itemData.requestNom}</td>
+//           `;
+
+//             productsTableBody.insertBefore(
+//               itemRow,
+//               productsTableBody.firstChild
+//             );
+//           });
+//         } else {
+//           console.log(`Заяки по этому ключу "${requestKey}" нет в списке.`);
+//         }
+//       });
+//     });
+//   }
+// });
+
+// Объект для кэширования данных о заявках
+const requestsCache = {};
+
+// Функция для получения данных о заявках из кэша или базы данных
+async function getRequestsDataFromCacheOrDatabase() {
+  // Проверяем, есть ли данные в кэше
+  if (Object.keys(requestsCache).length > 0) {
+    return Object.values(requestsCache);
+  } else {
+    // Если данных нет в кэше, делаем запрос к базе данных
+    const snapshot = await requestsRef.once("value");
+    const requestsData = snapshot.val();
+
+    // Обновляем кэш данными
+    Object.keys(requestsData).forEach((requestKey) => {
+      requestsCache[requestKey] = requestsData[requestKey];
+    });
+
+    return Object.values(requestsData);
+  }
+}
+
 const viewRequestsButton = document.getElementById("view-requests");
 const requestsTableContainer = document.getElementById(
   "requests-table-container"
@@ -1940,7 +2031,7 @@ const productsTableContainer = document.getElementById(
 const productsTable = document.getElementById("products-table");
 const productsTableBody = document.getElementById("products-table-body");
 
-viewRequestsButton.addEventListener("click", () => {
+viewRequestsButton.addEventListener("click", async () => {
   // Переключение видимости таблиц
   const isRequestsTableVisible =
     requestsTableContainer.style.display !== "none";
@@ -1955,37 +2046,35 @@ viewRequestsButton.addEventListener("click", () => {
     // Очистите таблицу перед загрузкой новых данных
     productsTableBody.innerHTML = "";
 
-    // Загрузите данные о заявках из базы данных
-    const requestsRef = database.ref("requests");
-    requestsRef.once("value", (snapshot) => {
-      snapshot.forEach((requestSnapshot) => {
-        const requestKey = requestSnapshot.key;
-        const requestData = requestSnapshot.val();
+    try {
+      // Получаем данные о заявках из кэша или базы данных
+      const requestsData = await getRequestsDataFromCacheOrDatabase();
 
-        // Проверяем, существуют ли продукты в заявке
-        if (requestData.items) {
-          // Добавьте продукты из заявки в таблицу
+      // Загрузите данные о заявках из базы данных
+      for (const requestData of requestsData) {
+        if (requestData && requestData.items) {
           requestData.items.forEach((itemData) => {
             const itemRow = document.createElement("tr");
             itemRow.innerHTML = `
-          <td>${requestData.number}</td>
-          <td>${requestData.initiator}</td>
-          <td>${requestData.executive}</td>
-          <td>${requestData.date}</td>
-          <td>${itemData.name}</td>
-          <td>${itemData.variation}</td>
-          <td>${itemData.equipment}</td>
-          <td>${itemData.type}</td>
-          <td>${itemData.brand}</td>
-          <td class="tooltip" title="${itemData.comment.replace(/"/g, "")}">${
-              itemData.comment
-            }</td>
-          <td>${itemData.code}</td>
-          <td>${itemData.count}</td>
-          <td>${itemData.dateNom}</td>
-          <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
-          <td>${itemData.requestNom}</td>
-          `;
+              <td>${requestData.number}</td>
+              <td>${requestData.initiator}</td>
+              <td>${requestData.executive}</td>
+              <td>${requestData.date}</td>
+              <td>${itemData.name}</td>
+              <td>${itemData.variation}</td>
+              <td>${itemData.equipment}</td>
+              <td>${itemData.type}</td>
+              <td>${itemData.brand}</td>
+              <td class="tooltip" title="${itemData.comment.replace(
+                /"/g,
+                ""
+              )}">${itemData.comment}</td>
+              <td>${itemData.code}</td>
+              <td>${itemData.count}</td>
+              <td>${itemData.dateNom}</td>
+              <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
+              <td>${itemData.requestNom}</td>
+            `;
 
             productsTableBody.insertBefore(
               itemRow,
@@ -1993,12 +2082,15 @@ viewRequestsButton.addEventListener("click", () => {
             );
           });
         } else {
-          console.log(`Заяки по этому ключу "${requestKey}" нет в списке.`);
+          console.log(`Заявки по этому ключу "${requestKey}" нет в списке.`);
         }
-      });
-    });
+      }
+    } catch (error) {
+      console.error("Ошибка при получении данных о заявках:", error);
+    }
   }
 });
+console.log(requestsCache);
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ОБНОВЛЕНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
 
