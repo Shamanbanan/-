@@ -682,6 +682,7 @@ async function saveRequestDatabase() {
     statusRequest: "Новая",
     date: new Date().toLocaleString(),
     items: requestData,
+        uid: currentUser.uid, // Записываем uid пользователя в заявку
   };
 
   const messageDiv = createMessageDiv();
