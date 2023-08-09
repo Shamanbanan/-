@@ -863,3 +863,7 @@ td.copied.active-copy::after {
   font-size: 12px; /* Измените размер галочки */
   /* Другие стили по вашему желанию */
 }
+.nameFirst-cell {
+  display: none;
+}
+
