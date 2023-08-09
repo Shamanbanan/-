@@ -511,6 +511,7 @@ function createItemRow(itemData) {
     <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
     <td class="dateNom-cell">${itemData.dateNom}</td>
     <td class="count-cell">${itemData.count}</td>
+    <td class="nameFirst-cell">${itemData.nameFirst}</td>
     <td class="button-cell">
       <button class="btn-edit" id="edit">Изменить</button>
     </td>
@@ -615,6 +616,7 @@ function getTableData() {
         : "",
       dateNom: row.querySelector(".dateNom-cell").textContent,
       count: row.querySelector(".count-cell").textContent,
+      nameFirst: row.querySelector(".nameFirst-cell").textContent,
     };
     requestData.push(data);
   });
@@ -682,7 +684,7 @@ async function saveRequestDatabase() {
     statusRequest: "Новая",
     date: new Date().toLocaleString(),
     items: requestData,
-        uid: currentUser.uid, // Записываем uid пользователя в заявку
+    uid: currentUser.uid, // Записываем uid пользователя в заявку
   };
 
   const messageDiv = createMessageDiv();
@@ -1390,6 +1392,7 @@ async function addNomenklatureTable(event) {
     const typeField = formRequest.elements.type;
     const equipmentField = formRequest.elements.equipment;
     const name = nameField.value.trim();
+    const nameFirst = nameField.value.trim();
     const variation = variationField.value.trim();
     const count = countField.value.trim();
     const category = categoryField.value;
@@ -1472,6 +1475,7 @@ async function addNomenklatureTable(event) {
           <td class="statusNom-cell"></td> 
           <td class="dateNom-cell"></td>
           <td class="count-cell">${count}</td>
+          <td class="nameFirst-cell">${nameFirst}</td>
           <td class="button-cell"><button class="btn-edit" id="edit">Изменить</button></td>
           <td class="button-cell"><button class="btn-remove" id="remove">Удалить</button></td>
         </tr>
@@ -2195,6 +2199,7 @@ function Excel() {
     "Статус",
     "Дата",
     "Кол-во",
+    "Первоначальное имя",
   ]);
 
   // Получаем значение инициатора и ответственного
@@ -2317,6 +2322,7 @@ function downloadExcel() {
             itemData.statusNom,
             itemData.dateNom,
             itemData.count,
+            itemData.nameFirst,
           ]);
         });
       }
