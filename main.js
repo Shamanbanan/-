@@ -67,6 +67,16 @@ let requestNumber = null; //Переменная для номера заявк�
 // Глобальная переменная для фильтрации по имени пользователя (surname)
 let searchFilter = "";
 
+let globalItems = null;
+
+async function loadItems() {
+  if (globalItems === null) {
+    const itemsSnapshot = await itemsRef.once("value");
+    globalItems = itemsSnapshot.val() || {};
+  }
+  return globalItems;
+}
+
 // ------------------------------------------------------------------------------------------------------ БЛОК АВТОРИЗАЦИИ --------------------------------------------//
 // Отображение формы авторизации
 const showLoginForm = () => {
@@ -865,8 +875,7 @@ async function refreshRequest(requestKey) {
       .ref(`requests/${requestKey}`)
       .once("value");
     const requestData = requestSnapshot.val();
-    const itemsSnapshot = await itemsRef.once("value");
-    const items = itemsSnapshot.val() || {};
+    const items = await loadItems();
 
     const codeVariationToNameTypeMap = {};
     const nameVariationTypeToCodeMap = {};
@@ -1442,20 +1451,16 @@ async function addNomenklatureTable(event) {
     }
 
     let code = "";
-
-    // Проверяем наличие записи в базе данных
-    await itemsRef.once("value", (snapshot) => {
-      const items = snapshot.val();
-      Object.keys(items).forEach((key) => {
-        const item = items[key];
-        if (
-          item.name === name &&
-          item.variation === variation &&
-          item.type === typeField.value
-        ) {
-          code = item.code;
-        }
-      });
+    const items = await loadItems(); // Добавьте await здесь
+    Object.keys(items).forEach((key) => {
+      const item = items[key];
+      if (
+        item.name === name &&
+        item.variation === variation &&
+        item.type === typeField.value
+      ) {
+        code = item.code;
+      }
     });
 
     const rowIndex = listTableRequest.rows.length + 1;
@@ -1693,10 +1698,9 @@ let miniSearch;
 
 // Load data from firebase
 async function loadData() {
-  const itemsSnapshot = await itemsRef.once("value");
-
-  items = itemsSnapshot.val()
-    ? Object.entries(itemsSnapshot.val()).map(([id, item]) => ({
+  const itemsObject = await loadItems();
+  const items = itemsObject
+    ? Object.entries(itemsObject).map(([id, item]) => ({
         id,
         ...item,
       }))
@@ -1719,8 +1723,6 @@ async function loadData() {
 
   miniSearch.addAll(allItems);
 }
-
-loadData();
 
 // Search and update UI
 function search(searchTerm) {
@@ -1816,9 +1818,11 @@ function highlightMatch(text, searchTerm) {
 let searchTimeout;
 
 // Event listeners
-nameInput.addEventListener("input", (e) => {
+nameInput.addEventListener("input", async (e) => {
   clearTimeout(searchTimeout);
-  searchTimeout = setTimeout(() => search(e.target.value.toLowerCase()), 100);
+  await loadData();
+
+  searchTimeout = setTimeout(() => search(e.target.value.toLowerCase()), 10);
 });
 
 document.addEventListener("click", (e) => {
@@ -1933,76 +1937,6 @@ document.addEventListener("click", (e) => {
 });
 
 // ------------------------------------------------------------------------------------------------------ БЛОК ТАБЛИЦЫ ПРОСМОТР ТМЦ  --------------------------------------------//
-
-// const viewRequestsButton = document.getElementById("view-requests");
-// const requestsTableContainer = document.getElementById(
-//   "requests-table-container"
-// );
-// const productsTableContainer = document.getElementById(
-//   "products-table-container"
-// );
-// const productsTable = document.getElementById("products-table");
-// const productsTableBody = document.getElementById("products-table-body");
-
-// viewRequestsButton.addEventListener("click", () => {
-//   // Переключение видимости таблиц
-//   const isRequestsTableVisible =
-//     requestsTableContainer.style.display !== "none";
-//   requestsTableContainer.style.display = isRequestsTableVisible
-//     ? "none"
-//     : "block";
-//   productsTableContainer.style.display = isRequestsTableVisible
-//     ? "block"
-//     : "none";
-
-//   if (isRequestsTableVisible) {
-//     // Очистите таблицу перед загрузкой новых данных
-//     productsTableBody.innerHTML = "";
-
-//     // Загрузите данные о заявках из базы данных
-//     const requestsRef = database.ref("requests");
-//     requestsRef.once("value", (snapshot) => {
-//       snapshot.forEach((requestSnapshot) => {
-//         const requestKey = requestSnapshot.key;
-//         const requestData = requestSnapshot.val();
-
-//         // Проверяем, существуют ли продукты в заявке
-//         if (requestData.items) {
-//           // Добавьте продукты из заявки в таблицу
-//           requestData.items.forEach((itemData) => {
-//             const itemRow = document.createElement("tr");
-//             itemRow.innerHTML = `
-//           <td>${requestData.number}</td>
-//           <td>${requestData.initiator}</td>
-//           <td>${requestData.executive}</td>
-//           <td>${requestData.date}</td>
-//           <td>${itemData.name}</td>
-//           <td>${itemData.variation}</td>
-//           <td>${itemData.equipment}</td>
-//           <td>${itemData.type}</td>
-//           <td>${itemData.brand}</td>
-//           <td class="tooltip" title="${itemData.comment.replace(/"/g, "")}">${
-//               itemData.comment
-//             }</td>
-//           <td>${itemData.code}</td>
-//           <td>${itemData.count}</td>
-//           <td>${itemData.dateNom}</td>
-//           <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
-//           <td>${itemData.requestNom}</td>
-//           `;
-
-//             productsTableBody.insertBefore(
-//               itemRow,
-//               productsTableBody.firstChild
-//             );
-//           });
-//         } else {
-//           console.log(`Заяки по этому ключу "${requestKey}" нет в списке.`);
-//         }
-//       });
-//     });
-//   }
-// });
 
 // Объект для кэширования данных о заявках
 const requestsCache = {};
