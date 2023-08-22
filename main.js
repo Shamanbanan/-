@@ -2111,7 +2111,7 @@ function refreshAllRequests() {
 
 // ------------------------------------------------------------------------------------------------------ БЛОК СКАЧИВАНИЯ ОДНОЙ ЗАЯВКОЙ  --------------------------------------------//
 
-//функция загрузки
+//функция загрузки одной заявки
 function Excel() {
   const workbook = new ExcelJS.Workbook();
   const sheet = workbook.addWorksheet("Заявки");
@@ -2141,7 +2141,7 @@ function Excel() {
   const responsible = document.getElementById("executive-id").value;
 
   // Собираем все строки из таблицы 'products-table'
-  const rows = document.querySelectorAll("#products-table tr");
+  const rows = document.querySelectorAll(".nomenklature tr");
 
   // Для каждой строки (за исключением первой, так как она содержит заголовки)
   for (let i = 1; i < rows.length; i++) {
