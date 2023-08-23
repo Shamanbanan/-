@@ -2226,6 +2226,7 @@ function downloadExcel() {
     "Статус",
     "Дата",
     "Кол-во",
+        "Имя от поставщика",
   ]);
 
   requestsRef.once("value", (snapshot) => {
