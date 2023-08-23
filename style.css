@@ -1,6 +1,6 @@
 :root {
   --color-white: #fff;
-  --color-edit: #19c37d;
+  --color-edit: #1c9c75;
   --color-primary: #007cff;
   --color-secondary: rgba(0, 124, 255, 0.8);
   --color-error: #ef4146;
@@ -368,7 +368,9 @@ td.product-details-cell {
   color: var(--text-secondary);
   font-size: small;
 }
-
+td.button-cell {
+  text-align: center;
+}
 tr:hover:not(.head-string) td {
   background-color: var(--text-disabled);
   color: var(--color-primary);
@@ -844,7 +846,7 @@ td.copied::after {
   position: absolute;
   left: 100%;
   transform: translateY(-50%);
-  background-color: #19c37d;
+  background-color: var(--color-edit);
   color: #fff;
   padding: 5px 10px;
   border-radius: 5px;
@@ -859,7 +861,7 @@ td.copied.active-copy::after {
 /* Стиль для галочки */
 .fa-check {
   /* Добавьте ваш стиль здесь */
-  color: #19c37d; /* Измените цвет галочки */
+  color: var(--color-edit); /* Измените цвет галочки */
   font-size: 12px; /* Измените размер галочки */
   /* Другие стили по вашему желанию */
 }

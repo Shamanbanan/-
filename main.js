@@ -1502,13 +1502,15 @@ addProductBtn.addEventListener("click", addNomenklatureTable);
 // Функция для включения режима редактирования ячейки
 const enableCellEditing = (cell) => {
   cell.contentEditable = true;
-  cell.style.backgroundColor = "#e8f9fb"; // Используем явное значение цвета
+  cell.style.backgroundColor = "#f0ffff";
+  cell.style.borderColor = "#d9f0ff";
 };
 
 // Функция для отключения режима редактирования ячейки
 const disableCellEditing = (cell) => {
   cell.contentEditable = false;
   cell.style.backgroundColor = "";
+  cell.style.borderColor = "";
 };
 
 // Функция для обновления текста кнопки
