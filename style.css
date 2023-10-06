@@ -186,9 +186,7 @@ cursor: pointer;
 
   transition: all 0.3s;
 }
-#download-products-button {
-  margin-left: 1rem;
-}
+
 #modal {
   position: fixed;
   z-index: 1;
