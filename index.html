@@ -19,6 +19,9 @@
 <body>
 <!-- ШАПКА -->
 <header class="header-container">
+  <!-- <textarea id="nameList" rows="5" cols="30" placeholder="Введите список наименований через запятую"></textarea>
+<button id="searchButton">Поиск</button> -->
+
   <button id="view-requests">Посмотреть ТМЦ</button>
   <div id="login-form"class="hidden">
     <span class="close-btn-login">&times;</span>
@@ -226,6 +229,7 @@
           <option value="Хозматериалы">Хозматериалы</option>
           <option value="Стройматериалы">Стройматериал</option>
           <option value="Спецодежда">Спецодежда</option>
+          <option value="Услуги">Услуги</option>
         </select>
       </div>
         <div class="field-container">
@@ -302,8 +306,8 @@
       </table>
     </div>
     <div class="modal-footer">
-      <!-- <button id="attachDocumentBtn">Прикрепить документ</button>
-      <a id="downloadButton" style="display: none;">Скачать</a> -->
+      <input type="file" id="fileInput" style="display: none;">
+      <button id="downloadfile" style="display: none;">Скачать файл</button>
         <input type="submit" id="save-request-btn" value="Отправить заявку" class="hidden">
       <input type="submit" id="save-change-btn" value="Перезаписать заявку" class="hidden">
       <button id="download-products-button">

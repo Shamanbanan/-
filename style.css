@@ -86,6 +86,14 @@ th select {
 #status {
   border: 0.1rem solid var(--text-disabled);
 }
+#downloadfile,
+#fileInput{
+background-color: transparent;
+color: var(--color-primary);
+border: none;
+cursor: pointer;
+}
+
 
 #add-btn,
 #add-product-btn,
@@ -399,6 +407,7 @@ tbody {
   position: absolute;
   left: 100%;
   z-index: 3;
+  max-height: 30rem;
   background-color: var(--color-white);
   min-width: 40rem;
   box-shadow: 0 0.2rem 0.6rem 0 rgba(136, 148, 171, 0.368),
@@ -406,6 +415,7 @@ tbody {
   border-top-right-radius: var(--border-r);
   border-bottom-left-radius: var(--border-r);
   border-bottom-right-radius: var(--border-r);
+  overflow-y: auto;
 }
 
 #equipment-list {

@@ -105,7 +105,7 @@ const closeButtonLogin = document.querySelector(".close-btn-login");
 
 closeButtonLogin.addEventListener("click", () => {
   alert(
-    "Неаторизованный пользователь не может редактировать и записывать новые заявки"
+    "Неавторизованный пользователь не может редактировать и записывать новые заявки"
   );
   toggleElementsVisibility(false, false, false);
 });
@@ -214,9 +214,10 @@ logoutBtn.addEventListener("click", () => {
       console.error("Ошибка выхода из системы:", error);
     });
 });
-
-let registerButton = null; // Переменная для хранения кнопки регистрации
-let updateButton = null; // Переменная для хранения кнопки обновления
+// Переменная для хранения кнопки регистрации
+let registerButton = null;
+// Переменная для хранения кнопки обновления
+let updateButton = null;
 // Создание кнопки регистрации для администратора
 const createRegisterButton = () => {
   if (!registerButton) {
@@ -425,14 +426,14 @@ async function getUserDetails(userId) {
 async function openModalForNewRequest() {
   listTableRequest.innerHTML = "";
   resetForm();
-
+  document.getElementById("fileInput").style.display = "block";
   // Получаем информацию о текущем пользователе
   const currentUser = firebase.auth().currentUser;
   if (currentUser) {
     try {
       const userDetails = await getUserDetails(currentUser.uid);
       const initiatorField = document.getElementById("initiator");
-
+      initiatorField.setAttribute("readonly", true);
       // Заполняем поле "Инициатор" фамилией текущего пользователя
       if (userDetails.surname) {
         initiatorField.value = userDetails.surname;
@@ -457,7 +458,9 @@ addBtn.addEventListener("click", openModalForNewRequest);
 function resetForm() {
   form.reset();
   formRequest.reset();
-  let selectedFileContent = null;
+  // Сброс значений ваших input-ов
+  document.getElementById("fileInput").value = "";
+  document.getElementById("downloadfile").style.display = "none";
 }
 
 // Функция для закрытия модального окна
@@ -473,7 +476,7 @@ async function closeModal() {
         if (requestData.isLocked && requestData.lockedBy === currentUser.uid) {
           // Разблокируем заявку
           await requestsRef.child(currentRequestKey).update({
-            isLocked: false,
+            isLocked: null,
             lockedBy: null,
           });
         }
@@ -498,8 +501,32 @@ closeButton.addEventListener("click", () => {
 });
 
 // Обработчик для редактирования заявки
-function handleEditRequest(event) {
+async function handleEditRequest(event) {
   const requestKey = event.target.closest("tr").getAttribute("data-key");
+
+  // Проверяем, прикреплен ли файл к заявке
+  const querySnapshot = await documentsRef
+    .where("requestKey", "==", requestKey)
+    .get();
+
+  if (!querySnapshot.empty) {
+    const documentData = querySnapshot.docs[0].data();
+    console.log("Документ уже прикреплен к заявке:", documentData);
+    downloadfile.innerText = `Скачать файл: ${documentData.filename}`;
+    downloadfile.href = URL.createObjectURL(
+      new Blob([atob(documentData.fileContent)], {
+        type: "application/octet-stream",
+      })
+    );
+    downloadfile.style.display = "block";
+    fileInput.style.display = "none";
+  } else {
+    console.log("Документ не прикреплен к заявке.");
+    downloadfile.style.display = "none";
+    fileInput.style.display = "block";
+  }
+
+  // Открываем модальное окно
   openModalForEditRequest(requestKey);
 }
 
@@ -550,6 +577,7 @@ async function openModalForEditRequest(requestKey) {
       saveRequestBtn.classList.add("hidden");
     } else {
       await lockRequest(requestKey);
+
       saveChangesBtn.classList.remove("hidden");
       saveRequestBtn.classList.add("hidden");
       saveChangesBtn.setAttribute("data-request-key", requestKey);
@@ -577,7 +605,7 @@ async function openModalForEditRequest(requestKey) {
   }
 }
 
-// ------------------------------------------------------------------------------------------------------ БЛОК СОХРАНЕНИЯ ЗАЯВКИ --------------------------------------------//
+// ------------------------------------------- БЛОК СОХРАНЕНИЯ ЗАЯВКИ --------------------------------------------//
 
 // Функция для создания элемента сообщения
 function createMessageDiv() {
@@ -670,6 +698,7 @@ async function saveRequestDatabase() {
 
   const initiator = document.getElementById("initiator").value;
   const executive = document.getElementById("executive-id").value;
+  const inputFile = document.getElementById("fileInput").files[0]; // Получение выбранного файла из input элемента
 
   if (initiator === "") {
     const fieldinitiator = document.getElementById("initiator");
@@ -699,8 +728,23 @@ async function saveRequestDatabase() {
 
   const messageDiv = createMessageDiv();
   try {
-    await saveRequestToDatabase(request);
-    showSuccessMessage(messageDiv, request.number);
+    const newRequestRef = await requestsRef.push(request);
+    const newRequestKey = newRequestRef.key;
+
+    // Если выбран файл для загрузки, прикрепляем его к заявке
+    if (inputFile) {
+      const docId = await attachDocumentToRequest(newRequestKey, inputFile);
+      if (docId) {
+        console.log(`Документ ${inputFile.name} успешно прикреплен к заявке.`);
+      } else {
+        console.error(
+          `Ошибка при прикреплении документа ${inputFile.name} к заявке.`
+        );
+      }
+    }
+
+    showSuccessMessage(messageDiv, newRequestNumber);
+
     resetForm();
     closeModal();
 
@@ -714,7 +758,7 @@ async function saveRequestDatabase() {
 // Обработчик сохранения в базу
 saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ЗАГРУЗКИ В ТАБЛИЦУ ЗАЯВОК --------------------------------------------//
+// ---------------------------------- БЛОК ЗАГРУЗКИ В ТАБЛИЦУ ЗАЯВОК --------------------------------------------//
 
 //создание строк таблицы заявок
 function createTableRow(requestData, requestKey) {
@@ -823,7 +867,7 @@ async function updateTable() {
 // Вызываем функцию для первоначального отображения таблицы
 updateTable();
 
-// ------------------------------------------------------------------------------------------------------ БЛОК УПРАВЛЕНИЯ ПАГИНАЦИЕЙ --------------------------------------------//
+// ------------------------------------ БЛОК УПРАВЛЕНИЯ ПАГИНАЦИЕЙ --------------------------------------------//
 
 // Обработчик кнопки "Предыдущая страница"
 document.getElementById("prev-page").addEventListener("click", () => {
@@ -868,7 +912,7 @@ function updatePageNumbers() {
   }
 }
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ОБНОВЛЕНИЯ ЗАЯВОК --------------------------------------------//
+// ------------------------------------------ БЛОК ОБНОВЛЕНИЯ ЗАЯВОК --------------------------------------------//
 async function refreshRequest(requestKey) {
   try {
     const requestSnapshot = await database
@@ -941,11 +985,11 @@ async function updateRequestInDatabase(requestKey, requestData) {
 
 function areAllItemsFilled(itemsData) {
   return itemsData.every((itemData) => {
-    const trimmedCode = String(itemData.code).trim();
+    // const trimmedCode = String(itemData.code).trim();
     const trimmedRequestNom = String(itemData.requestNom).trim();
 
     // Проверяем, что код и номер заказа заполнены для каждого продукта
-    return trimmedCode !== "" && trimmedRequestNom !== "";
+    return trimmedRequestNom !== "";
   });
 }
 
@@ -964,8 +1008,8 @@ async function updateRequest() {
   const currentCompletionDate =
     document.querySelector(`[data-key='${requestKey}'] .completion-date-cell`)
       .textContent || null;
-
-  let completionDate = currentCompletionDate; // Используем текущую дату завершения в качестве значения по умолчанию
+  // Используем текущую дату завершения в качестве значения по умолчанию
+  let completionDate = currentCompletionDate;
 
   // Если статус заявки "Выполнена" и текущая дата завершения не установлена, устанавливаем новую дату
   if (statusRequest === "Выполнена" && !currentCompletionDate) {
@@ -1025,10 +1069,7 @@ async function updateRequest() {
   }
 }
 
-// Обработчик для сохранения изменений в заявке
-saveChangesBtn.addEventListener("click", updateRequest);
-
-// ------------------------------------------------------------------------------------------------------ БЛОК УДАЛЕНИЯ ЗАЯВОК --------------------------------------------//
+//----------------------------------------- БЛОК УДАЛЕНИЯ ЗАЯВОК --------------------------------------------//
 
 // Обработчик для удаления заявки
 async function handleDeleteRequest(event) {
@@ -1049,9 +1090,23 @@ async function handleDeleteRequest(event) {
           userDetails.role === "admin" ||
           requestData.initiator === userDetails.surname
         ) {
+          // Удаляем связанные с заявкой файлы или документы из коллекции documents
+          const documentsQuerySnapshot = await documentsRef
+            .where("requestKey", "==", requestKey)
+            .get();
+
+          const deletePromises = documentsQuerySnapshot.docs.map(
+            async (doc) => {
+              await doc.ref.delete();
+              console.log("Документ успешно удален из коллекции documents.");
+            }
+          );
+
+          // Ожидаем выполнения всех промисов перед продолжением
+          await Promise.all(deletePromises);
+
           // Удаляем заявку из базы данных
-          await moveRequestToDeleted(requestKey);
-          await deleteRequestFromDatabase(requestKey);
+          await requestsRef.child(requestKey).remove();
           event.target.closest("tr").remove();
           alert("Заявка успешно удалена");
 
@@ -1118,12 +1173,20 @@ async function deleteRequestFromDatabase(requestKey) {
 
       // Если у текущего пользователя есть фамилия, добавляем её к данным о заявке
       if (userDetails.surname) {
-        await requestsRef.child(requestKey).update({
-          deletedBy: userDetails.surname,
-        });
+        // Получаем данные о заявке
+        const requestData = await getRequestData(requestKey);
+
+        // Удаляем поле isLocked из объекта данных о заявке, если оно существует
+        if (requestData.hasOwnProperty("isLocked")) {
+          delete requestData.isLocked;
+        }
+
+        // Обновляем данные о заявке в базе данных
+        await requestsRef.child(requestKey).set(requestData);
       }
     }
 
+    // Удаляем заявку из базы данных
     await requestsRef.child(requestKey).remove();
 
     return true;
@@ -1132,14 +1195,15 @@ async function deleteRequestFromDatabase(requestKey) {
     throw error;
   }
 }
-// ------------------------------------------------------------------------------------------------------ БЛОК БЛОКИРОВКИ ЗАЯВОК --------------------------------------------//
+
+// ----------------------------------------------- БЛОК БЛОКИРОВКИ ЗАЯВОК --------------------------------------------//
 
 // Функция для разблокировки заявки в базе данных
 async function unlockRequestInDatabase(requestKey) {
   return new Promise((resolve, reject) => {
     requestsRef.child(requestKey).update(
       {
-        isLocked: false,
+        isLocked: null,
         lockedBy: null,
       },
       (error) => {
@@ -1223,7 +1287,7 @@ window.addEventListener("beforeunload", async (event) => {
       try {
         const requestRef = database.ref("requests/" + currentRequestKey);
         await requestRef.update({
-          isLocked: false,
+          isLocked: null,
           lockedBy: null,
         });
 
@@ -1237,9 +1301,8 @@ window.addEventListener("beforeunload", async (event) => {
   }
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ОБРАБОТЧИК КЛИКОВ ПО ТАБЛИЦЕ --------------------------------------------//
+// ----------------------------- БЛОК ЗАГРУЗКИ ИСПОЛНИТЕЛЯ  --------------------------------------------//
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ЗАГРУЗКИ ИСПОЛНИТЕЛЯ  --------------------------------------------//
 // Добавление обработчиков для клика на кнопки в таблице
 table.addEventListener("click", async (event) => {
   if (event.target.classList.contains("btn-delete")) {
@@ -1385,7 +1448,7 @@ categoryInput.addEventListener("change", () => {
   }
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
+// ---------------------------------------- БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
 
 async function addNomenklatureTable(event) {
   event.preventDefault();
@@ -1497,13 +1560,17 @@ async function addNomenklatureTable(event) {
 
 // добавляем обработчик события на кнопку закрытия модального окна
 addProductBtn.addEventListener("click", addNomenklatureTable);
-// ------------------------------------------------------------------------------------------------------ БЛОК РЕДАКТИРОВАНИЕ ЯЧЕЕК --------------------------------------------//
+
+// ------------------------------------------ БЛОК РЕДАКТИРОВАНИЕ ЯЧЕЕК --------------------------------------------//
 
 // Функция для включения режима редактирования ячейки
 const enableCellEditing = (cell) => {
   cell.contentEditable = true;
   cell.style.backgroundColor = "#f0ffff";
   cell.style.borderColor = "#d9f0ff";
+  cell.addEventListener("input", () => {
+    cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
+  });
 };
 
 // Функция для отключения режима редактирования ячейки
@@ -1583,7 +1650,7 @@ listTableRequest.addEventListener("click", (event) => {
   }
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ФИЛЬТРАЦИИ --------------------------------------------//
+// -------------------------------------------------- БЛОК ФИЛЬТРАЦИИ --------------------------------------------//
 
 // функция фильтрации
 function setColumnWidths(table) {
@@ -1679,14 +1746,15 @@ toggleButtons.forEach((button) => {
       filterInput.value = "";
       const fakeEvent = {
         target: filterInput,
-      }; // Создаем искусственный объект события
+      };
+
       // Вызываем функцию filterTable, чтобы обновить таблицу после очистки фильтра
       filterTable.call(filterInput, fakeEvent);
     }
   });
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ПОИСКА НОМЕНКЛАТУРЫ --------------------------------------------//
+// ------------------------------------------ БЛОК ПОИСКА НОМЕНКЛАТУРЫ --------------------------------------------//
 
 //функция для поиска номенклатуры
 const nameInput = document.getElementById("name");
@@ -1744,9 +1812,9 @@ function search(searchTerm) {
         code: 1,
         type: 1,
       },
-      threshold: 0.3,
+      threshold: 0.2,
     })
-    .slice(0, 10);
+    .slice(0, 30);
 
   updateAutocompleteList(results);
 }
@@ -1838,7 +1906,7 @@ nameInput.addEventListener(
   () => ((codeInput.value = ""), (variationInput.value = "осн."))
 );
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
+// -------------------------------------- БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
 
 const equipmentRef = database.ref("equipment");
 const equipmentInput = document.getElementById("equipment");
@@ -1887,7 +1955,7 @@ function searchEquipment(searchTerm) {
         title: 2,
       },
       termFrequency: false,
-      fuzzy: 0.3, // добавляем нечеткое совпадение с уровнем нечеткости 0.3 (от 0 до 1)
+      fuzzy: 0.3,
     })
     .slice(0, 10);
 
@@ -1938,7 +2006,7 @@ document.addEventListener("click", (e) => {
   }
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ТАБЛИЦЫ ПРОСМОТР ТМЦ  --------------------------------------------//
+// --------------------------------------- БЛОК ТАБЛИЦЫ ПРОСМОТР ТМЦ --------------------------------------------//
 
 // Объект для кэширования данных о заявках
 const requestsCache = {};
@@ -2033,7 +2101,7 @@ viewRequestsButton.addEventListener("click", async () => {
 });
 console.log(requestsCache);
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ОБНОВЛЕНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
+// ------------------------------------ БЛОК ОБНОВЛЕНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
 
 // Функция обновления всех заявок
 function refreshAllRequests() {
@@ -2111,7 +2179,7 @@ function refreshAllRequests() {
   });
 }
 
-// ------------------------------------------------------------------------------------------------------ БЛОК СКАЧИВАНИЯ ОДНОЙ ЗАЯВКОЙ  --------------------------------------------//
+// ------------------------------------- БЛОК СКАЧИВАНИЯ ОДНОЙ ЗАЯВКОЙ  --------------------------------------------//
 
 //функция загрузки одной заявки
 function Excel() {
@@ -2198,7 +2266,7 @@ const downloadProductButton = document.getElementById(
 );
 downloadProductButton.addEventListener("click", Excel);
 
-// ------------------------------------------------------------------------------------------------------ БЛОК СКАЧИВАНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
+// ---------------------------------------- БЛОК СКАЧИВАНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
 
 //СКАЧИВАНИЕ ЗАЯВОК
 function downloadExcel() {
@@ -2226,7 +2294,7 @@ function downloadExcel() {
     "Статус",
     "Дата",
     "Кол-во",
-        "Имя от поставщика",
+    "Имя от поставщика",
   ]);
 
   requestsRef.once("value", (snapshot) => {
@@ -2286,7 +2354,7 @@ const downloadButton = document.getElementById("download-button");
 
 downloadButton.addEventListener("click", downloadExcel);
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ПРОКРУТКИ  -----------------------------------------------------//
+// ------------------------------------------ БЛОК ПРОКРУТКИ  -----------------------------------------------------//
 
 // При прокрутке страницы показывать/скрывать кнопку
 window.addEventListener("scroll", () => {
@@ -2303,7 +2371,7 @@ document.getElementById("scroll-to-top").addEventListener("click", () => {
   window.scrollTo({ top: 0, behavior: "smooth" });
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК КОПИРОВАНИЯ ЯЧЕЙКИ  --------------------------------------------//
+// ------------------------------------------ БЛОК КОПИРОВАНИЯ ЯЧЕЙКИ  --------------------------------------------//
 
 //копирование по нажатию на ячейку
 const tableBodies = document.querySelectorAll("tbody");
@@ -2338,259 +2406,270 @@ tableBodies.forEach((tableBody) => {
   });
 });
 
-// ------------------------------------------------------------------------------------------------------ БЛОК ПРИКРЕПЛЕНИЯ ФАЙЛОВ  --------------------------------------------//
+// -------------------- БЛОК ПРИКРЕПЛЕНИЯ ФАЙЛОВ  --------------------------------------------//
 
-// async function attachDocumentToRequest(requestKey, filename, fileContent) {
-//   try {
-//     reset;
-//     const documentsRef = db.collection("documents");
+// Получение ссылки на коллекцию "documents"
+const documentsRef = firebase.firestore().collection("documents");
 
-//     // Проверка, существует ли уже документ с данным requestKey
-//     const existingDocs = await documentsRef
-//       .where("requestKey", "==", requestKey)
-//       .get();
-//     if (!existingDocs.empty) {
-//       console.error("Документ с этим ключом уже существует.");
-//       return null;
-//     }
+// Переменные для элементов интерфейса
+const fileInput = document.getElementById("fileInput");
+const downloadfile = document.getElementById("downloadfile");
 
-//     const documentRef = await documentsRef.add({
-//       requestKey: requestKey,
-//       filename: filename,
-//       fileContent: fileContent,
-//       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-//     });
+// Функция для скачивания документа по ключу заявки
+async function downloadDocumentByRequestKey(requestKey, filename) {
+  try {
+    const documentRef = await documentsRef
+      .where("requestKey", "==", requestKey)
+      .get();
 
-//     return documentRef.id;
-//   } catch (error) {
-//     console.error("Ошибка при прикреплении документа: ", error);
-//     return null;
-//   }
+    if (documentRef.empty) {
+      console.error("Документ не найден");
+      return;
+    }
+
+    const documentData = documentRef.docs[0].data();
+    const { fileContent, filename } = documentData;
+
+    const byteArray = Uint8Array.from(atob(fileContent), (c) =>
+      c.charCodeAt(0)
+    );
+    const blob = new Blob([byteArray], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.style.display = "none";
+    document.body.appendChild(a);
+    a.click();
+    window.URL.revokeObjectURL(url);
+  } catch (error) {
+    console.error("Ошибка при скачивании документа: ", error);
+  }
+}
+
+// Обработчик для кнопки "Скачать файл"
+downloadfile.addEventListener("click", async () => {
+  const requestKey = saveChangesBtn.getAttribute("data-request-key");
+  await downloadDocumentByRequestKey(requestKey);
+});
+
+// Обработчик для кнопки "Сохранить изменения"
+saveChangesBtn.addEventListener("click", async () => {
+  const requestKey = saveChangesBtn.getAttribute("data-request-key");
+  const inputFile = fileInput.files[0]; // Получение выбранного файла из input элемента
+
+  try {
+    if (inputFile) {
+      const docId = await attachDocumentToRequest(requestKey, inputFile);
+      if (docId) {
+        console.log(`Документ ${inputFile.name} успешно прикреплен к заявке.`);
+        downloadfile.style.display = "block"; // Показываем кнопку скачивания
+      } else {
+        console.error(
+          `Ошибка при прикреплении документа ${inputFile.name} к заявке.`
+        );
+      }
+    }
+
+    // Перезагрузка данных заявки, если необходимо
+    updateRequest();
+  } catch (error) {
+    console.error("Ошибка при прикреплении документа: ", error);
+  }
+});
+
+// Функция для прикрепления файла к заявке
+async function attachDocumentToRequest(requestKey, file) {
+  try {
+    // Проверка, существует ли уже документ с данным requestKey
+    const existingDocs = await documentsRef
+      .where("requestKey", "==", requestKey)
+      .get();
+
+    if (!existingDocs.empty) {
+      // Если документ существует, обновляем его содержимое
+      const existingDocId = existingDocs.docs[0].id;
+      const fileContent = await readFileContent(file);
+      const updatedDocumentData = {
+        requestKey: requestKey,
+        filename: file.name,
+        fileContent: fileContent,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // Обновляем существующий документ
+      await documentsRef.doc(existingDocId).set(updatedDocumentData);
+      return existingDocId;
+    } else {
+      // Если документ не существует, создаем новый
+      const fileContent = await readFileContent(file);
+      const documentData = {
+        requestKey: requestKey,
+        filename: file.name,
+        fileContent: fileContent,
+        timestamp: firebase.firestore.FieldValue.serverTimestamp(),
+      };
+
+      // Добавляем документ в коллекцию "documents"
+      const documentRef = await documentsRef.add(documentData);
+      return documentRef.id;
+    }
+  } catch (error) {
+    console.error("Ошибка при прикреплении документа: ", error.message);
+    return null;
+  }
+}
+
+// Функция для чтения содержимого файла
+function readFileContent(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      const fileContent = reader.result.split(",")[1]; // Извлечение содержимого файла из Data URL
+      resolve(fileContent);
+    };
+    reader.onerror = reject;
+    reader.readAsDataURL(file);
+  });
+} //Поиск по списку файла
+// function calculateMatchPercentage(result, query) {
+//   const maxDistance = Math.max(result.length, query.length);
+//   const distance = damerauLevenshteinDistance(result, query);
+//   const similarity = 1 - distance / maxDistance;
+//   return similarity * 100;
 // }
 
-// let selectedFileContent = null; // Глобальная переменная для хранения содержимого файла
+// function damerauLevenshteinDistance(a, b) {
+//   const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
+//   dp[0] = Array.from({ length: b.length + 1 }, (_, i) => i);
 
-// async function attachDocumentToRequest(requestKey, filename, fileContent) {
-//   try {
-//     const documentsRef = db.collection("documents");
+//   for (let i = 1; i <= a.length; i++) {
+//     for (let j = 1; j <= b.length; j++) {
+//       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
+//       dp[i][j] = Math.min(
+//         dp[i - 1][j] + 1,
+//         dp[i][j - 1] + 1,
+//         dp[i - 1][j - 1] + cost
+//       );
 
-//     // Проверка, существует ли уже документ с данным requestKey
-//     const existingDocs = await documentsRef
-//       .where("requestKey", "==", requestKey)
-//       .get();
-//     if (!existingDocs.empty) {
-//       console.error("Документ с этим ключом уже существует.");
-//       return null;
-//     }
-
-//     const documentRef = await documentsRef.add({
-//       requestKey: requestKey,
-//       filename: filename,
-//       fileContent: fileContent,
-//       timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-//     });
-
-//     return documentRef.id;
-//   } catch (error) {
-//     console.error("Ошибка при прикреплении документа: ", error);
-//     return null;
-//   }
-// }
-
-// document.getElementById("attachDocumentBtn").addEventListener("click", () => {
-//   const requestKey = saveChangesBtn.getAttribute("data-request-key");
-//   const input = document.createElement("input");
-//   input.type = "file";
-//   input.accept = ".pdf, .doc, .docx";
-//   input.addEventListener("change", async (event) => {
-//     const file = event.target.files[0];
-//     const reader = new FileReader();
-//     reader.readAsDataURL(file);
-//     reader.onload = async () => {
-//       const fileContent = reader.result.split(",")[1]; // Извлечение содержимого файла из Data URL
-//       const docId = await attachDocumentToRequest(
-//         requestKey,
-//         file.name,
-//         fileContent
-//       ); // Передача имени файла и содержимого вместо объекта File
-//       if (docId) {
-//         console.log(`Документ ${file.name} успешно прикреплен к заявке.`);
-//         document.getElementById("downloadButton").style.display = "block";
-//         // Обновляем статус документа
-//         updateDocumentStatus(requestKey);
-//       } else {
-//         console.error(
-//           `Ошибка при прикреплении документа ${file.name} к заявке.`
-//         );
+//       if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
+//         dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + cost);
 //       }
+//     }
+//   }
+
+//   return dp[a.length][b.length];
+// }
+
+// const searchButton = document.getElementById("searchButton");
+// const nameListInput = document.getElementById("nameList");
+
+// searchButton.addEventListener("click", async () => {
+//   const nameList = nameListInput.value.trim();
+//   const namesArray = nameList.split(/\s*#\s*/).filter(Boolean);
+
+//   await loadData(); // Load data before performing the search
+
+//   const searchResults = namesArray.map((name) => {
+//     const results = miniSearch.search(name.toLowerCase(), {
+//       prefix: false,
+//       termFrequency: false,
+//       fuzzy: 0.4,
+//       boost: {
+//         name: 4,
+//         variation: 1,
+//         code: 1,
+//         type: 1,
+//       },
+//       threshold: 0.3,
+//     });
+
+//     return {
+//       name,
+//       results: results.map((result) => ({
+//         result,
+//         matchPercentage: calculateMatchPercentage(
+//           result.name,
+//           name.toLowerCase()
+//         ),
+//       })),
 //     };
 //   });
 
-//   input.click();
-// });
+//   const filteredResults = searchResults.map((item) => {
+//     const resultsWithPrice = item.results.filter(
+//       (result) => result.result.price !== undefined
+//     );
 
-// async function downloadDocumentByRequestKey(requestKey) {
-//   try {
-//     const querySnapshot = await firebase
-//       .firestore()
-//       .collection("documents")
-//       .where("requestKey", "==", requestKey)
-//       .get();
-
-//     if (querySnapshot.empty) {
-//       document.getElementById("downloadButton").style.display = "none"; // Скрываем кнопку скачивания
-//       return console.error("Документ не найден");
+//     if (resultsWithPrice.length > 0) {
+//       resultsWithPrice.sort((a, b) => b.matchPercentage - a.matchPercentage);
+//       return {
+//         name: item.name,
+//         results: resultsWithPrice.slice(0, 1), // Вернуть только первый результат с наивысшим процентом совпадения
+//       };
 //     }
 
-//     const { fileContent, filename } = querySnapshot.docs[0].data();
-//     const byteArray = Uint8Array.from(atob(fileContent), (c) =>
-//       c.charCodeAt(0)
+//     const maxMatch = item.results.reduce((max, result) => {
+//       return result.matchPercentage > max ? result.matchPercentage : max;
+//     }, 0);
+
+//     const filtered = item.results.filter(
+//       (result) => result.matchPercentage === maxMatch
 //     );
-//     const blob = new Blob([byteArray], { type: "application/octet-stream" });
+
+//     return { name: item.name, results: filtered };
+//   });
+
+//   // Generate Excel file and offer download
+//   await generateExcelFile(filteredResults);
+// });
+
+// // Остальной код остается неизменным
+
+// function generateExcelFile(searchResults) {
+//   const workbook = new ExcelJS.Workbook();
+//   const worksheet = workbook.addWorksheet("Search Results");
+
+//   // Header row
+//   worksheet.addRow(["Name", "Top Result", "Code", "Match Percentage", "Price"]);
+
+//   searchResults.forEach((item) => {
+//     item.results.sort((a, b) => {
+//       if (b.result.price && a.result.price) {
+//         return b.result.price - a.result.price;
+//       } else if (b.result.price) {
+//         return -1; // Первый результат имеет цену
+//       } else if (a.result.price) {
+//         return 1; // Второй результат имеет цену
+//       } else {
+//         return 0; // Ни один результат не имеет цены
+//       }
+//     });
+
+//     if (item.results.length > 0) {
+//       const result = item.results[0]; // Берем первый результат после сортировки
+//       const code = result.result.code || "N/A";
+//       const price = result.result.price || "N/A";
+//       worksheet.addRow([
+//         item.name,
+//         result.result.name,
+//         code,
+//         result.matchPercentage.toFixed(2) + "%",
+//         price,
+//       ]);
+//     }
+//   });
+
+//   const buffer = workbook.xlsx.writeBuffer().then((data) => {
+//     const blob = new Blob([data], {
+//       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+//     });
 //     const url = URL.createObjectURL(blob);
 //     const a = document.createElement("a");
-
 //     a.href = url;
-//     a.download = filename;
-//     document.body.appendChild(a);
+//     a.download = "search_results.xlsx";
 //     a.click();
-//     window.URL.revokeObjectURL(url);
-//   } catch (error) {
-//     console.error("Ошибка при скачивании документа: ", error);
-//   }
-// }
-
-// document.getElementById("downloadButton").addEventListener("click", () => {
-//   const requestKey = saveChangesBtn.getAttribute("data-request-key");
-//   downloadDocumentByRequestKey(requestKey);
-// });
-
-// async function checkDocumentExists(requestKey) {
-//   const documentsRef = firebase.firestore().collection("documents");
-//   const existingDocs = await documentsRef
-//     .where("requestKey", "==", requestKey)
-//     .get();
-//   return !existingDocs.empty;
-// }
-
-// async function updateDocumentStatus(requestKey) {
-//   const documentStatus = document.getElementById("documentStatus");
-//   const downloadButton = document.getElementById("downloadButton");
-
-//   if (await checkDocumentExists(requestKey)) {
-//     // Если документ существует, отображаем галочку и кнопку скачивания
-//     documentStatus.textContent = "✔️";
-//     downloadButton.style.display = "block"; // Показываем кнопку скачивания
-//   } else {
-//     // Если документ не существует, отображаем крестик и скрываем кнопку скачивания
-//     documentStatus.textContent = "❌";
-//     downloadButton.style.display = "none"; // Скрываем кнопку скачивания
-//   }
-// }
-
-// // Вызываем функцию при загрузке страницы
-// window.onload = function () {
-//   const requestKey = saveChangesBtn.getAttribute("data-request-key");
-//   updateDocumentStatus(requestKey);
-// };
-// let selectedFileContent = null; // Глобальная переменная для хранения содержимого файла
-
-// window.onload = function () {
-//   const requestKey = "unique_request_key"; // Здесь должен быть ваш уникальный ключ заявки
-//   checkDocumentExistsAndShowLink(requestKey);
-// };
-
-// document.getElementById("attachDocumentBtn").addEventListener("click", () => {
-//   const input = document.createElement("input");
-//   input.type = "file";
-//   input.accept = ".pdf, .doc, .docx";
-//   input.addEventListener("change", (event) => {
-//     const file = event.target.files[0];
-//     const reader = new FileReader();
-//     reader.readAsDataURL(file);
-//     reader.onload = () => {
-//       selectedFileContent = reader.result.split(",")[1];
-//       document.getElementById("downloadButton").style.display = "block";
-//       document.getElementById("downloadButton").textContent = file.name;
-//     };
+//     URL.revokeObjectURL(url);
 //   });
-//   input.click();
-// });
-
-// document
-//   .getElementById("saveChangesBtn")
-//   .addEventListener("click", async () => {
-//     const requestKey = "unique_request_key"; // Здесь должен быть ваш уникальный ключ заявки
-//     const filename = document.getElementById("downloadButton").textContent;
-//     if (
-//       await attachDocumentToRequest(requestKey, filename, selectedFileContent)
-//     ) {
-//       console.log(`Документ ${filename} успешно прикреплен к заявке.`);
-//     } else {
-//       console.error(`Ошибка при прикреплении документа ${filename} к заявке.`);
-//     }
-//   });
-
-// async function checkDocumentExistsAndShowLink(requestKey) {
-//   try {
-//     const documentsRef = db.collection("documents");
-//     const existingDocs = await documentsRef
-//       .where("requestKey", "==", requestKey)
-//       .get();
-
-//     if (!existingDocs.empty) {
-//       // Если документ существует, отображаем ссылку на скачивание
-//       const { filename } = existingDocs.docs[0].data();
-//       const downloadButton = document.getElementById("downloadButton");
-//       downloadButton.style.display = "block";
-//       downloadButton.textContent = filename;
-//     } else {
-//       // Если документ не существует, скрываем кнопку скачивания
-//       document.getElementById("downloadButton").style.display = "none";
-//     }
-//   } catch (error) {
-//     console.error("Ошибка при проверке наличия документа: ", error);
-//   }
-// }
-
-// async function attachDocumentToRequest(requestKey, filename, fileContent) {
-//   try {
-//     const documentsRef = db.collection("documents");
-
-//     // Проверка, существует ли уже документ с данным requestKey
-//     const existingDocs = await documentsRef
-//       .where("requestKey", "==", requestKey)
-//       .get();
-
-//     if (!existingDocs.empty) {
-//       // Если документ существует, обновляем его
-//       const docRef = existingDocs.docs[0].ref;
-//       await docRef.update({
-//         filename: filename,
-//         fileContent: fileContent,
-//         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-//       });
-//     } else {
-//       // Если документ не существует, добавляем новый
-//       await documentsRef.add({
-//         requestKey: requestKey,
-//         filename: filename,
-//         fileContent: fileContent,
-//         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
-//       });
-//     }
-
-//     return true;
-//   } catch (error) {
-//     console.error("Ошибка при прикреплении документа: ", error);
-//     return false;
-//   }
-// }
-
-// async function attachDocumentToRequest(requestKey, filename, fileContent) {
-//   try {
-//   } catch (error) {
-//     console.error("Ошибка при прикреплении документа: ", error);
-//     return null;
-//   }
 // }
