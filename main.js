@@ -1070,7 +1070,6 @@ async function updateRequest() {
 }
 
 //----------------------------------------- БЛОК УДАЛЕНИЯ ЗАЯВОК --------------------------------------------//
-
 // Обработчик для удаления заявки
 async function handleDeleteRequest(event) {
   if (confirm("Вы действительно хотите удалить эту заявку?")) {
@@ -1095,18 +1094,17 @@ async function handleDeleteRequest(event) {
             .where("requestKey", "==", requestKey)
             .get();
 
-          const deletePromises = documentsQuerySnapshot.docs.map(
-            async (doc) => {
-              await doc.ref.delete();
-              console.log("Документ успешно удален из коллекции documents.");
-            }
-          );
+          const deletePromises = documentsQuerySnapshot.docs.map(async (doc) => {
+            await doc.ref.delete();
+            console.log("Документ успешно удален из коллекции documents.");
+          });
 
           // Ожидаем выполнения всех промисов перед продолжением
           await Promise.all(deletePromises);
 
           // Удаляем заявку из базы данных
-          await requestsRef.child(requestKey).remove();
+          await moveRequestToDeleted(requestKey);
+          await deleteRequestFromDatabase(requestKey);
           event.target.closest("tr").remove();
           alert("Заявка успешно удалена");
 
@@ -1131,6 +1129,7 @@ async function handleDeleteRequest(event) {
     }
   }
 }
+
 
 // Функция для перемещения заявки в архив удаленных заявок
 async function moveRequestToDeleted(requestKey) {
@@ -1173,20 +1172,12 @@ async function deleteRequestFromDatabase(requestKey) {
 
       // Если у текущего пользователя есть фамилия, добавляем её к данным о заявке
       if (userDetails.surname) {
-        // Получаем данные о заявке
-        const requestData = await getRequestData(requestKey);
-
-        // Удаляем поле isLocked из объекта данных о заявке, если оно существует
-        if (requestData.hasOwnProperty("isLocked")) {
-          delete requestData.isLocked;
-        }
-
-        // Обновляем данные о заявке в базе данных
-        await requestsRef.child(requestKey).set(requestData);
+        await requestsRef.child(requestKey).update({
+          deletedBy: userDetails.surname,
+        });
       }
     }
 
-    // Удаляем заявку из базы данных
     await requestsRef.child(requestKey).remove();
 
     return true;
