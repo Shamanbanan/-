@@ -1089,18 +1089,15 @@ async function handleDeleteRequest(event) {
           userDetails.role === "admin" ||
           requestData.initiator === userDetails.surname
         ) {
-          // Удаляем связанные с заявкой файлы или документы из коллекции documents
+          // Удаляем связанный с заявкой файл или документ из коллекции documents
           const documentsQuerySnapshot = await documentsRef
             .where("requestKey", "==", requestKey)
             .get();
 
-          const deletePromises = documentsQuerySnapshot.docs.map(async (doc) => {
+          documentsQuerySnapshot.forEach(async (doc) => {
             await doc.ref.delete();
             console.log("Документ успешно удален из коллекции documents.");
           });
-
-          // Ожидаем выполнения всех промисов перед продолжением
-          await Promise.all(deletePromises);
 
           // Удаляем заявку из базы данных
           await moveRequestToDeleted(requestKey);
@@ -1129,7 +1126,6 @@ async function handleDeleteRequest(event) {
     }
   }
 }
-
 
 // Функция для перемещения заявки в архив удаленных заявок
 async function moveRequestToDeleted(requestKey) {
