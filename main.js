@@ -1595,7 +1595,7 @@ const enableCellEditing = (cell) => {
   cell.style.cursor = "text";
   cell.addEventListener("input", () => {
     if (!cell.classList.contains("link-cell")) {
-      cell.innerText = cell.innerText.replace(/<[^>]+>/g, "");
+      cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
     }
   });
 };
