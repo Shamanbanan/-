@@ -3,12 +3,12 @@
   --color-edit: #1c9c75;
   --color-primary: #007cff;
   --color-secondary: rgba(0, 124, 255, 0.8);
-  --color-error: #ef4146;
+  --color-error: #FE483B;
   --gradient-primary: linear-gradient(90deg, #a29bd4, #989fdd);
-  --text-primary: #202123;
-  --text-default: #353740;
-  --text-secondary: #d2d2d7;
-  --text-disabled: #f5f5f7;
+  --text-primary: #292727;
+  --text-default: #404550;
+  --text-secondary: #dcdcdd;
+  --text-disabled: #d7e9f8;
   --border-r: 0.4rem;
   --font-size-small: calc(1rem + (0.1 - 1) * ((100vw - 320px) / (1920 - 320)));
   --font-size-medium: calc(1rem + (1.1 - 1) * ((100vw - 320px) / (1920 - 320)));
@@ -22,7 +22,7 @@
 }
 
 body {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Lato', sans-serif;
   margin: 0;
   height: 100%;
 }
@@ -33,29 +33,20 @@ body {
   align-items: center;
   justify-content: space-between;
 }
-/* Стиль для закрепленной шапки */
-/* .fixed-header {
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100%;
-  background-color: #ffffff;
-  z-index: 1000;
-} */
 
 input,
 select,
 datalist,
 option,
 label {
-  font-family: "Roboto", sans-serif;
+  font-family: 'Lato', sans-serif;
   font-size: var(--font-size-small);
 }
 #input-code {
   position: absolute;
   bottom: 2.7rem;
   left: 85%;
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
   font-size: var(--font-size-small);
   margin-right: 2rem;
   align-items: start;
@@ -77,10 +68,9 @@ th input[type="date"],
 th select {
   width: 100%;
   padding: 0.5rem;
-  border: 0.1rem solid var(--text-secondary);
-
+  border: 0.1rem solid var(--text-disabled);
   font-size: var(--font-size-small);
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
 }
 
 #status {
@@ -93,7 +83,6 @@ color: var(--color-primary);
 border: none;
 cursor: pointer;
 }
-
 
 #add-btn,
 #add-product-btn,
@@ -111,8 +100,8 @@ cursor: pointer;
   padding: 0.3rem;
   cursor: pointer;
   font-size: var(--font-size-small);
-  font-weight: 500;
-  font-family: "Roboto", sans-serif;
+  font-weight: 400;
+  font-family: "Lato", sans-serif;
 }
 #save-change-btn,
 #save-request-btn {
@@ -125,7 +114,6 @@ cursor: pointer;
 #save-request-btn:hover,
 #download-button:hover,
 #view-requests:hover,
-#download-products-button:hover,
 #logged-in-content button:hover {
   background-color: var(--color-primary);
   color: var(--color-white);
@@ -134,10 +122,11 @@ cursor: pointer;
 #add-product-btn:disabled {
   background: var(--text-default);
 }
-#download-products-button {
+#download-products-button ,
+#download-word-button{
   margin-left: auto;
   background: transparent;
-  color: var(--text-secondary);
+  color: var(--text-default);
   border: none;
   outline: none;
   padding: 0rem;
@@ -145,9 +134,10 @@ cursor: pointer;
 
   font-size: var(--font-size-small);
   font-weight: 500;
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
 }
-#download-products-button:hover {
+#download-products-button:hover,
+#download-word-button:hover {
   align-items: center;
   background: transparent;
   color: var(--color-primary);
@@ -155,7 +145,7 @@ cursor: pointer;
   outline: none;
   padding: 0rem;
   cursor: pointer;
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
 }
 
 .btn-edit,
@@ -186,7 +176,9 @@ cursor: pointer;
 
   transition: all 0.3s;
 }
-
+#download-products-button {
+  margin-right: 1rem;
+}
 #modal {
   position: fixed;
   z-index: 1;
@@ -204,7 +196,7 @@ cursor: pointer;
   height: 98vh;
   display: flex;
   flex-direction: column;
-  background-color: var(--text-disabled);
+  background-color: #f3f3f5;
   overflow: hidden;
 }
 
@@ -272,6 +264,9 @@ cursor: pointer;
 #request-form .field-container:nth-child(6) {
   flex-basis: 5%;
 }
+#request-form .field-container:nth-child(6) {
+  flex-basis: 5%;
+}
 
 .modal-header {
   display: flex;
@@ -301,6 +296,9 @@ cursor: pointer;
   align-self: center;
   width: 100%;
   margin-top: 1%;
+}
+.download-footer-buttons{
+  margin-left: auto;
 }
 
 .close {
@@ -340,14 +338,14 @@ thead {
   top: 0;
   z-index: 1;
   cursor: pointer;
-  border-bottom: 0.1rem solid var(--text-disabled);
+  border-bottom: 0.1rem solid var(--text-default);
 }
 
 td {
   text-align: left;
   padding: 0.3rem;
-  color: var(--text-primary);
-  border-bottom: 0.1rem solid var(--text-disabled);
+  color: var(--text-default);
+  border-bottom: 1px solid var(--text-disabled);
   font-size: var(--font-size-small);
   transition: all 0.3s;
 }
@@ -356,7 +354,7 @@ th {
   position: relative;
   text-align: start;
   padding: 0.5rem 0.5rem;
-  color: var(--text-default);
+  color: var(--text-primary);
   border-bottom: 0.1rem solid var(--text-secondary);
   vertical-align: middle;
   font-size: var(--font-size-small);
@@ -379,8 +377,7 @@ td.button-cell {
 }
 tr:hover:not(.head-string) td {
   background-color: var(--text-disabled);
-  color: var(--color-primary);
-  font-weight: 400;
+  border-color: transparent;
   cursor: pointer;
   transition: all 0.3s;
 }
@@ -435,7 +432,8 @@ tbody {
   padding: 0.5rem;
   word-wrap: wrap;
   cursor: pointer;
-  font-size: var(--font-size-medium);
+  font-size: var(--font-size-sma);
+  color: var(--text-default);
   border-bottom: 0.1rem solid var(--text-disabled);
   transition: all 0.3s;
 }
@@ -617,7 +615,7 @@ td.tooltip::after {
   padding: 0.7rem;
   border: 0.1rem solid var(--text-secondary);
   font-size: var(--font-size-small);
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
   margin-bottom: 1rem;
 }
 
@@ -636,7 +634,7 @@ td.tooltip::after {
   cursor: pointer;
   font-size: var(--font-size-small);
   font-weight: 500;
-  font-family: "Roboto", sans-serif;
+  font-family: "Lato", sans-serif;
 }
 
 #registration-form button[type="submit"]:hover {
@@ -778,7 +776,7 @@ table {
   border: none;
   color: var(--color-white);
   cursor: pointer;
-  transition: background 0.3s ease;
+  transition:  0.3s ease;
 }
 
 #login-form button:hover {
@@ -805,7 +803,7 @@ table {
 }
 #logged-in-content {
   align-items: center;
-  flex: 1; /* Take up available space */
+  flex: 1;
   display: flex;
 }
 .filter-content {
@@ -817,6 +815,7 @@ table {
   color: var(--text-default);
   margin: 0 10px 0px 0;
 }
+
 /* Стили для кнопки "переноса вверх страницы" */
 #scroll-to-top {
   position: fixed;
@@ -863,16 +862,69 @@ td.copied::after {
 }
 
 td.copied.active-copy::after {
-  opacity: 1; /* Добавляем этот стиль, чтобы управлять видимостью текста "Скопировано!" */
+  opacity: 1;
 }
 
-/* Стиль для галочки */
-.fa-check {
-  /* Добавьте ваш стиль здесь */
-  color: var(--color-edit); /* Измените цвет галочки */
-  font-size: 12px; /* Измените размер галочки */
-  /* Другие стили по вашему желанию */
+.checkfile-cell {
+  color: var(--color-edit); 
+  font-size: 1rem; 
+text-align: center;
+}
+
+.checkfile-cell:hover {
+  color: var(--color-edit);
+  font-size: 1rem; 
+text-align: center;
 }
 .nameFirst-cell {
   display: none;
+}
+.fa-file-excel{
+  color: #1c9c75;
+  font-size: 1.1rem;
+  vertical-align: middle;
+  padding: 0.5rem;
+} 
+.fa-file-word{
+  color:#066ad4;
+  font-size: 1.2rem;
+  vertical-align: middle;
+  padding-left: 0.5rem;
+}
+.fa-file{
+  color:#1c9c75;
+  vertical-align: middle;
+  font-size: 1.2rem;
+} 
+
+.filled {
+  font-size: 0.9rem;
+  color: #1c9c75; /* Зеленый цвет текста */
+
+}
+
+.not-filled {
+  font-size: 0.9rem;
+  color: red; /* Красный цвет текста */
+
+}
+
+.completed-row .status-cell{
+  color: #1c9c75; /* Цвет фона для выполненных заявок */
+
+  /* Другие стили по вашему усмотрению */
+}
+
+.link-cell a[title]:hover:after {
+  content: attr(title);
+  background: #000;
+  color: #fff;
+  padding: 5px 10px;
+  border-radius: 5px;
+  position: absolute;
+  bottom: 150%; /* Положение подсказки */
+  left: 50%;
+  transform: translateX(-50%);
+  white-space: nowrap;
+  z-index: 1;
 }

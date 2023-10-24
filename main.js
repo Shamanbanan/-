@@ -77,7 +77,7 @@ async function loadItems() {
   return globalItems;
 }
 
-// ------------------------------------------------------------------------------------------------------ БЛОК АВТОРИЗАЦИИ --------------------------------------------//
+//------------------------------------------------- БЛОК АВТОРИЗАЦИИ --------------------------------------------//
 // Отображение формы авторизации
 const showLoginForm = () => {
   toggleElementsVisibility(true, false, false);
@@ -420,7 +420,7 @@ async function getUserDetails(userId) {
   return snapshot.val();
 }
 
-// ------------------------------------------------------------------------------------------------------ БЛОК МОДАЛЬНОГО ОКНА --------------------------------------------//
+// ------------------------------------ БЛОК МОДАЛЬНОГО ОКНА --------------------------------------------//
 
 // Функция для открытия модального окна для добавления новой заявки
 async function openModalForNewRequest() {
@@ -544,6 +544,13 @@ function createItemRow(itemData) {
     <td class="brand-cell">${itemData.brand}</td>
     <td class="code-cell">${itemData.code.trim().replace(/\s/g, "")}</td>
     <td class="comment-cell">${itemData.comment}</td>
+    <td class="link-cell">
+      ${
+        itemData.link
+          ? `<a href="${itemData.link}" target="_blank"  title="${itemData.link}"><i class="fas fa-link"></i></a>`
+          : ""
+      }
+    </td>
     <td class="requestNom-cell">${itemData.requestNom}</td>
     <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
     <td class="dateNom-cell">${itemData.dateNom}</td>
@@ -648,6 +655,9 @@ function getTableData() {
         .textContent.trim()
         .replace(/\s/g, ""),
       comment: row.querySelector(".comment-cell").textContent,
+      link: row.querySelector(".link-cell a")
+        ? row.querySelector(".link-cell a").getAttribute("href")
+        : "",
       requestNom: row.querySelector(".requestNom-cell").textContent,
       statusNom: row.querySelector(".statusNom-cell")
         ? row.querySelector(".statusNom-cell").textContent
@@ -765,25 +775,36 @@ function createTableRow(requestData, requestKey) {
   const tableRow = document.createElement("tr");
   tableRow.setAttribute("data-key", requestKey);
 
-  const allProductsHaveCode =
-    requestData.items &&
-    requestData.items.every((itemData) => {
-      const trimmedCode = String(itemData.code).trim();
-      return trimmedCode !== "";
-    });
+  const productsWithCode = requestData.items.filter((itemData) => {
+    const trimmedCode = String(itemData.code).trim();
+    return trimmedCode !== "";
+  });
+
+  const totalProducts = requestData.items.length;
+
+  // Устанавливаем класс filled или not-filled в зависимости от условия
+  const checkmarkClass =
+    productsWithCode.length === totalProducts ? "filled" : "not-filled";
+
+  if (requestData.statusRequest === "Выполнена") {
+    // Если статус равен "выполнен", добавляем класс к строке
+    tableRow.classList.add("completed-row");
+  }
 
   tableRow.innerHTML = `
     <td class="id-cell">${requestData.number}${
     requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ""
   }</td>
-    <td class="checkmark-cell">${
-      allProductsHaveCode ? '<i class="fa fa-check"></i>' : ""
-    }</td>
-    <td class="number-cell">${requestKey}</td>
+  <td class="checkmark-cell ${checkmarkClass}">
+    ${productsWithCode.length} / ${totalProducts}
+  </td>
     <td class="date-cell">${requestData.date}</td>
     <td class="in-cell">${requestData.initiator}</td>
     <td class="executive-cell">${requestData.executive}</td>
     <td class="status-cell">${requestData.statusRequest}</td>
+    <td class="checkfile-cell">${
+      requestData.hasFile ? '<i class="fa fa-check"></i>' : ""
+    }</td>
     <td class="completion-date-cell">${requestData.completionDate || ""}</td>
     <td class="button-cell">
       <button class="edit-request-button">Редактировать</button>
@@ -1070,6 +1091,7 @@ async function updateRequest() {
 }
 
 //----------------------------------------- БЛОК УДАЛЕНИЯ ЗАЯВОК --------------------------------------------//
+
 // Обработчик для удаления заявки
 async function handleDeleteRequest(event) {
   if (confirm("Вы действительно хотите удалить эту заявку?")) {
@@ -1089,19 +1111,23 @@ async function handleDeleteRequest(event) {
           userDetails.role === "admin" ||
           requestData.initiator === userDetails.surname
         ) {
-          // Удаляем связанный с заявкой файл или документ из коллекции documents
+          // Удаляем связанные с заявкой файлы или документы из коллекции documents
           const documentsQuerySnapshot = await documentsRef
             .where("requestKey", "==", requestKey)
             .get();
 
-          documentsQuerySnapshot.forEach(async (doc) => {
-            await doc.ref.delete();
-            console.log("Документ успешно удален из коллекции documents.");
-          });
+          const deletePromises = documentsQuerySnapshot.docs.map(
+            async (doc) => {
+              await doc.ref.delete();
+              console.log("Документ успешно удален из коллекции documents.");
+            }
+          );
+
+          // Ожидаем выполнения всех промисов перед продолжением
+          await Promise.all(deletePromises);
 
           // Удаляем заявку из базы данных
-          await moveRequestToDeleted(requestKey);
-          await deleteRequestFromDatabase(requestKey);
+          await requestsRef.child(requestKey).remove();
           event.target.closest("tr").remove();
           alert("Заявка успешно удалена");
 
@@ -1168,12 +1194,20 @@ async function deleteRequestFromDatabase(requestKey) {
 
       // Если у текущего пользователя есть фамилия, добавляем её к данным о заявке
       if (userDetails.surname) {
-        await requestsRef.child(requestKey).update({
-          deletedBy: userDetails.surname,
-        });
+        // Получаем данные о заявке
+        const requestData = await getRequestData(requestKey);
+
+        // Удаляем поле isLocked из объекта данных о заявке, если оно существует
+        if (requestData.hasOwnProperty("isLocked")) {
+          delete requestData.isLocked;
+        }
+
+        // Обновляем данные о заявке в базе данных
+        await requestsRef.child(requestKey).set(requestData);
       }
     }
 
+    // Удаляем заявку из базы данных
     await requestsRef.child(requestKey).remove();
 
     return true;
@@ -1450,10 +1484,12 @@ async function addNomenklatureTable(event) {
     const countField = formRequest.elements["input-count"];
     const typeField = formRequest.elements.type;
     const equipmentField = formRequest.elements.equipment;
+    const linkField = formRequest.elements["input-link"];
     const name = nameField.value.trim();
     const nameFirst = nameField.value.trim();
     const variation = variationField.value.trim();
     const count = countField.value.trim();
+    const link = linkField.value.trim();
     const category = categoryField.value;
 
     let hasError = false;
@@ -1526,6 +1562,7 @@ async function addNomenklatureTable(event) {
           <td class="brand-cell"></td> 
           <td class="code-cell">${code}</td>
           <td class="comment-cell"></td>
+          <td class="link-cell"><a href="${link}" target="_blank"  title="${link}"><i class="fas fa-link"></i></a></td>
           <td class="requestNom-cell"></td>
           <td class="statusNom-cell"></td> 
           <td class="dateNom-cell"></td>
@@ -1548,15 +1585,18 @@ async function addNomenklatureTable(event) {
 // добавляем обработчик события на кнопку закрытия модального окна
 addProductBtn.addEventListener("click", addNomenklatureTable);
 
-// ------------------------------------------ БЛОК РЕДАКТИРОВАНИЕ ЯЧЕЕК --------------------------------------------//
+// ------------------- БЛОК РЕДАКТИРОВАНИЕ ЯЧЕЕК --------------------------------------------//
 
 // Функция для включения режима редактирования ячейки
 const enableCellEditing = (cell) => {
   cell.contentEditable = true;
-  cell.style.backgroundColor = "#f0ffff";
-  cell.style.borderColor = "#d9f0ff";
+  cell.style.backgroundColor = "#e5f4ffce";
+  cell.style.borderColor = "#baddf7";
+  cell.style.cursor = "text";
   cell.addEventListener("input", () => {
-    cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
+    if (!cell.classList.contains("link-cell")) {
+      cell.innerText = cell.innerText.replace(/<[^>]+>/g, "");
+    }
   });
 };
 
@@ -1565,6 +1605,7 @@ const disableCellEditing = (cell) => {
   cell.contentEditable = false;
   cell.style.backgroundColor = "";
   cell.style.borderColor = "";
+  cell.style.cursor = "pointer";
 };
 
 // Функция для обновления текста кнопки
@@ -1603,35 +1644,39 @@ editListCheckbox.addEventListener("change", (event) => {
 listTableRequest.addEventListener("click", (event) => {
   const target = event.target;
 
-  // Если нажата кнопка удаления
-  if (target.matches(".btn-remove")) {
-    const item = target.closest(".item-request");
-    if (item && item.parentNode) {
-      item.parentNode.removeChild(item);
-    }
-  }
   // Если нажата кнопка редактирования
-  else if (target.matches(".btn-edit")) {
+  if (target.matches(".btn-edit")) {
     const item = target.closest(".item-request");
     const editButton = item.querySelector(".btn-edit");
     const cells = item.querySelectorAll("td:not(.button-cell)");
+    const linkCell = item.querySelector(".link-cell");
 
     if (editButton.textContent === "Изменить") {
       // Режим редактирования
       updateButtonText(editButton, "Сохранить");
       cells.forEach(enableCellEditing);
+
+      // Проверяем и обрабатываем ячейки с ссылкой
+      const linkElement = linkCell.querySelector("a");
+      if (linkElement) {
+        linkCell.textContent = linkElement.href;
+      }
     } else {
       // Режим сохранения
       updateButtonText(editButton, "Изменить");
       cells.forEach(disableCellEditing);
 
-      if (item) {
-        const dataForm = Object.fromEntries(
-          new FormData(item.formRequest).entries()
-        );
-        Object.assign(item, { data: dataForm });
-      } else {
-        console.log("Элемент не найден");
+      // Проверяем и обрабатываем ячейки с текстовым содержимым
+      const linkText = linkCell.textContent.trim();
+      if (linkText.startsWith("http")) {
+        const linkIcon = document.createElement("i");
+        linkIcon.classList.add("fas", "fa-link");
+        const linkElement = document.createElement("a");
+        linkElement.href = linkText;
+        linkElement.target = "_blank";
+        linkElement.appendChild(linkIcon);
+        linkCell.innerHTML = "";
+        linkCell.appendChild(linkElement);
       }
     }
   }
@@ -2000,19 +2045,14 @@ const requestsCache = {};
 
 // Функция для получения данных о заявках из кэша или базы данных
 async function getRequestsDataFromCacheOrDatabase() {
-  // Проверяем, есть ли данные в кэше
   if (Object.keys(requestsCache).length > 0) {
     return Object.values(requestsCache);
   } else {
-    // Если данных нет в кэше, делаем запрос к базе данных
     const snapshot = await requestsRef.once("value");
     const requestsData = snapshot.val();
-
-    // Обновляем кэш данными
     Object.keys(requestsData).forEach((requestKey) => {
       requestsCache[requestKey] = requestsData[requestKey];
     });
-
     return Object.values(requestsData);
   }
 }
@@ -2448,6 +2488,16 @@ saveChangesBtn.addEventListener("click", async () => {
 
   try {
     if (inputFile) {
+      // Проверяем размер файла
+      const maxSizeInBytes = 700000; // 1 МБ в байтах
+      if (inputFile.size > maxSizeInBytes) {
+        // Если файл слишком велик, показываем сообщение пользователю
+        alert(
+          "Файл слишком велик. Пожалуйста, выберите файл размером до 700 Кб."
+        );
+        return;
+      }
+
       const docId = await attachDocumentToRequest(requestKey, inputFile);
       if (docId) {
         console.log(`Документ ${inputFile.name} успешно прикреплен к заявке.`);
@@ -2487,6 +2537,7 @@ async function attachDocumentToRequest(requestKey, file) {
 
       // Обновляем существующий документ
       await documentsRef.doc(existingDocId).set(updatedDocumentData);
+
       return existingDocId;
     } else {
       // Если документ не существует, создаем новый
@@ -2497,7 +2548,10 @@ async function attachDocumentToRequest(requestKey, file) {
         fileContent: fileContent,
         timestamp: firebase.firestore.FieldValue.serverTimestamp(),
       };
-
+      // После успешного прикрепления файла обновляем атрибут в заявке
+      await requestsRef.child(requestKey).update({
+        hasFile: true, // Добавляем атрибут hasFile и устанавливаем его в true
+      });
       // Добавляем документ в коллекцию "documents"
       const documentRef = await documentsRef.add(documentData);
       return documentRef.id;
@@ -2519,7 +2573,8 @@ function readFileContent(file) {
     reader.onerror = reject;
     reader.readAsDataURL(file);
   });
-} //Поиск по списку файла
+}
+//Поиск по списку файла
 // function calculateMatchPercentage(result, query) {
 //   const maxDistance = Math.max(result.length, query.length);
 //   const distance = damerauLevenshteinDistance(result, query);
@@ -2660,3 +2715,153 @@ function readFileContent(file) {
 //     URL.revokeObjectURL(url);
 //   });
 // }
+function generateAndDownloadWordDocument() {
+  // Получаем данные из заявки
+  const initiator = document.getElementById("initiator").value;
+  const responsible = document.getElementById("executive-id").value;
+  const tableRequestsNumber =
+    document.getElementById("request-number").textContent;
+
+  // Получаем все строки таблицы .products-body
+  const rows = document.querySelectorAll("#products-body .item-request");
+
+  // Создаем пустой массив для хранения данных таблицы
+  const tableData = [];
+
+  // Итерируемся по каждой строке и извлекаем данные из ячеек
+  rows.forEach((row) => {
+    const cells = row.querySelectorAll("td");
+    const linkCell = cells[9].querySelector("a");
+    const rowData = {
+      index: cells[0].textContent,
+      category: cells[1].textContent,
+      name: cells[2].textContent,
+      variation: cells[3].textContent,
+      type: cells[4].textContent,
+      equipment: cells[5].textContent,
+      brand: cells[6].textContent,
+      code: cells[7].textContent,
+      comment: cells[8].textContent,
+      link: linkCell ? linkCell.getAttribute("href") : "", // Извлекаем ссылку из атрибута href
+      requestNom: cells[10].textContent,
+      statusNom: cells[11].textContent,
+      dateNom: cells[12].textContent,
+      count: cells[13].textContent,
+      nameFirst: cells[14].textContent,
+    };
+    tableData.push(rowData);
+  });
+
+  // Проверьте, что ваши данные заполнили объект tableData правильно
+  console.log(tableData);
+
+  const htmlContent = `
+  <html xmlns:w="urn:schemas-microsoft-com:office:word">
+  <head>
+    <meta charset="utf-8">
+    <style>
+      /* Стили для документа Word могут быть добавлены здесь */
+      table {
+        float:left ;
+        width: 100%;
+        border-collapse: collapse;
+      }
+      th, td {
+        border: 1px solid black;
+        padding: 8px;
+        text-align: left;
+      }
+      th {
+        background-color: #f2f2f2;
+      }
+      h1 {
+        text-align: center;
+      }
+      p{
+        text-align: right;
+      } 
+      span{
+        text-align: start;
+      }
+    </style>
+  </head>
+  <body>
+
+    <p>      *Должность*</p>
+    <p>_________________________</p>
+    <p>“____“______________20__г.</p>
+    <br>
+    <h1>Заявка №_____ </h1>
+    <br>
+    <table border="1">
+      <tr>
+        <th>№</th>
+        <th>Наименование</th>
+        <th>Обозначение, марка, тип, ГОСТ</th>
+        <th>Вариант</th>
+        <th>Ед.изм</th>
+        <th>Кол-во</th>
+        <th>Код</th>
+        <th>Назначение</th>
+      </tr>
+      ${tableData
+        .map(
+          (data) => `
+        <tr>
+          <td>${data.index}</td>
+          <td>${data.name}</td>
+          <td></td>
+          <td>${data.variation}</td>
+          <td>${data.type}</td>
+          <td>${data.count}</td>
+          <td>${data.code}</td>
+          <td>${data.equipment}</td>
+        </tr>
+      `
+        )
+        .join("")}
+    </table>
+    <p>Электронная заявка № ${tableRequestsNumber}</p>
+    <span>Основание для заявки:______________________________________________________<br>
+    __________________________________________________________________________</span><br>
+    <br>
+    <br>
+    <span>Инициатор заявки:  </span>                         <p> ${initiator} (_____________)</p>
+    <br>
+    <span>Руководитель подразделения: </span>          <p> ________________   (_____________)</p>
+    <br>
+    <br>
+    <br>
+    <br>
+    <span>Место для ссылок на товар:</span>
+    <span>Место для ссылок на товар:</span>
+    <ol>
+      ${tableData
+        .map(
+          (data) =>
+            `<li><a href="${data.link}" target="_blank">${data.link}</a></li>`
+        )
+        .join("")}
+    </ol>
+  </body>
+  </html>
+`;
+
+  // Преобразуем строку в Uint8Array с кодировкой Windows-1251
+  const uint8Array = new TextEncoder("windows-1251").encode(htmlContent);
+
+  // Создаем Blob с Uint8Array
+  const blob = new Blob([uint8Array], { type: "application/msword" });
+
+  // Создаем ссылку для скачивания файла
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "request_template.doc";
+  a.click();
+  URL.revokeObjectURL(url);
+}
+
+// Добавляем обработчик события для кнопки
+const downloadWordButton = document.getElementById("download-word-button");
+downloadWordButton.addEventListener("click", generateAndDownloadWordDocument);

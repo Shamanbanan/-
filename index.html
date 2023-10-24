@@ -7,11 +7,15 @@
     <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.39.1/docxtemplater.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
+
 <link rel="stylesheet" href="style.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap" rel="stylesheet">
+
 <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
 
 <title>Заявка на закупку номенклатур</title>
@@ -123,13 +127,14 @@
           </div>
         </th>
         <th>
+          Кол-во ТМЦ
         </th>
-        <th>Ссылка на заявку
+        <!-- <th>Ссылка на заявку
           <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text"  data-filter="1" placeholder="Фильтр">
           </div>
-        </th>
+        </th> -->
         <th>Дата заявки
           <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
@@ -148,6 +153,7 @@
           <input type="text"  data-filter="4" placeholder="Фильтр">
           </div>
         </th>
+   
         <th>Статус
           <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown" data-filter="5">
@@ -159,13 +165,16 @@
         </select>
           </div>
         </th>
+        <th>Файл прикреплен</th>
         <th>Дата выполнения
           <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
           <input type="text" data-filter="6" placeholder="Фильтр">
           </div>
         </th>
-        <th><button id="download-button">Скачать заявки</button></th>
+        <th><button id="download-button">
+          <!-- <i class="fas fa-download"></i> -->
+          Скачать заявки</button></th>
         <th><button id="add-btn">Добавить заявку</button></th>
       </tr>
     </thead>
@@ -267,6 +276,11 @@
           <input class="text-field-input" type="number" id="input-count" name="count" min="0" placeholder="0" required>
           <label class="text-field-label" for="input-count" >Кол-во</label>
         </div>
+        <div class="field-container">      
+        <input class="text-field-input" type="text" id="input-link" name="input-link">
+        <label  class="text-field-label" for="input-link">Ссылка на товар:</label>
+      </div>
+        
         <button type="submit" id="add-product-btn">Добавить ТМЦ</button>
     </form>
     <div class="modal-main">
@@ -291,6 +305,7 @@
             <input type="number"  data-filter="1" min="0" size="6" placeholder="Фильтр">
           </div></th>
             <th>Комментарий</th>
+            <th>Ссылка</th>
             <th>№ Заказа</th>
             <th>Статус</th>
             <th>Дата</th>
@@ -310,12 +325,19 @@
       <button id="downloadfile" style="display: none;">Скачать файл</button>
         <input type="submit" id="save-request-btn" value="Отправить заявку" class="hidden">
       <input type="submit" id="save-change-btn" value="Перезаписать заявку" class="hidden">
-      <button id="download-products-button">
-        <i class="fas fa-download"></i>
-    </button>    
+      <div class="download-footer-buttons">
+        <button id="download-products-button">
+          Скачать Excel<i class="fas fa-file-excel"></i> 
+      </button>  
+      <button id="download-word-button">
+        Скачать Word<i class="fas fa-file-word"></i>
+      </button>
+      </div> 
     </div>
   <script src="https://cdn.jsdelivr.net/npm/minisearch"></script>
   <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
+  <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.js"></script>
+
   <script src="main.js"></script>
 </body>
 </html>
