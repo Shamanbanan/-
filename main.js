@@ -2928,7 +2928,6 @@ function generateAndDownloadWordDocument() {
     <br>
     <br>
     <span>Место для ссылок на товар:</span>
-    <span>Место для ссылок на товар:</span>
     <ol>
       ${tableData
         .map(
