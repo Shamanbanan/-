@@ -1738,7 +1738,13 @@ listTableRequest.addEventListener("click", (event) => {
     const editButton = item.querySelector(".btn-edit");
     const cells = item.querySelectorAll("td:not(.button-cell)");
     const linkCell = item.querySelector(".link-cell");
-
+    // Если нажата кнопка удаления
+    if (target.matches(".btn-remove")) {
+      const item = target.closest(".item-request");
+      if (item && item.parentNode) {
+        item.parentNode.removeChild(item);
+      }
+    }
     if (editButton.textContent === "Изменить") {
       // Режим редактирования
       updateButtonText(editButton, "Сохранить");
