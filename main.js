@@ -1644,7 +1644,13 @@ async function addNomenklatureTable(event) {
           <td class="brand-cell"></td> 
           <td class="code-cell">${code}</td>
           <td class="comment-cell"></td>
-          <td class="link-cell"><a href="${link}" target="_blank"  title="${link}"><i class="fas fa-link"></i></a></td>
+               <td class="link-cell">
+          ${
+            link
+              ? `<a href="${link}" target="_blank" title="${link}"><i class="fas fa-link"></i></a>`
+              : ""
+          }
+        </td>
           <td class="requestNom-cell"></td>
           <td class="statusNom-cell"></td> 
           <td class="dateNom-cell"></td>
