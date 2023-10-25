@@ -1731,13 +1731,6 @@ editListCheckbox.addEventListener("change", (event) => {
 // Обработчик события ПО КЛИКУ НА ТАБЛИЦЕ ПРОДУКТОВ
 listTableRequest.addEventListener("click", (event) => {
   const target = event.target;
-
-  // Если нажата кнопка редактирования
-  if (target.matches(".btn-edit")) {
-    const item = target.closest(".item-request");
-    const editButton = item.querySelector(".btn-edit");
-    const cells = item.querySelectorAll("td:not(.button-cell)");
-    const linkCell = item.querySelector(".link-cell");
     // Если нажата кнопка удаления
     if (target.matches(".btn-remove")) {
       const item = target.closest(".item-request");
@@ -1745,6 +1738,13 @@ listTableRequest.addEventListener("click", (event) => {
         item.parentNode.removeChild(item);
       }
     }
+  // Если нажата кнопка редактирования
+  if (target.matches(".btn-edit")) {
+    const item = target.closest(".item-request");
+    const editButton = item.querySelector(".btn-edit");
+    const cells = item.querySelectorAll("td:not(.button-cell)");
+    const linkCell = item.querySelector(".link-cell");
+
     if (editButton.textContent === "Изменить") {
       // Режим редактирования
       updateButtonText(editButton, "Сохранить");
