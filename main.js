@@ -812,10 +812,92 @@ function createTableRow(requestData, requestKey) {
     <td class="button-cell">
       <button class="btn-delete">Удалить</button>
     </td>
+    <td class="expand-cell">
+    <button class="expand-button">Развернуть</button>
+  </td>
   `;
 
   return tableRow;
 }
+
+async function toggleRequestDetails(tableRow, requestKey) {
+  const expandCell = tableRow.querySelector(".expand-cell");
+  const detailsRow = tableRow.nextElementSibling;
+
+  if (detailsRow && detailsRow.classList.contains("details-row")) {
+    detailsRow.remove();
+    expandCell.innerHTML = `<button class="expand-button">Развернуть</button>`;
+  } else {
+    try {
+      // Получаем данные о заявке из базы данных Firebase по ключу
+      const snapshot = await requestsRef.child(requestKey).once("value");
+      const requestData = snapshot.val();
+
+      // Создаем таблицу с деталями заявки
+      const productsTable = document.createElement("table");
+      productsTable.innerHTML = `
+        <thead>
+          <tr>
+          <th>#</th>
+            <th>Наименование</th>
+            <th>Вариант исполнения</th>
+            <th>Код</th>
+            <th>Базовая ед.</th>
+            <th>Поставщик</th>
+            <th>Оборудование</th>
+            <th>Комментарий</th>
+            <th>Количество</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${requestData.items
+            .map(
+              (product) => `
+            <tr>
+            <td>${product.rowIndexRow}</td>
+              <td>${product.name}</td>
+              <td>${product.variation}</td>
+              <td>${product.code}</td>
+              <td>${product.type}</td>
+              <td>${product.brand}</td>
+              <td>${product.equipment}</td>
+              <td>${product.comment}</td>
+              <td>${product.count}</td>
+            </tr>
+          `
+            )
+            .join("")}
+        </tbody>
+      `;
+      // Создаем строку с деталями и вставляем после текущей строки заявки
+      const detailsRow = document.createElement("tr");
+      detailsRow.classList.add("details-row");
+      const detailsCell = document.createElement("td");
+      detailsCell.setAttribute("colspan", "11");
+      detailsCell.appendChild(productsTable);
+      detailsRow.appendChild(detailsCell);
+
+      tableRow.parentNode.insertBefore(detailsRow, tableRow.nextSibling);
+      expandCell.innerHTML = `<button class="expand-button">Свернуть</button>`;
+    } catch (error) {
+      console.error("Ошибка получения данных о заявке: ", error);
+    }
+  }
+}
+
+// Обработчик события клика на кнопке "Развернуть/Свернуть"
+document
+  .getElementById("table-body")
+  .addEventListener("click", async function (event) {
+    const expandButton = event.target.closest(".expand-button");
+    if (expandButton) {
+      const tableRow = expandButton.closest("tr");
+      const requestKey = tableRow.getAttribute("data-key");
+      await toggleRequestDetails(tableRow, requestKey);
+      // Добавляем класс для подсветки строки
+      tableRow.classList.toggle("highlighted-row");
+    }
+  });
 
 async function updateTable() {
   try {
@@ -1595,7 +1677,7 @@ const enableCellEditing = (cell) => {
   cell.style.cursor = "text";
   cell.addEventListener("input", () => {
     if (!cell.classList.contains("link-cell")) {
-      cell.textContent = cell.textContent.replace(/<[^>]+>/g, "");
+      cell.innerText = cell.innerText.replace(/<[^>]+>/g, "");
     }
   });
 };
