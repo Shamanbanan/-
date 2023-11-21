@@ -1465,25 +1465,17 @@ function setFieldError(field, message) {
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
-
   if (originalValue.length === 0) {
     return;
   }
-
-  // Удаляем запрещенные символы
   const sanitizedValue = originalValue.replace(forbiddenChars, "");
 
-  // Заглавляем только первую букву каждого слова
+  // Заглавить только первую букву строки
   const words = sanitizedValue.split(/\s+/);
-  words.forEach((word, index) => {
-    words[index] = word.charAt(0).toUpperCase() + word.slice(1);
-  });
-
-  // Объединяем слова в строку и заменяем множественные пробелы
+  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
   const capitalizedValue = words.join(" ").replace(/\s(?=\S)/g, " ");
-
   // Заменяем русскую "х" между цифрами на английскую "x"
-  const finalValue = capitalizedValue.replace(/(\d)х(\d)/g, "$1x$2");
+  const finalValue = sanitizedValue.replace(/(\d)х(\d)/g, '$1x$2');
 
   // Заменяем символ "*" на "x"
   input.value = finalValue.replace(/\*/g, "x");
