@@ -1461,23 +1461,32 @@ function setFieldError(field, message) {
   field.reportValidity();
 }
 
-//функция для редактирования поля ввода
+// Функция для редактирования поля ввода
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
+
   if (originalValue.length === 0) {
     return;
   }
+
+  // Удаляем запрещенные символы
   const sanitizedValue = originalValue.replace(forbiddenChars, "");
 
-  // Заглавить только первую букву строки
+  // Заглавляем только первую букву каждого слова
   const words = sanitizedValue.split(/\s+/);
-  words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
+  words.forEach((word, index) => {
+    words[index] = word.charAt(0).toUpperCase() + word.slice(1);
+  });
 
+  // Объединяем слова в строку и заменяем множественные пробелы
   const capitalizedValue = words.join(" ").replace(/\s(?=\S)/g, " ");
-  const finalValue = capitalizedValue.replace(/\*/g, "x");
 
-  input.value = finalValue;
+  // Заменяем русскую "х" между цифрами на английскую "x"
+  const finalValue = capitalizedValue.replace(/(\d)х(\d)/g, "$1x$2");
+
+  // Заменяем символ "*" на "x"
+  input.value = finalValue.replace(/\*/g, "x");
 }
 
 // Функция для проверки полей на наличие ошибок
@@ -1551,7 +1560,7 @@ categoryInput.addEventListener("change", () => {
   }
 });
 
-// ---------------------------------------- БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
+// -------------------------- БЛОК СОЗДАНИЯ ПРОДУКТОВ --------------------------------------------//
 
 async function addNomenklatureTable(event) {
   event.preventDefault();
@@ -1640,17 +1649,20 @@ async function addNomenklatureTable(event) {
           <td class="name-cell">${name}</td>
           <td class="variation-cell">${variation}</td>
           <td class="type-cell">${formRequest.elements.type.value}</td>
-          <td class="equipment-cell">${formRequest.elements.equipment.value}</td>
+          <td class="equipment-cell">${
+            formRequest.elements.equipment.value
+          }</td>
           <td class="brand-cell"></td> 
           <td class="code-cell">${code}</td>
           <td class="comment-cell"></td>
-               <td class="link-cell">
+          <td class="link-cell">
           ${
             link
               ? `<a href="${link}" target="_blank" title="${link}"><i class="fas fa-link"></i></a>`
               : ""
           }
         </td>
+          
           <td class="requestNom-cell"></td>
           <td class="statusNom-cell"></td> 
           <td class="dateNom-cell"></td>
@@ -1683,7 +1695,7 @@ const enableCellEditing = (cell) => {
   cell.style.cursor = "text";
   cell.addEventListener("input", () => {
     if (!cell.classList.contains("link-cell")) {
-      cell.innerHTML = cell.innerinnerHTML.replace(/<[^>]+>/g, "");
+      cell.innerHTML = cell.replace(/<[^>]+>/g, "");
     }
   });
 };
@@ -1731,13 +1743,15 @@ editListCheckbox.addEventListener("change", (event) => {
 // Обработчик события ПО КЛИКУ НА ТАБЛИЦЕ ПРОДУКТОВ
 listTableRequest.addEventListener("click", (event) => {
   const target = event.target;
-    // Если нажата кнопка удаления
-    if (target.matches(".btn-remove")) {
-      const item = target.closest(".item-request");
-      if (item && item.parentNode) {
-        item.parentNode.removeChild(item);
-      }
+
+  // Если нажата кнопка удаления
+  if (target.matches(".btn-remove")) {
+    const item = target.closest(".item-request");
+    if (item && item.parentNode) {
+      item.parentNode.removeChild(item);
     }
+  }
+
   // Если нажата кнопка редактирования
   if (target.matches(".btn-edit")) {
     const item = target.closest(".item-request");
@@ -2668,7 +2682,7 @@ function readFileContent(file) {
     reader.readAsDataURL(file);
   });
 }
-//Поиск по списку файла
+// // Поиск по списку файла
 // function calculateMatchPercentage(result, query) {
 //   const maxDistance = Math.max(result.length, query.length);
 //   const distance = damerauLevenshteinDistance(result, query);
@@ -2768,32 +2782,31 @@ function readFileContent(file) {
 //   const worksheet = workbook.addWorksheet("Search Results");
 
 //   // Header row
-//   worksheet.addRow(["Name", "Top Result", "Code", "Match Percentage", "Price"]);
+//   worksheet.addRow([
+//     "Name",
+//     "Top Result",
+//     "Code",
+//     "Variation",
+//     "Match Percentage",
+//   ]);
 
 //   searchResults.forEach((item) => {
-//     item.results.sort((a, b) => {
-//       if (b.result.price && a.result.price) {
-//         return b.result.price - a.result.price;
-//       } else if (b.result.price) {
-//         return -1; // Первый результат имеет цену
-//       } else if (a.result.price) {
-//         return 1; // Второй результат имеет цену
-//       } else {
-//         return 0; // Ни один результат не имеет цены
-//       }
-//     });
-
 //     if (item.results.length > 0) {
-//       const result = item.results[0]; // Берем первый результат после сортировки
-//       const code = result.result.code || "N/A";
-//       const price = result.result.price || "N/A";
+//       const topResult = item.results[0].result;
+//       const code = topResult.code || "N/A";
+//       const variation = topResult.variation || "N/A";
+//       const matchPercentage = item.results[0].matchPercentage.toFixed(2) + "%";
+
 //       worksheet.addRow([
 //         item.name,
-//         result.result.name,
+//         topResult.name,
 //         code,
-//         result.matchPercentage.toFixed(2) + "%",
-//         price,
+//         variation,
+//         matchPercentage,
 //       ]);
+//     } else {
+//       // Если нет результатов, просто добавьте строку с информацией об отсутствии результатов
+//       worksheet.addRow([item.name, "N/A", "N/A", "N/A", "N/A"]);
 //     }
 //   });
 
@@ -2809,6 +2822,7 @@ function readFileContent(file) {
 //     URL.revokeObjectURL(url);
 //   });
 // }
+
 function generateAndDownloadWordDocument() {
   // Получаем данные из заявки
   const initiator = document.getElementById("initiator").value;
@@ -2923,8 +2937,6 @@ function generateAndDownloadWordDocument() {
     <span>Инициатор заявки:  </span>                         <p> ${initiator} (_____________)</p>
     <br>
     <span>Руководитель подразделения: </span>          <p> ________________   (_____________)</p>
-    <br>
-    <br>
     <br>
     <br>
     <span>Место для ссылок на товар:</span>
