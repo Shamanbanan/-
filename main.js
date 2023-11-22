@@ -1461,22 +1461,29 @@ function setFieldError(field, message) {
   field.reportValidity();
 }
 
-//функция для редактирования поля ввода
+// Функция для редактирования поля ввода
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
+  
   if (originalValue.length === 0) {
     return;
   }
+
   const sanitizedValue = originalValue.replace(forbiddenChars, "");
 
-  // Заглавить только первую букву строки
+  // Озаглавить только первую букву строки
   const words = sanitizedValue.split(/\s+/);
   words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
-  const capitalizedValue = words.join(" ").replace(/\s(?=\S)/g, " ");
-  const finalValue = capitalizedValue.replace(/\*/g, "x");
+
+  // Заменить русскую "х" между цифрами
+  const replacedValue = words.join(" ").replace(/(\d)х(\d)/g, '$1x$2');
+
+  const finalValue = replacedValue.replace(/\s(?=\S)/g, " ").replace(/\*/g, "x");
+
   input.value = finalValue;
 }
+
 
 // Функция для проверки полей на наличие ошибок
 function validateFields() {
