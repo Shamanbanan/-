@@ -1461,7 +1461,7 @@ function setFieldError(field, message) {
   field.reportValidity();
 }
 
-// Функция для редактирования поля ввода
+//функция для редактирования поля ввода
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
@@ -1474,11 +1474,8 @@ function capitalizeWords(input) {
   const words = sanitizedValue.split(/\s+/);
   words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
   const capitalizedValue = words.join(" ").replace(/\s(?=\S)/g, " ");
-  // Заменяем русскую "х" между цифрами на английскую "x"
-  const finalValue = sanitizedValue.replace(/(\d)х(\d)/g, '$1x$2');
-
-  // Заменяем символ "*" на "x"
-  input.value = finalValue.replace(/\*/g, "x");
+  const finalValue = capitalizedValue.replace(/\*/g, "x");
+  input.value = finalValue;
 }
 
 // Функция для проверки полей на наличие ошибок
