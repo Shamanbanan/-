@@ -1465,7 +1465,7 @@ function setFieldError(field, message) {
 function capitalizeWords(input) {
   const forbiddenChars = /[\\:?<>\|"%&@;#!№]/g;
   const originalValue = input.value.trim();
-  
+
   if (originalValue.length === 0) {
     return;
   }
@@ -1477,13 +1477,14 @@ function capitalizeWords(input) {
   words[0] = words[0].charAt(0).toUpperCase() + words[0].slice(1);
 
   // Заменить русскую "х" между цифрами
-  const replacedValue = words.join(" ").replace(/(\d)х(\d)/g, '$1x$2');
+  const replacedValue = words.join(" ").replace(/(\d)х(\d)/g, "$1x$2");
 
-  const finalValue = replacedValue.replace(/\s(?=\S)/g, " ").replace(/\*/g, "x");
+  const finalValue = replacedValue
+    .replace(/\s(?=\S)/g, " ")
+    .replace(/\*/g, "x");
 
   input.value = finalValue;
 }
-
 
 // Функция для проверки полей на наличие ошибок
 function validateFields() {
@@ -1913,9 +1914,9 @@ async function loadData() {
     : [];
 
   miniSearch = new MiniSearch({
-    fields: ["name", "variation", "code", "type"],
+    fields: ["group3", "name", "variation", "code", "type"],
     idField: "id",
-    storeFields: ["name", "variation", "code", "type"],
+    storeFields: ["group3", "name", "variation", "code", "type"],
     caseSensitive: false,
     normalizeField: false,
   });
@@ -1941,8 +1942,9 @@ function search(searchTerm) {
     .search(searchTerm.toLowerCase(), {
       prefix: true,
       termFrequency: false,
-      fuzzy: 0.4,
+      fuzzy: 0.2,
       boost: {
+        group3: 4,
         name: 2,
         variation: 1,
         code: 1,
@@ -1952,7 +1954,38 @@ function search(searchTerm) {
     })
     .slice(0, 30);
 
+  // Sort results by weighted percentage match with 'group3' in descending order
+  results.sort((a, b) => {
+    const matchPercentageA = getMatchPercentage(a.group3, searchTerm);
+    const matchPercentageB = getMatchPercentage(b.group3, searchTerm);
+
+    return matchPercentageB - matchPercentageA;
+  });
+
   updateAutocompleteList(results);
+}
+
+// Helper function to calculate percentage match
+function getMatchPercentage(text, searchTerm) {
+  const regex = new RegExp(`(${searchTerm.trim().replace(/\s+/g, "|")})`, "gi");
+
+  const matches = (text.match(regex) || []).length;
+  const totalWords = text.trim().split(/\s+/).length;
+
+  return (matches / totalWords) * 100;
+}
+
+// Функция для вычисления процента совпадения между двумя строками
+function calculateMatchPercentage(str1, str2) {
+  const cleanStr1 = str1.replace(/\s+/g, ""); // Убираем пробелы из первой строки
+  const cleanStr2 = str2.replace(/\s+/g, ""); // Убираем пробелы из второй строки
+
+  const maxLength = Math.max(cleanStr1.length, cleanStr2.length);
+  const commonLength = Array.from(cleanStr1).reduce((count, char, index) => {
+    return count + (char === cleanStr2[index] ? 1 : 0);
+  }, 0);
+
+  return (commonLength / maxLength) * 100;
 }
 
 // Update the autocomplete list based on search results
@@ -1981,7 +2014,7 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
   const searchTerm = nameInput.value;
 
   results.forEach((item) => {
-    const { name, variation, code, type } = item || {};
+    const { name, variation, code, type, group3 } = item || {};
     const itemKey = `${name}-${variation}-${code}-${type}`;
 
     if (uniqueItems.has(itemKey)) {
@@ -1997,7 +2030,7 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
     el.appendChild(highlightedName);
 
     const info = document.createElement("div");
-    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type}`;
+    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type} ${group3}`;
     el.appendChild(info);
 
     el.addEventListener("click", () => {
@@ -2232,7 +2265,7 @@ viewRequestsButton.addEventListener("click", async () => {
 });
 console.log(requestsCache);
 
-// ------------------------------------ БЛОК ОБНОВЛЕНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
+// ------------- БЛОК ОБНОВЛЕНИЯ ВСЕХ ЗАЯВОК  --------------------------------------------//
 
 // Функция обновления всех заявок
 function refreshAllRequests() {
