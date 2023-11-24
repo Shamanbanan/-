@@ -2030,7 +2030,7 @@ function createAutocompleteItems(results, uniqueItems, fragment) {
     el.appendChild(highlightedName);
 
     const info = document.createElement("div");
-    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type} ${group3}`;
+    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type}`;
     el.appendChild(info);
 
     el.addEventListener("click", () => {
