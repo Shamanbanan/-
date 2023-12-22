@@ -1893,24 +1893,17 @@ toggleButtons.forEach((button) => {
 
 // ------------------------------------------ БЛОК ПОИСКА НОМЕНКЛАТУРЫ --------------------------------------------//
 
-//функция для поиска номенклатуры
 const nameInput = document.getElementById("name");
-const typeInput = document.getElementById("type");
 const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
-let items = [];
 let miniSearch;
 
-// Load data from firebase
 async function loadData() {
   const itemsObject = await loadItems();
   const items = itemsObject
-    ? Object.entries(itemsObject).map(([id, item]) => ({
-        id,
-        ...item,
-      }))
+    ? Object.entries(itemsObject).map(([id, item]) => ({ id, ...item }))
     : [];
 
   miniSearch = new MiniSearch({
@@ -1919,84 +1912,37 @@ async function loadData() {
     storeFields: ["group3", "name", "variation", "code", "type"],
     caseSensitive: false,
     normalizeField: false,
+    boost: {
+      group3: 4, // Установите желаемый вес для поля group3
+      name: 1,
+      variation: 1,
+      code: 1,
+      type: 1,
+    },
   });
 
-  const allItems = items.map((item, index) => {
-    return {
-      ...item,
-      id: index + 1, // create unique ID for each item
-    };
-  });
-
+  const allItems = items.map((item, index) => ({ ...item, id: index + 1 }));
   miniSearch.addAll(allItems);
 }
 
-// Search and update UI
 function search(searchTerm) {
   if (!searchTerm) {
     autocompleteList.innerHTML = "";
     return;
   }
 
-  const results = miniSearch
-    .search(searchTerm.toLowerCase(), {
-      prefix: true,
-      termFrequency: false,
-      fuzzy: 0.2,
-      boost: {
-        group3: 4,
-        name: 2,
-        variation: 1,
-        code: 1,
-        type: 1,
-      },
-      threshold: 0.2,
-    })
-    .slice(0, 30);
+  const results = miniSearch.search(searchTerm.toLowerCase()).slice(0, 30);
 
-  // Sort results by weighted percentage match with 'group3' in descending order
-  results.sort((a, b) => {
-    const matchPercentageA = getMatchPercentage(a.group3, searchTerm);
-    const matchPercentageB = getMatchPercentage(b.group3, searchTerm);
-
-    return matchPercentageB - matchPercentageA;
-  });
-
-  updateAutocompleteList(results);
+  updateAutocompleteList(results, searchTerm);
 }
 
-// Helper function to calculate percentage match
-function getMatchPercentage(text, searchTerm) {
-  const regex = new RegExp(`(${searchTerm.trim().replace(/\s+/g, "|")})`, "gi");
-
-  const matches = (text.match(regex) || []).length;
-  const totalWords = text.trim().split(/\s+/).length;
-
-  return (matches / totalWords) * 100;
-}
-
-// Функция для вычисления процента совпадения между двумя строками
-function calculateMatchPercentage(str1, str2) {
-  const cleanStr1 = str1.replace(/\s+/g, ""); // Убираем пробелы из первой строки
-  const cleanStr2 = str2.replace(/\s+/g, ""); // Убираем пробелы из второй строки
-
-  const maxLength = Math.max(cleanStr1.length, cleanStr2.length);
-  const commonLength = Array.from(cleanStr1).reduce((count, char, index) => {
-    return count + (char === cleanStr2[index] ? 1 : 0);
-  }, 0);
-
-  return (commonLength / maxLength) * 100;
-}
-
-// Update the autocomplete list based on search results
-function updateAutocompleteList(results) {
+function updateAutocompleteList(results, searchTerm) {
   const fragment = document.createDocumentFragment();
-  const uniqueItems = new Set();
 
   if (!results.length) {
     createNoResultsElement(fragment);
   } else {
-    createAutocompleteItems(results, uniqueItems, fragment);
+    createAutocompleteItems(results, fragment, searchTerm);
   }
 
   autocompleteList.innerHTML = "";
@@ -2010,38 +1956,34 @@ function createNoResultsElement(fragment) {
   fragment.appendChild(noResultsEl);
 }
 
-function createAutocompleteItems(results, uniqueItems, fragment) {
-  const searchTerm = nameInput.value;
+function createAutocompleteItems(results, fragment, searchTerm) {
+  const uniqueItems = new Set();
 
-  results.forEach((item) => {
-    const { name, variation, code, type, group3 } = item || {};
-    const itemKey = `${name}-${variation}-${code}-${type}`;
+  results
+    .filter((item) => !uniqueItems.has(item.id))
+    .forEach((item) => {
+      uniqueItems.add(item.id);
 
-    if (uniqueItems.has(itemKey)) {
-      return; // skip duplicates
-    }
-    uniqueItems.add(itemKey); // add unique item to Set
+      const el = document.createElement("div");
+      el.classList.add("autocomplete-item");
 
-    const el = document.createElement("div");
-    el.classList.add("autocomplete-item");
+      const highlightedName = document.createElement("div");
+      highlightedName.innerHTML = highlightMatch(item.name, searchTerm);
+      el.appendChild(highlightedName);
 
-    const highlightedName = document.createElement("div");
-    highlightedName.innerHTML = highlightMatch(name, searchTerm);
-    el.appendChild(highlightedName);
+      const info = document.createElement("div");
+      info.innerHTML = `ВИ: ${item.variation}  Код: (${item.code}) ${item.type}`;
+      el.appendChild(info);
 
-    const info = document.createElement("div");
-    info.innerHTML = `ВИ: ${variation}  Код: (${code}) ${type}`;
-    el.appendChild(info);
+      el.addEventListener("click", () => {
+        nameInput.value = item.name;
+        variationInput.value = item.variation;
+        codeInput.value = item.code;
+        autocompleteList.innerHTML = "";
+      });
 
-    el.addEventListener("click", () => {
-      nameInput.value = name;
-      variationInput.value = variation;
-      codeInput.value = code;
-      typeInput.value = type;
-      autocompleteList.innerHTML = "";
+      fragment.appendChild(el);
     });
-    fragment.appendChild(el);
-  });
 }
 
 function highlightMatch(text, searchTerm) {
@@ -2051,17 +1993,16 @@ function highlightMatch(text, searchTerm) {
   );
   const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
 
-  return text.replace(regex, "<mark>$1</mark>");
+  return text.replace(regex, (match) => `<mark>${match}</mark>`);
 }
 
 let searchTimeout;
 
-// Event listeners
 nameInput.addEventListener("input", async (e) => {
   clearTimeout(searchTimeout);
   await loadData();
 
-  searchTimeout = setTimeout(() => search(e.target.value.toLowerCase()), 10);
+  searchTimeout = setTimeout(() => search(e.target.value), 300);
 });
 
 document.addEventListener("click", (e) => {
@@ -2069,11 +2010,6 @@ document.addEventListener("click", (e) => {
     autocompleteList.innerHTML = "";
   }
 });
-
-nameInput.addEventListener(
-  "input",
-  () => ((codeInput.value = ""), (variationInput.value = "осн."))
-);
 
 // -------------------------------------- БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
 
