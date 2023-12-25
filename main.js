@@ -1914,7 +1914,7 @@ async function loadData() {
     normalizeField: false,
     boost: {
       group3: 4, // Установите желаемый вес для поля group3
-      name: 1,
+      name: 2,
       variation: 1,
       code: 1,
       type: 1,
@@ -1931,7 +1931,9 @@ function search(searchTerm) {
     return;
   }
 
-  const results = miniSearch.search(searchTerm.toLowerCase()).slice(0, 30);
+  const results = miniSearch
+    .search(searchTerm.toLowerCase(), { fuzzy: 0.2 })
+    .slice(0, 30);
 
   updateAutocompleteList(results, searchTerm);
 }
