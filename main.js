@@ -770,17 +770,19 @@ saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
 // ---------------------------------- БЛОК ЗАГРУЗКИ В ТАБЛИЦУ ЗАЯВОК --------------------------------------------//
 
-//создание строк таблицы заявок
 function createTableRow(requestData, requestKey) {
   const tableRow = document.createElement("tr");
   tableRow.setAttribute("data-key", requestKey);
 
-  const productsWithCode = requestData.items.filter((itemData) => {
-    const trimmedCode = String(itemData.code).trim();
+  const items = requestData.items || []; // Проверяем, определен ли requestData.items
+
+  const productsWithCode = items.filter((itemData) => {
+    const code = itemData && itemData.code; // Проверяем, определен ли itemData и его свойство code
+    const trimmedCode = code ? String(code).trim() : "";
     return trimmedCode !== "";
   });
 
-  const totalProducts = requestData.items.length;
+  const totalProducts = items.length;
 
   // Устанавливаем класс filled или not-filled в зависимости от условия
   const checkmarkClass =
@@ -800,7 +802,7 @@ function createTableRow(requestData, requestKey) {
   </td>
     <td class="date-cell">${requestData.date}</td>
     <td class="in-cell">${requestData.initiator}</td>
-    <td class="executive-cell">${requestData.executive}</td>
+    <td class="executive-cell">${requestData.executive || ""}</td>
     <td class="status-cell">${requestData.statusRequest}</td>
     <td class="checkfile-cell">${
       requestData.hasFile ? '<i class="fa fa-check"></i>' : ""
@@ -1993,6 +1995,8 @@ function highlightMatch(text, searchTerm) {
   const escapedSearchWords = searchWords.map((word) =>
     word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&")
   );
+
+  // Изменяем регулярное выражение для поиска совпадающих символов
   const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
 
   return text.replace(regex, (match) => `<mark>${match}</mark>`);
