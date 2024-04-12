@@ -552,7 +552,9 @@ function createItemRow(itemData) {
       }
     </td>
     <td class="requestNom-cell">${itemData.requestNom}</td>
-    <td>${itemData.statusNom ? itemData.statusNom : ""}</td>
+    <td class="statusNom-cell">${
+      itemData.statusNom ? itemData.statusNom : ""
+    }</td>
     <td class="dateNom-cell">${itemData.dateNom}</td>
     <td class="count-cell">${itemData.count}</td>
     <td class="nameFirst-cell">${itemData.nameFirst}</td>
@@ -733,7 +735,8 @@ async function saveRequestDatabase() {
     statusRequest: "Новая",
     date: new Date().toLocaleString(),
     items: requestData,
-    uid: currentUser.uid, // Записываем uid пользователя в заявку
+    // Записываем uid пользователя в заявку
+    uid: currentUser.uid,
   };
 
   const messageDiv = createMessageDiv();
@@ -770,36 +773,47 @@ saveRequestBtn.addEventListener("click", saveRequestDatabase);
 
 // ---------------------------------- БЛОК ЗАГРУЗКИ В ТАБЛИЦУ ЗАЯВОК --------------------------------------------//
 
+// Функция для создания строки таблицы с данными о заявке
 function createTableRow(requestData, requestKey) {
+  const items = requestData.items || []; // Получаем список товаров в заявке
+  const totalProducts = items.length; // Общее количество товаров
+
+  let filledStatusCount = 0; // Счетчик заполненных статусов
+  let filledCodeCount = 0; // Счетчик заполненных кодов товаров
+
+  // Перебираем товары и считаем заполненные статусы и коды
+  items.forEach((item) => {
+    if (item.statusNom && item.statusNom.trim() !== "") {
+      filledStatusCount++;
+    }
+    if (item.code && item.code.trim() !== "") {
+      filledCodeCount++;
+    }
+  });
+
+  // Определяем текст статуса доставки на основе статусов
+  let deliveryStatusText = "";
+  if (filledStatusCount === 0) {
+    deliveryStatusText = "";
+  } else if (filledStatusCount === totalProducts) {
+    deliveryStatusText = "Доставлен";
+  } else {
+    deliveryStatusText = `Доставлен частично (${filledStatusCount} / ${totalProducts})`;
+  }
+
+  // Устанавливаем класс для ячейки в зависимости от заполнения кодов
+  const codeClass = filledCodeCount === totalProducts ? "filled" : "not-filled";
+
+  // Создаем HTML-строку для таблицы
   const tableRow = document.createElement("tr");
   tableRow.setAttribute("data-key", requestKey);
 
-  const items = requestData.items || []; // Проверяем, определен ли requestData.items
-
-  const productsWithCode = items.filter((itemData) => {
-    const code = itemData && itemData.code; // Проверяем, определен ли itemData и его свойство code
-    const trimmedCode = code ? String(code).trim() : "";
-    return trimmedCode !== "";
-  });
-
-  const totalProducts = items.length;
-
-  // Устанавливаем класс filled или not-filled в зависимости от условия
-  const checkmarkClass =
-    productsWithCode.length === totalProducts ? "filled" : "not-filled";
-
-  if (requestData.statusRequest === "Выполнена") {
-    // Если статус равен "выполнен", добавляем класс к строке
-    tableRow.classList.add("completed-row");
-  }
-
   tableRow.innerHTML = `
-    <td class="id-cell">${requestData.number}${
-    requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ""
-  }</td>
-  <td class="checkmark-cell ${checkmarkClass}">
-    ${productsWithCode.length} / ${totalProducts}
-  </td>
+    <td class="id-cell">${requestData.number}</td>
+    <td class="delivery-status-cell">${deliveryStatusText}</td>
+    <td class="checkmark-cell ${codeClass}">
+      ${filledCodeCount} / ${totalProducts}
+    </td>
     <td class="date-cell">${requestData.date}</td>
     <td class="in-cell">${requestData.initiator}</td>
     <td class="executive-cell">${requestData.executive || ""}</td>
@@ -815,8 +829,8 @@ function createTableRow(requestData, requestKey) {
       <button class="btn-delete">Удалить</button>
     </td>
     <td class="expand-cell">
-    <button class="expand-button">Развернуть</button>
-  </td>
+      <button class="expand-button">Развернуть</button>
+    </td>
   `;
 
   return tableRow;
@@ -848,6 +862,7 @@ async function toggleRequestDetails(tableRow, requestKey) {
             <th>Поставщик</th>
             <th>Оборудование</th>
             <th>Комментарий</th>
+            <th>Статус</th>
             <th>Количество</th>
           </tr>
         </thead>
@@ -864,6 +879,7 @@ async function toggleRequestDetails(tableRow, requestKey) {
               <td>${product.brand}</td>
               <td>${product.equipment}</td>
               <td>${product.comment}</td>
+              <td>${product.statusNom}</td>
               <td>${product.count}</td>
             </tr>
           `
@@ -875,7 +891,7 @@ async function toggleRequestDetails(tableRow, requestKey) {
       const detailsRow = document.createElement("tr");
       detailsRow.classList.add("details-row");
       const detailsCell = document.createElement("td");
-      detailsCell.setAttribute("colspan", "11");
+      detailsCell.setAttribute("colspan", "12");
       detailsCell.appendChild(productsTable);
       detailsRow.appendChild(detailsCell);
 
@@ -1177,63 +1193,51 @@ async function updateRequest() {
 //----------------------------------------- БЛОК УДАЛЕНИЯ ЗАЯВОК --------------------------------------------//
 
 // Обработчик для удаления заявки
+// Обработчик для удаления заявки
 async function handleDeleteRequest(event) {
-  if (confirm("Вы действительно хотите удалить эту заявку?")) {
-    const requestKey = event.target.closest("tr").getAttribute("data-key");
-    const currentUser = firebase.auth().currentUser;
+  if (!confirm("Вы действительно хотите удалить эту заявку?")) return;
+  const requestKey = event.target.closest("tr").getAttribute("data-key");
+  const currentUser = firebase.auth().currentUser;
 
-    if (currentUser) {
-      try {
-        // Получаем информацию о текущем пользователе
-        const userDetails = await getUserDetails(currentUser.uid);
+  if (!currentUser) {
+    alert("Вы должны войти в систему, чтобы удалить заявку.");
+    return;
+  }
 
-        // Получаем данные о заявке
-        const requestData = await getRequestData(requestKey);
+  try {
+    const [userDetails, requestData] = await Promise.all([
+      getUserDetails(currentUser.uid),
+      getRequestData(requestKey),
+    ]);
 
-        // Проверяем, является ли текущий пользователь инициатором заявки или администратором
-        if (
-          userDetails.role === "admin" ||
-          requestData.initiator === userDetails.surname
-        ) {
-          // Удаляем связанные с заявкой файлы или документы из коллекции documents
-          const documentsQuerySnapshot = await documentsRef
-            .where("requestKey", "==", requestKey)
-            .get();
-
-          const deletePromises = documentsQuerySnapshot.docs.map(
-            async (doc) => {
-              await doc.ref.delete();
-              console.log("Документ успешно удален из коллекции documents.");
-            }
-          );
-
-          // Ожидаем выполнения всех промисов перед продолжением
-          await Promise.all(deletePromises);
-
-          // Удаляем заявку из базы данных
-          await requestsRef.child(requestKey).remove();
-          event.target.closest("tr").remove();
-          alert("Заявка успешно удалена");
-
-          // Если заявка была заблокирована, то снимаем блокировку перед удалением
-          if (
-            requestData.isLocked &&
-            requestData.lockedBy === currentUser.uid
-          ) {
-            await unlockRequestInDatabase(requestKey);
-          }
-
-          // Обновляем таблицу после удаления заявки
-          updateTable();
-        } else {
-          alert("У вас нет прав для удаления этой заявки");
-        }
-      } catch (error) {
-        console.error("Ошибка удаления заявки: ", error);
-      }
-    } else {
-      alert("Вы должны войти в систему, чтобы удалить заявку.");
+    if (
+      !(
+        userDetails.role === "admin" ||
+        requestData.initiator === userDetails.surname
+      )
+    ) {
+      alert("У вас нет прав для удаления этой заявки");
+      return;
     }
+
+    const documentsQuerySnapshot = await documentsRef
+      .where("requestKey", "==", requestKey)
+      .get();
+    await Promise.all(
+      documentsQuerySnapshot.docs.map((doc) => doc.ref.delete())
+    );
+
+    if (requestData.isLocked && requestData.lockedBy === currentUser.uid) {
+      await unlockRequestInDatabase(requestKey);
+    }
+
+    await requestsRef.child(requestKey).remove();
+    event.target.closest("tr").remove();
+    alert("Заявка успешно удалена");
+    updateTable();
+  } catch (error) {
+    console.error("Ошибка удаления заявки: ", error);
+    alert("Произошла ошибка при удалении заявки.");
   }
 }
 
@@ -2127,12 +2131,24 @@ async function getRequestsDataFromCacheOrDatabase() {
   if (Object.keys(requestsCache).length > 0) {
     return Object.values(requestsCache);
   } else {
-    const snapshot = await requestsRef.once("value");
-    const requestsData = snapshot.val();
-    Object.keys(requestsData).forEach((requestKey) => {
-      requestsCache[requestKey] = requestsData[requestKey];
-    });
-    return Object.values(requestsData);
+    try {
+      const snapshot = await requestsRef.once("value");
+      const requestsData = snapshot.val();
+
+      if (requestsData) {
+        Object.keys(requestsData).forEach((requestKey) => {
+          requestsCache[requestKey] = requestsData[requestKey];
+        });
+
+        return Object.values(requestsData);
+      } else {
+        console.log("Нет данных о заявках.");
+        return [];
+      }
+    } catch (error) {
+      console.error("Ошибка при получении данных о заявках:", error);
+      return [];
+    }
   }
 }
 
@@ -2653,146 +2669,8 @@ function readFileContent(file) {
     reader.readAsDataURL(file);
   });
 }
-// // Поиск по списку файла
-// function calculateMatchPercentage(result, query) {
-//   const maxDistance = Math.max(result.length, query.length);
-//   const distance = damerauLevenshteinDistance(result, query);
-//   const similarity = 1 - distance / maxDistance;
-//   return similarity * 100;
-// }
 
-// function damerauLevenshteinDistance(a, b) {
-//   const dp = Array.from({ length: a.length + 1 }, (_, i) => [i]);
-//   dp[0] = Array.from({ length: b.length + 1 }, (_, i) => i);
-
-//   for (let i = 1; i <= a.length; i++) {
-//     for (let j = 1; j <= b.length; j++) {
-//       const cost = a[i - 1] === b[j - 1] ? 0 : 1;
-//       dp[i][j] = Math.min(
-//         dp[i - 1][j] + 1,
-//         dp[i][j - 1] + 1,
-//         dp[i - 1][j - 1] + cost
-//       );
-
-//       if (i > 1 && j > 1 && a[i - 1] === b[j - 2] && a[i - 2] === b[j - 1]) {
-//         dp[i][j] = Math.min(dp[i][j], dp[i - 2][j - 2] + cost);
-//       }
-//     }
-//   }
-
-//   return dp[a.length][b.length];
-// }
-
-// const searchButton = document.getElementById("searchButton");
-// const nameListInput = document.getElementById("nameList");
-
-// searchButton.addEventListener("click", async () => {
-//   const nameList = nameListInput.value.trim();
-//   const namesArray = nameList.split(/\s*#\s*/).filter(Boolean);
-
-//   await loadData(); // Load data before performing the search
-
-//   const searchResults = namesArray.map((name) => {
-//     const results = miniSearch.search(name.toLowerCase(), {
-//       prefix: false,
-//       termFrequency: false,
-//       fuzzy: 0.4,
-//       boost: {
-//         name: 4,
-//         variation: 1,
-//         code: 1,
-//         type: 1,
-//       },
-//       threshold: 0.3,
-//     });
-
-//     return {
-//       name,
-//       results: results.map((result) => ({
-//         result,
-//         matchPercentage: calculateMatchPercentage(
-//           result.name,
-//           name.toLowerCase()
-//         ),
-//       })),
-//     };
-//   });
-
-//   const filteredResults = searchResults.map((item) => {
-//     const resultsWithPrice = item.results.filter(
-//       (result) => result.result.price !== undefined
-//     );
-
-//     if (resultsWithPrice.length > 0) {
-//       resultsWithPrice.sort((a, b) => b.matchPercentage - a.matchPercentage);
-//       return {
-//         name: item.name,
-//         results: resultsWithPrice.slice(0, 1), // Вернуть только первый результат с наивысшим процентом совпадения
-//       };
-//     }
-
-//     const maxMatch = item.results.reduce((max, result) => {
-//       return result.matchPercentage > max ? result.matchPercentage : max;
-//     }, 0);
-
-//     const filtered = item.results.filter(
-//       (result) => result.matchPercentage === maxMatch
-//     );
-
-//     return { name: item.name, results: filtered };
-//   });
-
-//   // Generate Excel file and offer download
-//   await generateExcelFile(filteredResults);
-// });
-
-// // Остальной код остается неизменным
-
-// function generateExcelFile(searchResults) {
-//   const workbook = new ExcelJS.Workbook();
-//   const worksheet = workbook.addWorksheet("Search Results");
-
-//   // Header row
-//   worksheet.addRow([
-//     "Name",
-//     "Top Result",
-//     "Code",
-//     "Variation",
-//     "Match Percentage",
-//   ]);
-
-//   searchResults.forEach((item) => {
-//     if (item.results.length > 0) {
-//       const topResult = item.results[0].result;
-//       const code = topResult.code || "N/A";
-//       const variation = topResult.variation || "N/A";
-//       const matchPercentage = item.results[0].matchPercentage.toFixed(2) + "%";
-
-//       worksheet.addRow([
-//         item.name,
-//         topResult.name,
-//         code,
-//         variation,
-//         matchPercentage,
-//       ]);
-//     } else {
-//       // Если нет результатов, просто добавьте строку с информацией об отсутствии результатов
-//       worksheet.addRow([item.name, "N/A", "N/A", "N/A", "N/A"]);
-//     }
-//   });
-
-//   const buffer = workbook.xlsx.writeBuffer().then((data) => {
-//     const blob = new Blob([data], {
-//       type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
-//     });
-//     const url = URL.createObjectURL(blob);
-//     const a = document.createElement("a");
-//     a.href = url;
-//     a.download = "search_results.xlsx";
-//     a.click();
-//     URL.revokeObjectURL(url);
-//   });
-// }
+//--------------------------------СОЗДАНИЕ ДОКУМЕНТА ЗАЯВКИ---------------------------------------------------------------//
 
 function generateAndDownloadWordDocument() {
   // Получаем данные из заявки
