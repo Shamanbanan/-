@@ -1008,7 +1008,7 @@ document.getElementById("next-page").addEventListener("click", () => {
 
 // Глобальные переменные для управления пагинацией
 let currentPage = 1;
-let itemsPerPage = 300;
+let itemsPerPage = 500;
 let totalPages = 0;
 
 // Функция для обновления кнопок с номерами страниц
