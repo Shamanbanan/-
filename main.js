@@ -2126,11 +2126,109 @@ document.addEventListener("click", (e) => {
 });
 // -------------------------------------- БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
 
+// const equipmentRef = database.ref("equipment");
+// const equipmentInput = document.getElementById("equipment");
+// const equipmentAutocompleteList = document.getElementById("equipment-list");
+
+// let equipment = [];
+
+// // Load data from firebase
+// async function loadEquipmentData() {
+//   const equipmentSnapshot = await equipmentRef.once("value");
+
+//   equipment = equipmentSnapshot.val()
+//     ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
+//         if (!acc.some((equipment) => equipment.title === data.title)) {
+//           acc.push({
+//             id,
+//             ...data,
+//           });
+//         }
+//         return acc;
+//       }, [])
+//     : [];
+
+//   miniSearchEquipment = new MiniSearch({
+//     fields: ["title"],
+//     idField: "id",
+//     storeFields: ["title", "in_code"],
+//   });
+
+//   miniSearchEquipment.addAll(equipment);
+// }
+
+// loadEquipmentData();
+
+// function searchEquipment(searchTerm) {
+//   if (!searchTerm) {
+//     equipmentAutocompleteList.innerHTML = "";
+//     return;
+//   }
+
+//   // Check if miniSearchEquipment is initialized before searching
+//   const results = miniSearchEquipment
+//     .search(searchTerm, {
+//       prefix: true,
+//       boost: {
+//         title: 2,
+//       },
+//       termFrequency: false,
+//       fuzzy: 0.3,
+//     })
+//     .slice(0, 10);
+
+//   updateEquipmentAutocompleteList(results);
+// }
+
+// function updateEquipmentAutocompleteList(results) {
+//   const fragment = document.createDocumentFragment();
+
+//   if (!results.length) {
+//     createNoResultsElement(fragment);
+//   } else {
+//     createEquipmentAutocompleteItems(results, fragment);
+//   }
+
+//   equipmentAutocompleteList.innerHTML = "";
+//   equipmentAutocompleteList.appendChild(fragment);
+// }
+
+// function createEquipmentAutocompleteItems(results, fragment) {
+//   results.forEach((equipment) => {
+//     const { title, in_code } = equipment || {};
+
+//     const el = document.createElement("div");
+//     el.classList.add("autocomplete-item");
+//     el.innerText = `${title}\n (Инв.номер: ${in_code})`;
+//     el.addEventListener("click", () => {
+//       equipmentInput.value = title;
+//       equipmentAutocompleteList.innerHTML = "";
+//     });
+//     fragment.appendChild(el);
+//   });
+// }
+
+// let searchEquipmentTimeout;
+
+// equipmentInput.addEventListener("input", (e) => {
+//   clearTimeout(searchEquipmentTimeout);
+//   searchEquipmentTimeout = setTimeout(
+//     () => searchEquipment(e.target.value),
+//     200
+//   );
+// });
+
+// document.addEventListener("click", (e) => {
+//   if (!equipmentAutocompleteList.contains(e.target)) {
+//     equipmentAutocompleteList.innerHTML = "";
+//   }
+// });
 const equipmentRef = database.ref("equipment");
 const equipmentInput = document.getElementById("equipment");
 const equipmentAutocompleteList = document.getElementById("equipment-list");
 
 let equipment = [];
+let fuseEquipment;
 
 // Load data from firebase
 async function loadEquipmentData() {
@@ -2138,7 +2236,7 @@ async function loadEquipmentData() {
 
   equipment = equipmentSnapshot.val()
     ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
-        if (!acc.some((equipment) => equipment.title === data.title)) {
+        if (!acc.some((eq) => eq.title === data.title)) {
           acc.push({
             id,
             ...data,
@@ -2148,13 +2246,14 @@ async function loadEquipmentData() {
       }, [])
     : [];
 
-  miniSearchEquipment = new MiniSearch({
-    fields: ["title"],
-    idField: "id",
-    storeFields: ["title", "in_code"],
-  });
+  const options = {
+    keys: ["title"],
+    includeScore: true,
+    threshold: 0.3,
+    ignoreLocation: true,
+  };
 
-  miniSearchEquipment.addAll(equipment);
+  fuseEquipment = new Fuse(equipment, options);
 }
 
 loadEquipmentData();
@@ -2165,18 +2264,7 @@ function searchEquipment(searchTerm) {
     return;
   }
 
-  // Check if miniSearchEquipment is initialized before searching
-  const results = miniSearchEquipment
-    .search(searchTerm, {
-      prefix: true,
-      boost: {
-        title: 2,
-      },
-      termFrequency: false,
-      fuzzy: 0.3,
-    })
-    .slice(0, 10);
-
+  const results = fuseEquipment.search(searchTerm).slice(0, 10);
   updateEquipmentAutocompleteList(results);
 }
 
@@ -2194,8 +2282,8 @@ function updateEquipmentAutocompleteList(results) {
 }
 
 function createEquipmentAutocompleteItems(results, fragment) {
-  results.forEach((equipment) => {
-    const { title, in_code } = equipment || {};
+  results.forEach(({ item }) => {
+    const { title, in_code } = item || {};
 
     const el = document.createElement("div");
     el.classList.add("autocomplete-item");
