@@ -1008,7 +1008,7 @@ document.getElementById("next-page").addEventListener("click", () => {
 
 // Глобальные переменные для управления пагинацией
 let currentPage = 1;
-let itemsPerPage = 300;
+let itemsPerPage = 500;
 
 let totalPages = 0;
 
@@ -1900,133 +1900,12 @@ toggleButtons.forEach((button) => {
 
 // ------------------------------------------ БЛОК ПОИСКА НОМЕНКЛАТУРЫ --------------------------------------------//
 
-// const nameInput = document.getElementById("name");
-// const variationInput = document.getElementById("variation");
-// const codeInput = document.getElementById("input-code");
-// const autocompleteList = document.getElementById("autocompleteList");
-
-// let miniSearch;
-
-// async function loadData() {
-//   const itemsObject = await loadItems();
-//   const items = itemsObject
-//     ? Object.entries(itemsObject).map(([id, item]) => ({ id, ...item }))
-//     : [];
-
-//   miniSearch = new MiniSearch({
-//     fields: ["group3", "name", "variation", "code", "type"],
-//     idField: "id",
-//     storeFields: ["group3", "name", "variation", "code", "type"],
-//     caseSensitive: false,
-//     normalizeField: false,
-//     boost: {
-//       group3: 4, // Установите желаемый вес для поля group3
-//       name: 2,
-//       variation: 1,
-//       code: 1,
-//       type: 1,
-//     },
-//   });
-
-//   const allItems = items.map((item, index) => ({ ...item, id: index + 1 }));
-//   miniSearch.addAll(allItems);
-// }
-
-// function search(searchTerm) {
-//   if (!searchTerm) {
-//     autocompleteList.innerHTML = "";
-//     return;
-//   }
-
-//   const results = miniSearch
-//     .search(searchTerm.toLowerCase(), { fuzzy: 0.2 })
-//     .slice(0, 30);
-
-//   updateAutocompleteList(results, searchTerm);
-// }
-
-// function updateAutocompleteList(results, searchTerm) {
-//   const fragment = document.createDocumentFragment();
-
-//   if (!results.length) {
-//     createNoResultsElement(fragment);
-//   } else {
-//     createAutocompleteItems(results, fragment, searchTerm);
-//   }
-
-//   autocompleteList.innerHTML = "";
-//   autocompleteList.appendChild(fragment);
-// }
-
-// function createNoResultsElement(fragment) {
-//   const noResultsEl = document.createElement("div");
-//   noResultsEl.classList.add("autocomplete-item");
-//   noResultsEl.innerText = "Нет результатов";
-//   fragment.appendChild(noResultsEl);
-// }
-
-// function createAutocompleteItems(results, fragment, searchTerm) {
-//   const uniqueItems = new Set();
-
-//   results
-//     .filter((item) => !uniqueItems.has(item.id))
-//     .forEach((item) => {
-//       uniqueItems.add(item.id);
-
-//       const el = document.createElement("div");
-//       el.classList.add("autocomplete-item");
-
-//       const highlightedName = document.createElement("div");
-//       highlightedName.innerHTML = highlightMatch(item.name, searchTerm);
-//       el.appendChild(highlightedName);
-
-//       const info = document.createElement("div");
-//       info.innerHTML = `ВИ: ${item.variation}  Код: (${item.code}) ${item.type}`;
-//       el.appendChild(info);
-
-//       el.addEventListener("click", () => {
-//         nameInput.value = item.name;
-//         variationInput.value = item.variation;
-//         codeInput.value = item.code;
-//         autocompleteList.innerHTML = "";
-//       });
-
-//       fragment.appendChild(el);
-//     });
-// }
-
-// function highlightMatch(text, searchTerm) {
-//   const searchWords = searchTerm.split(/\s+/);
-//   const escapedSearchWords = searchWords.map((word) =>
-//     word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&")
-//   );
-
-//   // Изменяем регулярное выражение для поиска совпадающих символов
-//   const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
-
-//   return text.replace(regex, (match) => `<mark>${match}</mark>`);
-// }
-
-// let searchTimeout;
-
-// nameInput.addEventListener("input", async (e) => {
-//   clearTimeout(searchTimeout);
-//   await loadData();
-
-//   searchTimeout = setTimeout(() => search(e.target.value), 300);
-// });
-
-// document.addEventListener("click", (e) => {
-//   if (!autocompleteList.contains(e.target)) {
-//     autocompleteList.innerHTML = "";
-//   }
-// });
 const nameInput = document.getElementById("name");
 const variationInput = document.getElementById("variation");
 const codeInput = document.getElementById("input-code");
 const autocompleteList = document.getElementById("autocompleteList");
 
-let fuse;
+let miniSearch;
 
 async function loadData() {
   const itemsObject = await loadItems();
@@ -2034,14 +1913,23 @@ async function loadData() {
     ? Object.entries(itemsObject).map(([id, item]) => ({ id, ...item }))
     : [];
 
-  const options = {
-    keys: ["group3", "name", "variation", "code", "type"],
-    includeScore: true,
-    threshold: 0.2,
-    ignoreLocation: true,
-  };
+  miniSearch = new MiniSearch({
+    fields: ["group3", "name", "variation", "code", "type"],
+    idField: "id",
+    storeFields: ["group3", "name", "variation", "code", "type"],
+    caseSensitive: false,
+    normalizeField: false,
+    boost: {
+      group3: 4, // Установите желаемый вес для поля group3
+      name: 2,
+      variation: 1,
+      code: 1,
+      type: 1,
+    },
+  });
 
-  fuse = new Fuse(items, options);
+  const allItems = items.map((item, index) => ({ ...item, id: index + 1 }));
+  miniSearch.addAll(allItems);
 }
 
 function search(searchTerm) {
@@ -2050,7 +1938,9 @@ function search(searchTerm) {
     return;
   }
 
-  const results = fuse.search(searchTerm);
+  const results = miniSearch
+    .search(searchTerm.toLowerCase(), { fuzzy: 0.2 })
+    .slice(0, 30);
 
   updateAutocompleteList(results, searchTerm);
 }
@@ -2078,8 +1968,9 @@ function createNoResultsElement(fragment) {
 function createAutocompleteItems(results, fragment, searchTerm) {
   const uniqueItems = new Set();
 
-  results.forEach(({ item }) => {
-    if (!uniqueItems.has(item.id)) {
+  results
+    .filter((item) => !uniqueItems.has(item.id))
+    .forEach((item) => {
       uniqueItems.add(item.id);
 
       const el = document.createElement("div");
@@ -2101,12 +1992,18 @@ function createAutocompleteItems(results, fragment, searchTerm) {
       });
 
       fragment.appendChild(el);
-    }
-  });
+    });
 }
 
 function highlightMatch(text, searchTerm) {
-  const regex = new RegExp("(" + searchTerm + ")", "gi");
+  const searchWords = searchTerm.split(/\s+/);
+  const escapedSearchWords = searchWords.map((word) =>
+    word.replace(/[.*+\-?^${}()|[\]\\]/g, "\\$&")
+  );
+
+  // Изменяем регулярное выражение для поиска совпадающих символов
+  const regex = new RegExp("(" + escapedSearchWords.join("|") + ")", "gi");
+
   return text.replace(regex, (match) => `<mark>${match}</mark>`);
 }
 
@@ -2116,7 +2013,7 @@ nameInput.addEventListener("input", async (e) => {
   clearTimeout(searchTimeout);
   await loadData();
 
-  searchTimeout = setTimeout(() => search(e.target.value), 100);
+  searchTimeout = setTimeout(() => search(e.target.value), 300);
 });
 
 document.addEventListener("click", (e) => {
@@ -2124,111 +2021,116 @@ document.addEventListener("click", (e) => {
     autocompleteList.innerHTML = "";
   }
 });
-// -------------------------------------- БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
+// const nameInput = document.getElementById("name");
+// const variationInput = document.getElementById("variation");
+// const codeInput = document.getElementById("input-code");
+// const autocompleteList = document.getElementById("autocompleteList");
 
-// const equipmentRef = database.ref("equipment");
-// const equipmentInput = document.getElementById("equipment");
-// const equipmentAutocompleteList = document.getElementById("equipment-list");
+// let fuse;
 
-// let equipment = [];
-
-// // Load data from firebase
-// async function loadEquipmentData() {
-//   const equipmentSnapshot = await equipmentRef.once("value");
-
-//   equipment = equipmentSnapshot.val()
-//     ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
-//         if (!acc.some((equipment) => equipment.title === data.title)) {
-//           acc.push({
-//             id,
-//             ...data,
-//           });
-//         }
-//         return acc;
-//       }, [])
+// async function loadData() {
+//   const itemsObject = await loadItems();
+//   const items = itemsObject
+//     ? Object.entries(itemsObject).map(([id, item]) => ({ id, ...item }))
 //     : [];
 
-//   miniSearchEquipment = new MiniSearch({
-//     fields: ["title"],
-//     idField: "id",
-//     storeFields: ["title", "in_code"],
-//   });
+//   const options = {
+//     keys: ["group3", "name", "variation", "code", "type"],
+//     includeScore: true,
+//     threshold: 0.2,
+//     ignoreLocation: true,
+//   };
 
-//   miniSearchEquipment.addAll(equipment);
+//   fuse = new Fuse(items, options);
 // }
 
-// loadEquipmentData();
-
-// function searchEquipment(searchTerm) {
+// function search(searchTerm) {
 //   if (!searchTerm) {
-//     equipmentAutocompleteList.innerHTML = "";
+//     autocompleteList.innerHTML = "";
 //     return;
 //   }
 
-//   // Check if miniSearchEquipment is initialized before searching
-//   const results = miniSearchEquipment
-//     .search(searchTerm, {
-//       prefix: true,
-//       boost: {
-//         title: 2,
-//       },
-//       termFrequency: false,
-//       fuzzy: 0.3,
-//     })
-//     .slice(0, 10);
+//   const results = fuse.search(searchTerm);
 
-//   updateEquipmentAutocompleteList(results);
+//   updateAutocompleteList(results, searchTerm);
 // }
 
-// function updateEquipmentAutocompleteList(results) {
+// function updateAutocompleteList(results, searchTerm) {
 //   const fragment = document.createDocumentFragment();
 
 //   if (!results.length) {
 //     createNoResultsElement(fragment);
 //   } else {
-//     createEquipmentAutocompleteItems(results, fragment);
+//     createAutocompleteItems(results, fragment, searchTerm);
 //   }
 
-//   equipmentAutocompleteList.innerHTML = "";
-//   equipmentAutocompleteList.appendChild(fragment);
+//   autocompleteList.innerHTML = "";
+//   autocompleteList.appendChild(fragment);
 // }
 
-// function createEquipmentAutocompleteItems(results, fragment) {
-//   results.forEach((equipment) => {
-//     const { title, in_code } = equipment || {};
+// function createNoResultsElement(fragment) {
+//   const noResultsEl = document.createElement("div");
+//   noResultsEl.classList.add("autocomplete-item");
+//   noResultsEl.innerText = "Нет результатов";
+//   fragment.appendChild(noResultsEl);
+// }
 
-//     const el = document.createElement("div");
-//     el.classList.add("autocomplete-item");
-//     el.innerText = `${title}\n (Инв.номер: ${in_code})`;
-//     el.addEventListener("click", () => {
-//       equipmentInput.value = title;
-//       equipmentAutocompleteList.innerHTML = "";
-//     });
-//     fragment.appendChild(el);
+// function createAutocompleteItems(results, fragment, searchTerm) {
+//   const uniqueItems = new Set();
+
+//   results.forEach(({ item }) => {
+//     if (!uniqueItems.has(item.id)) {
+//       uniqueItems.add(item.id);
+
+//       const el = document.createElement("div");
+//       el.classList.add("autocomplete-item");
+
+//       const highlightedName = document.createElement("div");
+//       highlightedName.innerHTML = highlightMatch(item.name, searchTerm);
+//       el.appendChild(highlightedName);
+
+//       const info = document.createElement("div");
+//       info.innerHTML = `ВИ: ${item.variation}  Код: (${item.code}) ${item.type}`;
+//       el.appendChild(info);
+
+//       el.addEventListener("click", () => {
+//         nameInput.value = item.name;
+//         variationInput.value = item.variation;
+//         codeInput.value = item.code;
+//         autocompleteList.innerHTML = "";
+//       });
+
+//       fragment.appendChild(el);
+//     }
 //   });
 // }
 
-// let searchEquipmentTimeout;
+// function highlightMatch(text, searchTerm) {
+//   const regex = new RegExp("(" + searchTerm + ")", "gi");
+//   return text.replace(regex, (match) => `<mark>${match}</mark>`);
+// }
 
-// equipmentInput.addEventListener("input", (e) => {
-//   clearTimeout(searchEquipmentTimeout);
-//   searchEquipmentTimeout = setTimeout(
-//     () => searchEquipment(e.target.value),
-//     200
-//   );
+// let searchTimeout;
+
+// nameInput.addEventListener("input", async (e) => {
+//   clearTimeout(searchTimeout);
+//   await loadData();
+
+//   searchTimeout = setTimeout(() => search(e.target.value), 100);
 // });
 
 // document.addEventListener("click", (e) => {
-//   if (!equipmentAutocompleteList.contains(e.target)) {
-//     equipmentAutocompleteList.innerHTML = "";
+//   if (!autocompleteList.contains(e.target)) {
+//     autocompleteList.innerHTML = "";
 //   }
 // });
+// -------------------------------------- БЛОК ПОИСКА ОБОРУДОВАНИЯ --------------------------------------------//
+
 const equipmentRef = database.ref("equipment");
 const equipmentInput = document.getElementById("equipment");
 const equipmentAutocompleteList = document.getElementById("equipment-list");
 
 let equipment = [];
-let fuseEquipment;
 
 // Load data from firebase
 async function loadEquipmentData() {
@@ -2236,7 +2138,7 @@ async function loadEquipmentData() {
 
   equipment = equipmentSnapshot.val()
     ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
-        if (!acc.some((eq) => eq.title === data.title)) {
+        if (!acc.some((equipment) => equipment.title === data.title)) {
           acc.push({
             id,
             ...data,
@@ -2246,14 +2148,13 @@ async function loadEquipmentData() {
       }, [])
     : [];
 
-  const options = {
-    keys: ["title"],
-    includeScore: true,
-    threshold: 0.3,
-    ignoreLocation: true,
-  };
+  miniSearchEquipment = new MiniSearch({
+    fields: ["title"],
+    idField: "id",
+    storeFields: ["title", "in_code"],
+  });
 
-  fuseEquipment = new Fuse(equipment, options);
+  miniSearchEquipment.addAll(equipment);
 }
 
 loadEquipmentData();
@@ -2264,7 +2165,18 @@ function searchEquipment(searchTerm) {
     return;
   }
 
-  const results = fuseEquipment.search(searchTerm).slice(0, 10);
+  // Check if miniSearchEquipment is initialized before searching
+  const results = miniSearchEquipment
+    .search(searchTerm, {
+      prefix: true,
+      boost: {
+        title: 2,
+      },
+      termFrequency: false,
+      fuzzy: 0.3,
+    })
+    .slice(0, 10);
+
   updateEquipmentAutocompleteList(results);
 }
 
@@ -2282,8 +2194,8 @@ function updateEquipmentAutocompleteList(results) {
 }
 
 function createEquipmentAutocompleteItems(results, fragment) {
-  results.forEach(({ item }) => {
-    const { title, in_code } = item || {};
+  results.forEach((equipment) => {
+    const { title, in_code } = equipment || {};
 
     const el = document.createElement("div");
     el.classList.add("autocomplete-item");
@@ -2311,6 +2223,94 @@ document.addEventListener("click", (e) => {
     equipmentAutocompleteList.innerHTML = "";
   }
 });
+// const equipmentRef = database.ref("equipment");
+// const equipmentInput = document.getElementById("equipment");
+// const equipmentAutocompleteList = document.getElementById("equipment-list");
+
+// let equipment = [];
+// let fuseEquipment;
+
+// // Load data from firebase
+// async function loadEquipmentData() {
+//   const equipmentSnapshot = await equipmentRef.once("value");
+
+//   equipment = equipmentSnapshot.val()
+//     ? Object.entries(equipmentSnapshot.val()).reduce((acc, [id, data]) => {
+//         if (!acc.some((eq) => eq.title === data.title)) {
+//           acc.push({
+//             id,
+//             ...data,
+//           });
+//         }
+//         return acc;
+//       }, [])
+//     : [];
+
+//   const options = {
+//     keys: ["title"],
+//     includeScore: true,
+//     threshold: 0.3,
+//     ignoreLocation: true,
+//   };
+
+//   fuseEquipment = new Fuse(equipment, options);
+// }
+
+// loadEquipmentData();
+
+// function searchEquipment(searchTerm) {
+//   if (!searchTerm) {
+//     equipmentAutocompleteList.innerHTML = "";
+//     return;
+//   }
+
+//   const results = fuseEquipment.search(searchTerm).slice(0, 10);
+//   updateEquipmentAutocompleteList(results);
+// }
+
+// function updateEquipmentAutocompleteList(results) {
+//   const fragment = document.createDocumentFragment();
+
+//   if (!results.length) {
+//     createNoResultsElement(fragment);
+//   } else {
+//     createEquipmentAutocompleteItems(results, fragment);
+//   }
+
+//   equipmentAutocompleteList.innerHTML = "";
+//   equipmentAutocompleteList.appendChild(fragment);
+// }
+
+// function createEquipmentAutocompleteItems(results, fragment) {
+//   results.forEach(({ item }) => {
+//     const { title, in_code } = item || {};
+
+//     const el = document.createElement("div");
+//     el.classList.add("autocomplete-item");
+//     el.innerText = `${title}\n (Инв.номер: ${in_code})`;
+//     el.addEventListener("click", () => {
+//       equipmentInput.value = title;
+//       equipmentAutocompleteList.innerHTML = "";
+//     });
+//     fragment.appendChild(el);
+//   });
+// }
+
+// let searchEquipmentTimeout;
+
+// equipmentInput.addEventListener("input", (e) => {
+//   clearTimeout(searchEquipmentTimeout);
+//   searchEquipmentTimeout = setTimeout(
+//     () => searchEquipment(e.target.value),
+//     200
+//   );
+// });
+
+// document.addEventListener("click", (e) => {
+//   if (!equipmentAutocompleteList.contains(e.target)) {
+//     equipmentAutocompleteList.innerHTML = "";
+//   }
+// });
 
 // --------------------------------------- БЛОК ТАБЛИЦЫ ПРОСМОТР ТМЦ --------------------------------------------//
 
