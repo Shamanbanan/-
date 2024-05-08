@@ -809,7 +809,9 @@ function createTableRow(requestData, requestKey) {
   tableRow.setAttribute("data-key", requestKey);
 
   tableRow.innerHTML = `
-    <td class="id-cell">${requestData.number}</td>
+      <td class="id-cell">${requestData.number}${
+    requestData.isLocked ? ' <i class="fa fa-lock"></i>' : ""
+  }</td>
     <td class="delivery-status-cell">${deliveryStatusText}</td>
     <td class="checkmark-cell ${codeClass}">
       ${filledCodeCount} / ${totalProducts}
