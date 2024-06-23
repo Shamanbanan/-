@@ -1,30 +1,42 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.6.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.0.0/firebase-firestore.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/docxtemplater/3.39.1/docxtemplater.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
-<link rel="stylesheet" href="style.css">
-<link rel="preconnect" href="https://fonts.googleapis.com">
-<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap" rel="stylesheet">
+    <script src="https://www.gstatic.com/firebasejs/8.3.1/firebase-database.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/FileSaver.js/2.0.2/FileSaver.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/fuse.js/dist/fuse.min.js"></script>
+    <link rel="stylesheet" href="style.css" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Lato:wght@300;400&display=swap"
+      rel="stylesheet"
+    />
 
-<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css"
+    />
 
-<title>Заявка на закупку номенклатур</title>
-</head>
-<body>
-<!-- ШАПКА -->
+    <title>Заявка на закупку номенклатур</title>
+  </head>
+  <body>
+    <div class="welcome-message">
+      На данный момент эта ссылка <strong>неактивна!</strong><br />
+      Просьба, перейти по ссылке на новый сервис
+      <a href="https://cenoobrazowaniee1.github.io/requests/"
+        >https://cenoobrazowaniee1.github.io/requests/"</a
+      >
+    </div>
+    <!-- 
 <header class="header-container">
-  <!-- <textarea id="nameList" rows="5" cols="30" placeholder="Введите список наименований через запятую"></textarea>
-<button id="searchButton">Поиск</button> -->
+
 
   <button id="view-requests">Посмотреть ТМЦ</button>
   <div id="login-form"class="hidden">
@@ -46,7 +58,7 @@
       <button id="logout-btn">Выйти</button>
   </div>
 </header>
-<!-- ТАБЛИЦА РАСКРЫТЫХ ЗАЯВОК-->
+
 <div class="main">
 <div id="products-table-container" style="display: none;">
   <table id="products-table">
@@ -95,13 +107,13 @@
       </tr>
     </thead>
     <tbody id="products-table-body">
-      <!-- Здесь будут добавляться строки с продуктами -->
+    
 
     </tbody>
   </table>
 </div>
   
-  <!-- ТАБЛИЦА ЗАЯВОК-->
+
   <div id="requests-table-container">
   <table class="table-request">
     <thead>
@@ -118,12 +130,7 @@
         <th>
           Кол-во ТМЦ
         </th>
-        <!-- <th>Ссылка на заявку
-          <i class="toggle-filter-button fa fa-filter"></i>
-          <div class="filter-dropdown">
-          <input type="text"  data-filter="1" placeholder="Фильтр">
-          </div>
-        </th> -->
+  
         <th>Дата заявки
           <i class="toggle-filter-button fa fa-filter"></i>
           <div class="filter-dropdown">
@@ -162,7 +169,7 @@
           </div>
         </th>
         <th><button id="download-button">
-          <!-- <i class="fas fa-download"></i> -->
+   
           Скачать заявки</button></th>
         <th><button id="add-btn">Добавить заявку</button></th>
         </th>
@@ -175,19 +182,19 @@
       <i class="fas fa-chevron-left"></i>
     </button>
     <div id="page-numbers">
-      <!-- Здесь будут размещаться кнопки с номерами страниц -->
+   
     </div>
     <button id="next-page" class="page-button">
       <i class="fas fa-chevron-right"></i>
     </button>
   </div>
 </div>
-      <!-- Добавим кнопку "переноса вверх страницы" -->
+ 
       <button id="scroll-to-top" title="Перейти вверх">
         <i class="fas fa-arrow-up"></i>
       </button>
 </div>
-<!-- МОДАЛЬНОЕ ОКНО ДЛЯ ПРОСМОТРА ЗАЯВКИ -->
+
 <div id="modal" class="hidden">
   <div class="modal-content">
     <div class="modal-header">
@@ -201,7 +208,7 @@
       <div class="field-container">
         <input type="text" id="executive-id" list="executive-list"   placeholder="ФИО" onblur="capitalizeWords(this)" autocomplete="off" class="text-field-input">
 <datalist id="executive-list">
-  <!-- Здесь будут опции для списка исполнителей -->
+
 </datalist>
         <label class="text-field-label" for="executive-id">Исполнитель</label>
       </div>
@@ -241,7 +248,7 @@
           <input class="text-field-input" type="text" id="variation" autocomplete="off" placeholder="осн." value="осн." required disabled>
           <label class="text-field-label" for="variation">Вариант исполнения</label>
         </div>
-        <!-- -->
+ 
         <div class="field-container">
           <label class="text-field-label" for="type">Баз.ед</label>
         <select class="text-field-input" id="type" required>
@@ -325,6 +332,6 @@
     <script src="https://cdn.jsdelivr.net/npm/minisearch@6.3.0/dist/umd/index.min.js"></script>
   <script src="https://unpkg.com/pdf-lib/dist/pdf-lib.js"></script>
   <script src="https://unpkg.com/exceljs/dist/exceljs.min.js"></script>
-  <script src="main.js"></script>
-</body>
+  <script src="main.js"></script> -->
+  </body>
 </html>
